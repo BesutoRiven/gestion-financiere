@@ -1,6 +1,5 @@
-// IMPORTANT : à chaque modification du site, incrémente ce numéro (v2 -> v3...)
-// pour forcer les téléphones à récupérer la nouvelle version.
-const CACHE = "gf-v5";
+// IMPORTANT : incrémente ce numéro à chaque déploiement (gf-v6 -> gf-v7...).
+const CACHE = "gf-v6";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
@@ -19,9 +18,21 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
+// Permet à la page de forcer l'activation immédiate d'une nouvelle version.
+self.addEventListener("message", e => {
+  if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+// Stratégie "réseau d'abord" : quand tu es en ligne, tu as TOUJOURS la
+// dernière version ; hors-ligne, on retombe sur la copie en cache.
 self.addEventListener("fetch", e => {
-  // On ne met en cache QUE nos propres fichiers.
-  // Les appels vers Supabase (connexion, données) doivent toujours passer par le réseau.
-  if (e.request.url.includes("supabase")) return;
-  e.respondWith(caches.match(e.request).then(rep => rep || fetch(e.request)));
+  if (e.request.method !== "GET") return;
+  if (e.request.url.includes("supabase")) return; // jamais mettre en cache les données
+  e.respondWith(
+    fetch(e.request).then(rep => {
+      const copie = rep.clone();
+      caches.open(CACHE).then(c => c.put(e.request, copie)).catch(()=>{});
+      return rep;
+    }).catch(() => caches.match(e.request))
+  );
 });

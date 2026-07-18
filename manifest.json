@@ -2,7 +2,7 @@
   "name": "Gestion financière",
   "short_name": "Finances",
   "description": "Budget du foyer : suivi des dépenses",
-  "start_url": "index.html",
+  "start_url": "app.html",
   "display": "standalone",
   "background_color": "#f6f7f6",
   "theme_color": "#0f6e56",

@@ -7,17 +7,32 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
-  <title>Mes dépenses</title>
+  <title>Gestion financière</title>
   <style>
+    .app{padding-bottom:78px;}
+    .vue{display:flex; flex-direction:column;}
     .bloc{background:var(--surface); margin:12px 12px 0; border:1px solid var(--border); border-radius:16px; padding:16px;}
-    /* Navigation mois / année */
-    .annee-nav{display:flex; align-items:center; justify-content:center; gap:16px; margin:12px 0 4px;}
-    .annee-nav button{border:1px solid var(--border); background:var(--surface); width:36px; height:36px; border-radius:10px; font-size:18px; cursor:pointer; color:var(--text);}
-    .annee-nav .annee{font-size:18px; font-weight:600; min-width:70px; text-align:center;}
-    .mois-chips{display:flex; gap:6px; overflow-x:auto; padding:8px 12px 4px; -webkit-overflow-scrolling:touch;}
-    .mois-chip{flex:0 0 auto; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:13px; padding:7px 12px; border-radius:20px; cursor:pointer; white-space:nowrap;}
-    .mois-chip.on{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;}
-    /* Saisie */
+    .bloc h2{font-size:16px; margin:0 0 10px;}
+
+    /* --- Tableau de bord --- */
+    .kpis{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px 12px 0;}
+    .kpi{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px;}
+    .kpi .lbl{font-size:13px; color:var(--muted); margin:0;}
+    .kpi .val{font-size:24px; font-weight:700; margin:6px 0 0; font-variant-numeric:tabular-nums;}
+    .rep-ligne{display:flex; align-items:center; gap:10px; margin:8px 0;}
+    .rep-ligne .pt{width:12px; height:12px; border-radius:50%; flex:0 0 auto;}
+    .rep-ligne .nom{flex:1; font-size:14px;}
+    .rep-ligne .mt{font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;}
+
+    /* --- Navigation par jour --- */
+    .jour-nav{display:flex; align-items:center; gap:8px; margin:12px 12px 0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:10px 12px;}
+    .jour-nav .fleche{border:1px solid var(--border); background:var(--surface); width:38px; height:38px; border-radius:10px; font-size:20px; cursor:pointer; color:var(--text); flex:0 0 auto;}
+    .jour-centre{flex:1; text-align:center; cursor:pointer;}
+    .jour-grand{font-size:17px; font-weight:600; text-transform:capitalize;}
+    .jour-sous{font-size:12px; color:var(--muted);}
+    .btn-cal{border:1px solid var(--border); background:var(--surface); width:38px; height:38px; border-radius:10px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; color:var(--accent);}
+
+    /* --- Saisie --- */
     .montant-ligne{display:flex; align-items:baseline; gap:8px; border-bottom:1px solid var(--border); padding-bottom:12px;}
     .montant-ligne input{border:none; outline:none; background:transparent; width:100%; font-size:34px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums;}
     .montant-ligne span{font-size:28px; color:var(--muted);}
@@ -29,390 +44,441 @@
     .champ2:focus{border-color:var(--accent);}
     .btn-add{width:100%; margin-top:14px; height:46px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer;}
     .btn-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:10px; font-size:14px; cursor:pointer;}
-    /* Liste */
-    .liste-zone{flex:1; padding:12px 12px 24px;}
-    .total-mois{display:flex; justify-content:space-between; align-items:baseline; padding:6px 8px 4px;}
-    .total-mois .lbl{font-size:14px; color:var(--muted);}
-    .total-mois .val{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+
+    /* --- Liste --- */
+    .liste-zone{flex:1; padding:12px 12px 8px;}
+    .total-jour{display:flex; justify-content:space-between; align-items:baseline; padding:6px 8px 4px;}
+    .total-jour .lbl{font-size:14px; color:var(--muted);}
+    .total-jour .val{font-size:20px; font-weight:700; font-variant-numeric:tabular-nums;}
     .cat-entete{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; margin:14px 4px 6px;}
     .dep{display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 4px 6px;}
     .dep .info{flex:1; min-width:0;}
     .dep .titre{font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    .dep .date{font-size:12px; color:var(--muted);}
     .dep .mnt{font-size:15px; font-weight:600; font-variant-numeric:tabular-nums;}
     .dep .act{border:none; background:transparent; font-size:17px; padding:0 3px; cursor:pointer; color:var(--muted); line-height:1;}
-    .vide{text-align:center; color:var(--muted); font-size:14px; padding:28px 0;}
-    /* Sections dépliables */
-    details{margin:12px 12px 0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:4px 16px;}
-    summary{cursor:pointer; font-weight:600; font-size:15px; padding:12px 0; list-style:none;}
-    summary::-webkit-details-marker{display:none;}
-    summary::before{content:"▸ "; color:var(--muted);}
-    details[open] summary::before{content:"▾ ";}
+    .vide{text-align:center; color:var(--muted); font-size:14px; padding:24px 0;}
+
+    /* --- Gestion catégories / import --- */
     .cat-ligne{display:flex; align-items:center; gap:8px; margin:6px 0;}
     .cat-ligne input{flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit;}
     .cat-ligne .pastille{width:18px; height:18px; border-radius:50%; flex:0 0 auto;}
     .cat-ligne button{border:none; background:transparent; color:var(--danger); font-size:18px; cursor:pointer;}
     .impexp textarea{width:100%; min-height:90px; border:1px solid var(--border); border-radius:10px; padding:10px; font-family:monospace; font-size:13px; margin-top:8px;}
-    .impexp .rangee{display:flex; gap:8px; margin-top:10px;}
-    .impexp .rangee button{flex:1; height:40px; border:1px solid var(--border); background:var(--surface); border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
+    .rangee{display:flex; gap:8px; margin-top:10px;}
+    .rangee button{flex:1; height:40px; border:1px solid var(--border); background:var(--surface); border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
+
+    /* --- Calendrier --- */
+    .cal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;}
+    .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px;}
+    .cal-tete{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+    .cal-tete button{border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); width:34px; height:34px; border-radius:8px;}
+    .cal-tete .titre{font-size:16px; font-weight:600; text-transform:capitalize;}
+    .cal-grille{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+    .cal-jsem{text-align:center; font-size:11px; color:var(--muted); padding:4px 0;}
+    .cal-jour{aspect-ratio:1; border:none; background:transparent; border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
+    .cal-jour:hover{background:var(--accent-soft);}
+    .cal-jour.auj{border:1px solid var(--accent); color:var(--accent); font-weight:600;}
+    .cal-jour.sel{background:var(--accent); color:#fff; font-weight:600;}
+    .cal-fermer{width:100%; margin-top:12px; height:42px; border:1px solid var(--border); background:var(--surface); border-radius:10px; cursor:pointer; color:var(--text);}
+
+    /* --- Barre de navigation basse --- */
+    .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
+    .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
+    .nav-btn svg{width:22px; height:22px;}
+    .nav-btn.on{color:var(--accent);}
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="topbar">
-      <h1>Mes dépenses</h1>
-      <a href="profil.html" aria-label="Mon profil"><span id="avatar-top" class="avatar-mini">…</span></a>
-    </div>
 
-    <!-- Navigation année + mois -->
-    <div class="annee-nav">
-      <button id="annee-moins" aria-label="Année précédente">‹</button>
-      <span class="annee" id="annee-label">2026</span>
-      <button id="annee-plus" aria-label="Année suivante">›</button>
-    </div>
-    <div class="mois-chips" id="mois-chips"></div>
-
-    <!-- Saisie / édition -->
-    <section class="bloc">
-      <div class="montant-ligne">
-        <input id="montant" type="text" inputmode="decimal" placeholder="0,00" />
-        <span>€</span>
+    <!-- ================= TABLEAU DE BORD ================= -->
+    <section id="vue-accueil" class="vue">
+      <div class="topbar"><h1>Tableau de bord</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+      <div class="kpis">
+        <div class="kpi"><p class="lbl">Aujourd'hui</p><p class="val" id="kpi-jour">0,00 €</p></div>
+        <div class="kpi"><p class="lbl">Cette semaine</p><p class="val" id="kpi-sem">0,00 €</p></div>
+        <div class="kpi"><p class="lbl">Ce mois</p><p class="val" id="kpi-mois">0,00 €</p></div>
+        <div class="kpi"><p class="lbl">Cette année</p><p class="val" id="kpi-an">0,00 €</p></div>
       </div>
-      <div class="mini-label">Catégorie</div>
-      <div class="chips" id="chips"></div>
-      <input id="commentaire" class="champ2" type="text" placeholder="Commentaire (facultatif) — ex. Carrefour" />
-      <input id="date-dep" class="champ2" type="date" />
-      <button class="btn-add" id="btn-add">Ajouter</button>
-      <button class="btn-annuler" id="btn-annuler" style="display:none;">Annuler la modification</button>
+      <div class="bloc">
+        <h2>Ce mois, par catégorie</h2>
+        <div id="repartition"></div>
+        <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense ce mois-ci.</p>
+      </div>
     </section>
 
-    <!-- Liste du mois -->
-    <section class="liste-zone">
-      <div class="total-mois">
-        <span class="lbl" id="mois-titre"></span>
-        <span class="val" id="total-mois">0,00 €</span>
+    <!-- ================= DEPENSES ================= -->
+    <section id="vue-depenses" class="vue" style="display:none;">
+      <div class="topbar"><h1>Dépenses</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+
+      <div class="jour-nav">
+        <button class="fleche" id="jour-moins" aria-label="Jour précédent">‹</button>
+        <div class="jour-centre" id="jour-centre">
+          <div class="jour-grand" id="jour-grand">Aujourd'hui</div>
+          <div class="jour-sous" id="jour-sous"></div>
+        </div>
+        <button class="fleche" id="jour-plus" aria-label="Jour suivant">›</button>
+        <button class="btn-cal" id="btn-cal" aria-label="Choisir une date">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        </button>
       </div>
-      <div id="liste"></div>
-      <p class="vide" id="vide">Aucune dépense ce mois-ci.</p>
+
+      <div class="bloc">
+        <div class="montant-ligne">
+          <input id="montant" type="text" inputmode="decimal" placeholder="0,00" />
+          <span>€</span>
+        </div>
+        <div class="mini-label">Catégorie</div>
+        <div class="chips" id="chips"></div>
+        <input id="commentaire" class="champ2" type="text" placeholder="Commentaire (facultatif) — ex. Carrefour" />
+        <button class="btn-add" id="btn-add">Ajouter</button>
+        <button class="btn-annuler" id="btn-annuler" style="display:none;">Annuler la modification</button>
+      </div>
+
+      <div class="liste-zone">
+        <div class="total-jour"><span class="lbl">Total du jour</span><span class="val" id="total-jour">0,00 €</span></div>
+        <div id="liste"></div>
+        <p class="vide" id="vide">Aucune dépense ce jour-là.</p>
+      </div>
     </section>
 
-    <!-- Gérer les catégories -->
-    <details>
-      <summary>Gérer les catégories</summary>
-      <div id="cats-liste"></div>
-      <div class="cat-ligne" style="margin-top:12px;">
-        <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
-        <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
+    <!-- ================= REGLAGES ================= -->
+    <section id="vue-reglages" class="vue" style="display:none;">
+      <div class="topbar"><h1>Réglages</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+      <div class="bloc">
+        <h2>Gérer les catégories</h2>
+        <div id="cats-liste"></div>
+        <div class="cat-ligne" style="margin-top:12px;">
+          <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
+          <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
+        </div>
+        <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ».</small>
       </div>
-      <small class="aide">Renommer met à jour les dépenses existantes. Supprimer une catégorie reclasse ses dépenses dans « Divers ».</small>
-    </details>
+      <div class="bloc impexp">
+        <h2>Import / Export Excel</h2>
+        <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, colonnes séparées par tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant.</small>
+        <div class="rangee">
+          <button id="exp-copier">Copier pour Excel</button>
+          <button id="exp-csv">Télécharger CSV</button>
+        </div>
+        <textarea id="zone-import" placeholder="01/05/2026&#9;Alim. &amp; Courses&#9;Carrefour&#9;1,40"></textarea>
+        <div class="rangee">
+          <button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button>
+        </div>
+        <div id="msg-impexp"></div>
+      </div>
+    </section>
 
-    <!-- Import / Export Excel -->
-    <details class="impexp">
-      <summary>Import / Export Excel</summary>
-      <small class="aide">Export : sauvegarde le mois affiché. Import : colle des lignes copiées d'Excel, une dépense par ligne, colonnes séparées par des tabulations, dans l'ordre : Date · Catégorie · Commentaire · Montant.</small>
-      <div class="rangee">
-        <button id="exp-copier">Copier pour Excel</button>
-        <button id="exp-csv">Télécharger CSV</button>
+    <!-- ================= CALENDRIER ================= -->
+    <div id="cal-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box">
+        <div class="cal-tete">
+          <button id="cal-moins" aria-label="Mois précédent">‹</button>
+          <span class="titre" id="cal-titre"></span>
+          <button id="cal-plus" aria-label="Mois suivant">›</button>
+        </div>
+        <div class="cal-grille" id="cal-jsem"></div>
+        <div class="cal-grille" id="cal-grille" style="margin-top:4px;"></div>
+        <button class="cal-fermer" id="cal-fermer">Fermer</button>
       </div>
-      <textarea id="zone-import" placeholder="01/05/2026&#9;Alim. &amp; Courses&#9;Carrefour&#9;1,40"></textarea>
-      <div class="rangee">
-        <button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button>
-      </div>
-      <div id="msg-impexp"></div>
-    </details>
+    </div>
 
+    <!-- ================= NAVIGATION BASSE ================= -->
+    <nav class="navbas">
+      <button class="nav-btn on" data-vue="accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        Accueil
+      </button>
+      <button class="nav-btn" data-vue="depenses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        Dépenses
+      </button>
+      <button class="nav-btn" data-vue="reglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>
+        Réglages
+      </button>
+    </nav>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script>
-  // ======================= Données par défaut =======================
+  // ================= Données =================
   const CATS_DEFAUT = [
-    {nom:"Logement",        bg:"#faece7", fg:"#712b13"},
-    {nom:"Alim. & Courses", bg:"#faeeda", fg:"#854f0b"},
-    {nom:"Déplacements",    bg:"#e6f1fb", fg:"#0c447c"},
-    {nom:"Santé",           bg:"#eaf3de", fg:"#27500a"},
-    {nom:"Animaux",         bg:"#e1f5ee", fg:"#085041"},
-    {nom:"Numér. & Tech.",  bg:"#eeedfe", fg:"#3c3489"},
-    {nom:"Shopping",        bg:"#fbeaf0", fg:"#72243e"},
-    {nom:"Loisirs",         bg:"#fcebeb", fg:"#a32d2d"},
-    {nom:"Voyages",         bg:"#fef0da", fg:"#9a6a00"},
-    {nom:"Divers",          bg:"#f1efe8", fg:"#444441"},
+    {nom:"Logement",bg:"#faece7",fg:"#712b13"},{nom:"Alim. & Courses",bg:"#faeeda",fg:"#854f0b"},
+    {nom:"Déplacements",bg:"#e6f1fb",fg:"#0c447c"},{nom:"Santé",bg:"#eaf3de",fg:"#27500a"},
+    {nom:"Animaux",bg:"#e1f5ee",fg:"#085041"},{nom:"Numér. & Tech.",bg:"#eeedfe",fg:"#3c3489"},
+    {nom:"Shopping",bg:"#fbeaf0",fg:"#72243e"},{nom:"Loisirs",bg:"#fcebeb",fg:"#a32d2d"},
+    {nom:"Voyages",bg:"#fef0da",fg:"#9a6a00"},{nom:"Divers",bg:"#f1efe8",fg:"#444441"},
   ];
-  const PALETTE = [
-    {bg:"#faece7",fg:"#712b13"},{bg:"#faeeda",fg:"#854f0b"},{bg:"#e6f1fb",fg:"#0c447c"},
-    {bg:"#eaf3de",fg:"#27500a"},{bg:"#e1f5ee",fg:"#085041"},{bg:"#eeedfe",fg:"#3c3489"},
-    {bg:"#fbeaf0",fg:"#72243e"},{bg:"#fcebeb",fg:"#a32d2d"},{bg:"#f1efe8",fg:"#444441"},
-  ];
-  const NOMS_MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
-  const NOMS_MOIS_LONG = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const PALETTE = [{bg:"#faece7",fg:"#712b13"},{bg:"#faeeda",fg:"#854f0b"},{bg:"#e6f1fb",fg:"#0c447c"},{bg:"#eaf3de",fg:"#27500a"},{bg:"#e1f5ee",fg:"#085041"},{bg:"#eeedfe",fg:"#3c3489"},{bg:"#fbeaf0",fg:"#72243e"},{bg:"#fcebeb",fg:"#a32d2d"},{bg:"#f1efe8",fg:"#444441"}];
+  const MOIS_L = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const MOIS_C = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+  const JSEM = ["L","M","M","J","V","S","D"];
 
-  // ======================= État =======================
   const $ = id => document.getElementById(id);
   let uid, cleDep, cleCat;
   let depenses = [], categories = [];
-  let anneeAff = new Date().getFullYear();
-  let moisAff = new Date().getMonth(); // 0-11
-  let catChoisie = null;
-  let editionId = null;
+  let selDate = new Date();      // jour sélectionné (vue Dépenses)
+  let calY, calM;                // mois affiché dans le calendrier
+  let catChoisie = null, editionId = null;
 
-  // ======================= Utilitaires =======================
+  // ================= Utilitaires =================
   const fmt = n => n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
   const couleursDe = nom => categories.find(c=>c.nom===nom) || {bg:"#f1efe8",fg:"#444441"};
-  const cleMois = () => anneeAff + "-" + String(moisAff+1).padStart(2,"0"); // "2026-05"
-  const moisDe = d => (d.date ? d.date.slice(0,7) : (d.mois || ""));
+  function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  const depDate = d => d.date || (d.mois ? d.mois+"-15" : null);
   const sauverDep = () => localStorage.setItem(cleDep, JSON.stringify(depenses));
   const sauverCat = () => localStorage.setItem(cleCat, JSON.stringify(categories));
-  const duMois = () => depenses.filter(d => moisDe(d) === cleMois());
-  function isoAvecJour(jour){ return anneeAff + "-" + String(moisAff+1).padStart(2,"0") + "-" + String(jour).padStart(2,"0"); }
-  function dateAffDepuisIso(iso){ const p=iso.split("-"); return parseInt(p[2],10) + " " + NOMS_MOIS[parseInt(p[1],10)-1]; }
+  function jourZero(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  function dateAff(isoStr){ const p=isoStr.split("-"); return parseInt(p[2],10)+" "+MOIS_C[parseInt(p[1],10)-1]; }
 
-  // ======================= Rendu navigation =======================
-  function rendreNav(){
-    $("annee-label").textContent = anneeAff;
-    const c = $("mois-chips"); c.innerHTML = "";
-    NOMS_MOIS.forEach((m,i)=>{
-      const b = document.createElement("button");
-      b.className = "mois-chip" + (i===moisAff ? " on" : "");
-      b.textContent = m;
-      b.onclick = () => { moisAff = i; annulerEdition(); rendreTout(); };
-      c.appendChild(b);
+  // ================= Vues =================
+  function changerVue(nom){
+    ["accueil","depenses","reglages"].forEach(v => $("vue-"+v).style.display = (v===nom?"flex":"none"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("on", b.dataset.vue===nom));
+    if(nom==="accueil") rendreAccueil();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll(".nav-btn").forEach(b => b.onclick = () => changerVue(b.dataset.vue));
+
+  // ================= Tableau de bord =================
+  function rendreAccueil(){
+    const auj = new Date();
+    const isoAuj = iso(auj);
+    // Semaine (lundi -> dimanche)
+    const lundi = jourZero(auj); lundi.setDate(lundi.getDate() - ((auj.getDay()+6)%7));
+    const dim = new Date(lundi); dim.setDate(dim.getDate()+6);
+    const isoLundi = iso(lundi), isoDim = iso(dim);
+    const moisAuj = isoAuj.slice(0,7), anAuj = isoAuj.slice(0,4);
+
+    let tJ=0,tS=0,tM=0,tA=0; const parCat={};
+    depenses.forEach(d=>{
+      const dd = depDate(d); if(!dd) return;
+      if(dd===isoAuj) tJ+=d.montant;
+      if(dd>=isoLundi && dd<=isoDim) tS+=d.montant;
+      if(dd.slice(0,7)===moisAuj){ tM+=d.montant; parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant; }
+      if(dd.slice(0,4)===anAuj) tA+=d.montant;
+    });
+    $("kpi-jour").textContent=fmt(tJ); $("kpi-sem").textContent=fmt(tS);
+    $("kpi-mois").textContent=fmt(tM); $("kpi-an").textContent=fmt(tA);
+
+    const box=$("repartition"); box.innerHTML="";
+    const noms=Object.keys(parCat).sort((a,b)=>parCat[b]-parCat[a]);
+    $("rep-vide").style.display = noms.length?"none":"block";
+    noms.forEach(n=>{
+      const col=couleursDe(n);
+      const l=document.createElement("div"); l.className="rep-ligne";
+      l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+n+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
+      box.appendChild(l);
     });
   }
 
-  // ======================= Rendu saisie =======================
+  // ================= Navigation par jour =================
+  function labelJour(d){
+    const diff=Math.round((jourZero(d)-jourZero(new Date()))/86400000);
+    if(diff===0) return "Aujourd'hui"; if(diff===-1) return "Hier"; if(diff===1) return "Demain";
+    if(diff===-2) return "Avant-hier"; if(diff===2) return "Après-demain";
+    return d.toLocaleDateString("fr-FR",{weekday:"long"});
+  }
+  function rendreJourNav(){
+    $("jour-grand").textContent = labelJour(selDate);
+    $("jour-sous").textContent = selDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+  }
+  $("jour-moins").onclick = () => { selDate.setDate(selDate.getDate()-1); selDate=new Date(selDate); annulerEdition(); rendreDepenses(); };
+  $("jour-plus").onclick  = () => { selDate.setDate(selDate.getDate()+1); selDate=new Date(selDate); annulerEdition(); rendreDepenses(); };
+
+  // ================= Calendrier =================
+  $("btn-cal").onclick = () => { calY=selDate.getFullYear(); calM=selDate.getMonth(); rendreCal(); $("cal-overlay").style.display="flex"; };
+  $("cal-fermer").onclick = () => $("cal-overlay").style.display="none";
+  $("cal-overlay").onclick = e => { if(e.target===$("cal-overlay")) $("cal-overlay").style.display="none"; };
+  $("cal-moins").onclick = () => { calM--; if(calM<0){calM=11;calY--;} rendreCal(); };
+  $("cal-plus").onclick  = () => { calM++; if(calM>11){calM=0;calY++;} rendreCal(); };
+  function rendreCal(){
+    $("cal-titre").textContent = MOIS_L[calM]+" "+calY;
+    const js=$("cal-jsem"); js.innerHTML=""; JSEM.forEach(j=>{ const s=document.createElement("div"); s.className="cal-jsem"; s.textContent=j; js.appendChild(s); });
+    const g=$("cal-grille"); g.innerHTML="";
+    const premier=new Date(calY,calM,1);
+    const decalage=(premier.getDay()+6)%7;
+    const nbJours=new Date(calY,calM+1,0).getDate();
+    for(let i=0;i<decalage;i++){ const v=document.createElement("div"); g.appendChild(v); }
+    const isoAuj=iso(new Date()), isoSel=iso(selDate);
+    for(let j=1;j<=nbJours;j++){
+      const b=document.createElement("button"); b.className="cal-jour"; b.textContent=j;
+      const isoJ=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(j).padStart(2,"0");
+      if(isoJ===isoAuj) b.classList.add("auj");
+      if(isoJ===isoSel) b.classList.add("sel");
+      b.onclick=()=>{ selDate=new Date(calY,calM,j); $("cal-overlay").style.display="none"; annulerEdition(); rendreDepenses(); };
+      g.appendChild(b);
+    }
+  }
+
+  // ================= Saisie / liste (vue Dépenses) =================
   function rendreChips(){
-    const c = $("chips"); c.innerHTML = "";
-    if (!catChoisie && categories[0]) catChoisie = categories[0].nom;
+    const c=$("chips"); c.innerHTML="";
+    if(!catChoisie && categories[0]) catChoisie=categories[0].nom;
     categories.forEach(cat=>{
-      const b = document.createElement("button");
-      const on = cat.nom===catChoisie;
-      b.className = "chip" + (on?" on":""); b.textContent = cat.nom;
+      const b=document.createElement("button"); const on=cat.nom===catChoisie;
+      b.className="chip"+(on?" on":""); b.textContent=cat.nom;
       if(on){ b.style.background=cat.bg; b.style.color=cat.fg; b.style.borderColor=cat.fg; }
-      b.onclick = () => { catChoisie = cat.nom; rendreChips(); };
+      b.onclick=()=>{ catChoisie=cat.nom; rendreChips(); };
       c.appendChild(b);
     });
   }
-
-  // ======================= Rendu liste =======================
+  function duJour(){ const s=iso(selDate); return depenses.filter(d=>depDate(d)===s); }
   function rendreListe(){
-    const liste = $("liste"); liste.innerHTML = "";
-    $("mois-titre").textContent = NOMS_MOIS_LONG[moisAff] + " " + anneeAff;
-    const items = duMois();
-    $("vide").style.display = items.length ? "none" : "block";
-    $("total-mois").textContent = fmt(items.reduce((s,d)=>s+d.montant,0));
-
-    const groupes = {};
-    items.forEach(d => { (groupes[d.categorie]=groupes[d.categorie]||[]).push(d); });
+    const liste=$("liste"); liste.innerHTML="";
+    const items=duJour();
+    $("vide").style.display=items.length?"none":"block";
+    $("total-jour").textContent=fmt(items.reduce((s,d)=>s+d.montant,0));
+    const groupes={}; items.forEach(d=>{(groupes[d.categorie]=groupes[d.categorie]||[]).push(d);});
     Object.keys(groupes).forEach(cat=>{
-      const col = couleursDe(cat);
-      const st = groupes[cat].reduce((s,d)=>s+d.montant,0);
-      const e = document.createElement("div"); e.className="cat-entete";
-      e.style.background=col.bg; e.style.color=col.fg;
-      e.innerHTML = "<span>"+cat+"</span><span>"+fmt(st)+"</span>";
-      liste.appendChild(e);
+      const col=couleursDe(cat); const st=groupes[cat].reduce((s,d)=>s+d.montant,0);
+      const e=document.createElement("div"); e.className="cat-entete"; e.style.background=col.bg; e.style.color=col.fg;
+      e.innerHTML="<span>"+cat+"</span><span>"+fmt(st)+"</span>"; liste.appendChild(e);
       groupes[cat].forEach(d=>{
-        const l = document.createElement("div"); l.className="dep";
-        const titre = d.commentaire || cat;
-        const dateAff = d.dateAffichee || (d.date ? dateAffDepuisIso(d.date) : "");
-        l.innerHTML = '<div class="info"><div class="titre">'+titre+'</div><div class="date">'+dateAff+'</div></div><div class="mnt">'+fmt(d.montant)+'</div>';
-        const be = document.createElement("button"); be.className="act"; be.setAttribute("aria-label","Modifier"); be.textContent="✎";
-        be.onclick = () => chargerEdition(d.id);
-        const bx = document.createElement("button"); bx.className="act"; bx.setAttribute("aria-label","Supprimer"); bx.style.color="var(--danger)"; bx.textContent="×";
-        bx.onclick = () => { depenses = depenses.filter(x=>x.id!==d.id); sauverDep(); rendreListe(); };
-        l.appendChild(be); l.appendChild(bx);
-        liste.appendChild(l);
+        const l=document.createElement("div"); l.className="dep";
+        l.innerHTML='<div class="info"><div class="titre">'+(d.commentaire||cat)+'</div></div><div class="mnt">'+fmt(d.montant)+'</div>';
+        const be=document.createElement("button"); be.className="act"; be.setAttribute("aria-label","Modifier"); be.textContent="✎"; be.onclick=()=>chargerEdition(d.id);
+        const bx=document.createElement("button"); bx.className="act"; bx.style.color="var(--danger)"; bx.setAttribute("aria-label","Supprimer"); bx.textContent="×";
+        bx.onclick=()=>{ depenses=depenses.filter(x=>x.id!==d.id); sauverDep(); rendreListe(); };
+        l.appendChild(be); l.appendChild(bx); liste.appendChild(l);
       });
     });
   }
+  function rendreDepenses(){ rendreJourNav(); rendreChips(); rendreListe(); }
 
-  // ======================= Rendu gestion catégories =======================
-  function rendreCategories(){
-    const box = $("cats-liste"); box.innerHTML = "";
-    categories.forEach((cat, idx)=>{
-      const ligne = document.createElement("div"); ligne.className="cat-ligne";
-      const pastille = document.createElement("span"); pastille.className="pastille"; pastille.style.background=cat.fg;
-      const inp = document.createElement("input"); inp.type="text"; inp.value=cat.nom;
-      inp.onchange = () => renommerCategorie(idx, inp.value.trim());
-      const del = document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer la catégorie");
-      del.onclick = () => supprimerCategorie(idx);
-      ligne.appendChild(pastille); ligne.appendChild(inp); ligne.appendChild(del);
-      box.appendChild(ligne);
-    });
-  }
-
-  function renommerCategorie(idx, nouveauNom){
-    if(!nouveauNom) { rendreCategories(); return; }
-    const ancien = categories[idx].nom;
-    if(ancien === nouveauNom) return;
-    categories[idx].nom = nouveauNom;
-    depenses.forEach(d => { if(d.categorie===ancien) d.categorie=nouveauNom; });
-    if(catChoisie===ancien) catChoisie=nouveauNom;
-    sauverCat(); sauverDep(); rendreTout();
-  }
-
-  function supprimerCategorie(idx){
-    if(categories.length<=1) return;
-    const nom = categories[idx].nom;
-    if(!confirm("Supprimer la catégorie « "+nom+" » ? Ses dépenses passeront dans « Divers ».")) return;
-    categories.splice(idx,1);
-    let divers = categories.find(c=>c.nom==="Divers");
-    if(!divers){ divers={nom:"Divers",bg:"#f1efe8",fg:"#444441"}; categories.push(divers); }
-    depenses.forEach(d => { if(d.categorie===nom) d.categorie="Divers"; });
-    if(catChoisie===nom) catChoisie=categories[0].nom;
-    sauverCat(); sauverDep(); rendreTout();
-  }
-
-  $("ajouter-cat").onclick = () => {
-    const nom = $("nouvelle-cat").value.trim();
-    if(!nom) return;
-    if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){ alert("Cette catégorie existe déjà."); return; }
-    const coul = PALETTE[categories.length % PALETTE.length];
-    categories.push({nom, bg:coul.bg, fg:coul.fg});
-    $("nouvelle-cat").value="";
-    sauverCat(); rendreTout();
-  };
-
-  // ======================= Ajout / édition dépense =======================
   function ajouterOuModifier(){
-    const v = parseFloat(($("montant").value||"").replace(",","."));
-    if(!v || v<=0){ $("montant").focus(); return; }
-    const iso = $("date-dep").value || isoAvecJour(new Date().getDate());
-    const commentaire = $("commentaire").value.trim();
-
+    const v=parseFloat(($("montant").value||"").replace(",","."));
+    if(!v||v<=0){ $("montant").focus(); return; }
+    const isoJour=iso(selDate); const commentaire=$("commentaire").value.trim();
     if(editionId){
-      const d = depenses.find(x=>x.id===editionId);
-      if(d){ d.montant=v; d.categorie=catChoisie; d.commentaire=commentaire; d.date=iso; d.mois=iso.slice(0,7); d.dateAffichee=dateAffDepuisIso(iso); }
+      const d=depenses.find(x=>x.id===editionId);
+      if(d){ d.montant=v; d.categorie=catChoisie; d.commentaire=commentaire; d.date=isoJour; d.mois=isoJour.slice(0,7); d.dateAffichee=dateAff(isoJour); }
       annulerEdition();
     } else {
-      depenses.push({ id:Date.now(), montant:v, categorie:catChoisie, commentaire, date:iso, mois:iso.slice(0,7), dateAffichee:dateAffDepuisIso(iso) });
+      depenses.push({id:Date.now(),montant:v,categorie:catChoisie,commentaire,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
     }
-    sauverDep();
-    $("montant").value=""; $("commentaire").value="";
-    resetDateDefaut();
-    rendreListe();
-    $("montant").focus();
+    sauverDep(); $("montant").value=""; $("commentaire").value=""; rendreListe(); $("montant").focus();
   }
-
   function chargerEdition(id){
-    const d = depenses.find(x=>x.id===id); if(!d) return;
-    editionId = id;
-    $("montant").value = String(d.montant).replace(".",",");
-    $("commentaire").value = d.commentaire || "";
-    $("date-dep").value = d.date || isoAvecJour(1);
-    catChoisie = d.categorie; rendreChips();
-    $("btn-add").textContent = "Enregistrer les modifications";
-    $("btn-annuler").style.display = "block";
-    window.scrollTo({top:0, behavior:"smooth"});
+    const d=depenses.find(x=>x.id===id); if(!d) return;
+    editionId=id; $("montant").value=String(d.montant).replace(".",","); $("commentaire").value=d.commentaire||"";
+    catChoisie=d.categorie; rendreChips();
+    $("btn-add").textContent="Enregistrer"; $("btn-annuler").style.display="block"; window.scrollTo({top:0,behavior:"smooth"});
   }
-
   function annulerEdition(){
-    editionId = null;
-    $("btn-add").textContent = "Ajouter";
-    $("btn-annuler").style.display = "none";
+    editionId=null; $("btn-add").textContent="Ajouter"; $("btn-annuler").style.display="none";
     $("montant").value=""; $("commentaire").value="";
-    resetDateDefaut();
   }
+  $("btn-add").onclick=ajouterOuModifier; $("btn-annuler").onclick=annulerEdition;
+  $("montant").addEventListener("keydown",e=>{ if(e.key==="Enter") ajouterOuModifier(); });
 
-  function resetDateDefaut(){
-    const auj = new Date();
-    if(auj.getFullYear()===anneeAff && auj.getMonth()===moisAff) $("date-dep").value = isoAvecJour(auj.getDate());
-    else $("date-dep").value = isoAvecJour(1);
-  }
-
-  $("btn-add").onclick = ajouterOuModifier;
-  $("btn-annuler").onclick = annulerEdition;
-  $("montant").addEventListener("keydown", e => { if(e.key==="Enter") ajouterOuModifier(); });
-
-  // ======================= Import / Export =======================
-  function ligneExport(){
-    const entete = "Date\tCatégorie\tCommentaire\tMontant";
-    const lignes = duMois().map(d => [d.dateAffichee||"", d.categorie, d.commentaire||"", String(d.montant).replace(".",",")].join("\t"));
-    return [entete].concat(lignes).join("\n");
-  }
-
-  $("exp-copier").onclick = async () => {
-    try { await navigator.clipboard.writeText(ligneExport()); msgIE("Copié ! Colle-le dans Excel (Ctrl+V).","ok"); }
-    catch(e){ msgIE("Copie impossible, sélectionne le texte manuellement.","err"); }
-  };
-
-  $("exp-csv").onclick = () => {
-    const rows = [["Date","Catégorie","Commentaire","Montant"]];
-    duMois().forEach(d => rows.push([d.dateAffichee||"", d.categorie, d.commentaire||"", String(d.montant).replace(".",",")]));
-    const csv = "\uFEFF" + rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(";")).join("\r\n");
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = "depenses_"+cleMois()+".csv"; a.click();
-    msgIE("Fichier CSV téléchargé.","ok");
-  };
-
-  function parseDate(txt){
-    txt = (txt||"").trim();
-    let m = txt.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/); // jj/mm/aaaa
-    if(m){ let a=m[3]; if(a.length===2) a="20"+a; return a+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0"); }
-    m = txt.match(/^(\d{4})-(\d{2})-(\d{2})$/); // aaaa-mm-jj
-    if(m) return txt;
-    return isoAvecJour(1); // par défaut : 1er du mois affiché
-  }
-
-  $("btn-importer").onclick = () => {
-    const txt = $("zone-import").value;
-    const lignes = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-    let n = 0;
-    lignes.forEach(l => {
-      if(/^date\t/i.test(l) || /^date;/i.test(l)) return; // ignore une ligne d'en-tête
-      const cols = l.includes("\t") ? l.split("\t") : (l.includes(";") ? l.split(";") : l.split(","));
-      if(cols.length < 2) return;
-      const dateIso = parseDate(cols[0]);
-      const categorie = (cols[1]||"Divers").trim() || "Divers";
-      const commentaire = (cols[2]||"").trim();
-      const montant = parseFloat((cols[cols.length-1]||"").replace(/[^0-9,.-]/g,"").replace(",","."));
-      if(!montant || montant<=0) return;
-      // crée la catégorie si elle n'existe pas encore
-      if(!categories.some(c=>c.nom===categorie)){
-        const coul = PALETTE[categories.length % PALETTE.length];
-        categories.push({nom:categorie, bg:coul.bg, fg:coul.fg});
-      }
-      depenses.push({ id:Date.now()+n, montant, categorie, commentaire, date:dateIso, mois:dateIso.slice(0,7), dateAffichee:dateAffDepuisIso(dateIso) });
-      n++;
+  // ================= Catégories =================
+  function rendreCategories(){
+    const box=$("cats-liste"); box.innerHTML="";
+    categories.forEach((cat,idx)=>{
+      const ligne=document.createElement("div"); ligne.className="cat-ligne";
+      const p=document.createElement("span"); p.className="pastille"; p.style.background=cat.fg;
+      const inp=document.createElement("input"); inp.type="text"; inp.value=cat.nom; inp.onchange=()=>renommerCat(idx,inp.value.trim());
+      const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer la catégorie"); del.onclick=()=>supprimerCat(idx);
+      ligne.appendChild(p); ligne.appendChild(inp); ligne.appendChild(del); box.appendChild(ligne);
     });
-    sauverDep(); sauverCat();
-    $("zone-import").value = "";
-    msgIE(n>0 ? (n+" dépense(s) importée(s).") : "Aucune ligne valide trouvée. Vérifie le format.", n>0?"ok":"err");
-    rendreTout();
+  }
+  function renommerCat(idx,nv){
+    if(!nv){ rendreCategories(); return; } const anc=categories[idx].nom; if(anc===nv) return;
+    categories[idx].nom=nv; depenses.forEach(d=>{ if(d.categorie===anc) d.categorie=nv; });
+    if(catChoisie===anc) catChoisie=nv; sauverCat(); sauverDep(); rendreCategories(); rendreChips();
+  }
+  function supprimerCat(idx){
+    if(categories.length<=1) return; const nom=categories[idx].nom;
+    if(!confirm("Supprimer « "+nom+" » ? Ses dépenses passeront dans « Divers ».")) return;
+    categories.splice(idx,1);
+    if(!categories.find(c=>c.nom==="Divers")) categories.push({nom:"Divers",bg:"#f1efe8",fg:"#444441"});
+    depenses.forEach(d=>{ if(d.categorie===nom) d.categorie="Divers"; });
+    if(catChoisie===nom) catChoisie=categories[0].nom;
+    sauverCat(); sauverDep(); rendreCategories(); rendreChips(); rendreListe();
+  }
+  $("ajouter-cat").onclick=()=>{
+    const nom=$("nouvelle-cat").value.trim(); if(!nom) return;
+    if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){ alert("Cette catégorie existe déjà."); return; }
+    const coul=PALETTE[categories.length%PALETTE.length]; categories.push({nom,bg:coul.bg,fg:coul.fg});
+    $("nouvelle-cat").value=""; sauverCat(); rendreCategories(); rendreChips();
   };
 
-  function msgIE(txt,type){ $("msg-impexp").innerHTML = '<div class="message '+type+'" style="margin-top:10px;">'+txt+'</div>'; }
+  // ================= Import / Export =================
+  function moisEnCours(){ return iso(new Date()).slice(0,7); }
+  function duMoisCourant(){ return depenses.filter(d=>{ const dd=depDate(d); return dd && dd.slice(0,7)===moisEnCours(); }); }
+  function exportTexte(){
+    const e="Date\tCatégorie\tCommentaire\tMontant";
+    const l=duMoisCourant().map(d=>[d.dateAffichee||"",d.categorie,d.commentaire||"",String(d.montant).replace(".",",")].join("\t"));
+    return [e].concat(l).join("\n");
+  }
+  $("exp-copier").onclick=async()=>{ try{ await navigator.clipboard.writeText(exportTexte()); msgIE("Copié ! Colle dans Excel (Ctrl+V).","ok"); }catch(e){ msgIE("Copie impossible, sélectionne le texte à la main.","err"); } };
+  $("exp-csv").onclick=()=>{
+    const rows=[["Date","Catégorie","Commentaire","Montant"]];
+    duMoisCourant().forEach(d=>rows.push([d.dateAffichee||"",d.categorie,d.commentaire||"",String(d.montant).replace(".",",")]));
+    const csv="\uFEFF"+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+    const b=new Blob([csv],{type:"text/csv;charset=utf-8"}); const a=document.createElement("a");
+    a.href=URL.createObjectURL(b); a.download="depenses_"+moisEnCours()+".csv"; a.click(); msgIE("Fichier CSV téléchargé.","ok");
+  };
+  function parseDate(t){
+    t=(t||"").trim();
+    let m=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/); if(m){ let a=m[3]; if(a.length===2) a="20"+a; return a+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0"); }
+    m=t.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return t;
+    return iso(new Date());
+  }
+  $("btn-importer").onclick=()=>{
+    const lignes=($("zone-import").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean); let n=0;
+    lignes.forEach(l=>{
+      if(/^date[\t;,]/i.test(l)) return;
+      const cols=l.includes("\t")?l.split("\t"):(l.includes(";")?l.split(";"):l.split(","));
+      if(cols.length<2) return;
+      const dIso=parseDate(cols[0]); const cat=(cols[1]||"Divers").trim()||"Divers"; const com=(cols[2]||"").trim();
+      const mt=parseFloat((cols[cols.length-1]||"").replace(/[^0-9,.-]/g,"").replace(",",".")); if(!mt||mt<=0) return;
+      if(!categories.some(c=>c.nom===cat)){ const coul=PALETTE[categories.length%PALETTE.length]; categories.push({nom:cat,bg:coul.bg,fg:coul.fg}); }
+      depenses.push({id:Date.now()+n,montant:mt,categorie:cat,commentaire:com,date:dIso,mois:dIso.slice(0,7),dateAffichee:dateAff(dIso)}); n++;
+    });
+    sauverDep(); sauverCat(); $("zone-import").value="";
+    msgIE(n>0?(n+" dépense(s) importée(s)."):"Aucune ligne valide. Vérifie le format.",n>0?"ok":"err");
+    rendreCategories(); rendreChips();
+  };
+  function msgIE(t,ty){ $("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>'; }
 
-  // ======================= Année =======================
-  $("annee-moins").onclick = () => { anneeAff--; annulerEdition(); rendreTout(); };
-  $("annee-plus").onclick  = () => { anneeAff++; annulerEdition(); rendreTout(); };
-
-  // ======================= Rendu global =======================
-  function rendreTout(){ rendreNav(); rendreChips(); rendreListe(); rendreCategories(); }
-
-  // ======================= Démarrage =======================
+  // ================= Démarrage =================
   (async () => {
-    const session = await exigerConnexion();
-    if(!session) return;
-    uid = session.user.id;
-    cleDep = "depenses_" + uid;
-    cleCat = "categories_" + uid;
-    depenses = JSON.parse(localStorage.getItem(cleDep) || "[]");
-    categories = JSON.parse(localStorage.getItem(cleCat) || "null") || CATS_DEFAUT.slice();
+    const session=await exigerConnexion(); if(!session) return;
+    uid=session.user.id; cleDep="depenses_"+uid; cleCat="categories_"+uid;
+    depenses=JSON.parse(localStorage.getItem(cleDep)||"[]");
+    categories=JSON.parse(localStorage.getItem(cleCat)||"null")||CATS_DEFAUT.slice();
     if(!localStorage.getItem(cleCat)) sauverCat();
-    catChoisie = categories[0] ? categories[0].nom : null;
+    catChoisie=categories[0]?categories[0].nom:null;
 
-    // Avatar dans la barre
-    const meta = session.user.user_metadata || {};
-    const av = $("avatar-top");
-    if(meta.avatar_url) av.outerHTML = '<img src="'+meta.avatar_url+'" class="avatar-mini" alt="Profil" />';
-    else av.textContent = (meta.username || session.user.email || "?").charAt(0).toUpperCase();
+    const meta=session.user.user_metadata||{};
+    const contenu = meta.avatar_url ? null : (meta.username||session.user.email||"?").charAt(0).toUpperCase();
+    document.querySelectorAll(".avatar-slot").forEach(el=>{
+      if(meta.avatar_url){ const img=document.createElement("img"); img.src=meta.avatar_url; img.className="avatar-mini"; img.alt="Profil"; el.replaceWith(img); }
+      else el.textContent=contenu;
+    });
 
-    resetDateDefaut();
-    rendreTout();
+    rendreDepenses(); rendreCategories(); rendreAccueil();
+    changerVue("accueil");
   })();
+
+  // ================= Mise à jour automatique (service worker) =================
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      reg.update();
+      reg.addEventListener("updatefound",()=>{
+        const nw=reg.installing;
+        nw && nw.addEventListener("statechange",()=>{
+          if(nw.state==="installed" && navigator.serviceWorker.controller) nw.postMessage({type:"SKIP_WAITING"});
+        });
+      });
+    }).catch(()=>{});
+    let recharge=false;
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(recharge) return; recharge=true; window.location.reload(); });
+  }
   </script>
 </body>
 </html>
