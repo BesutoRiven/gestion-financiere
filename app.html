@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f6e56" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Mes dépenses</title>
+  <style>
+    .saisie{background:var(--surface); margin:12px 12px 0; border:1px solid var(--border); border-radius:16px; padding:16px;}
+    .montant-ligne{display:flex; align-items:baseline; gap:8px; border-bottom:1px solid var(--border); padding-bottom:12px;}
+    .montant-ligne input{border:none; outline:none; background:transparent; width:100%; font-size:38px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums;}
+    .montant-ligne span{font-size:30px; color:var(--muted);}
+    .label{font-size:12px; color:var(--muted); margin:14px 0 8px; text-transform:uppercase; letter-spacing:.4px;}
+    .chips{display:flex; flex-wrap:wrap; gap:8px;}
+    .chip{border:1px solid var(--border); background:transparent; color:var(--muted); font-size:14px; padding:8px 12px; border-radius:20px; cursor:pointer;}
+    .chip.on{font-weight:600;}
+    .commentaire{width:100%; margin-top:12px; border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:15px; outline:none; font-family:inherit;}
+    .commentaire:focus{border-color:var(--accent);}
+    .ajouter{width:100%; margin-top:14px; height:48px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer;}
+    .liste-zone{flex:1; padding:16px 12px 24px;}
+    .total-mois{display:flex; justify-content:space-between; align-items:baseline; padding:0 8px 4px;}
+    .total-mois .mois{font-size:14px; color:var(--muted);}
+    .total-mois .val{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+    .cat-entete{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; margin:14px 4px 6px;}
+    .depense{display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin:0 4px 6px;}
+    .depense .info{flex:1; min-width:0;}
+    .depense .titre{font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .depense .date{font-size:12px; color:var(--muted);}
+    .depense .mnt{font-size:15px; font-weight:600; font-variant-numeric:tabular-nums;}
+    .depense .suppr{border:none; background:transparent; color:var(--muted); font-size:20px; padding:0 4px; cursor:pointer; line-height:1;}
+    .vide{text-align:center; color:var(--muted); font-size:14px; padding:32px 0;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <h1>Mes dépenses</h1>
+      <a href="profil.html" aria-label="Mon profil"><span id="avatar-top" class="avatar-mini">…</span></a>
+    </div>
+
+    <section class="saisie">
+      <div class="montant-ligne">
+        <input id="montant" type="text" inputmode="decimal" placeholder="0,00" />
+        <span>€</span>
+      </div>
+      <div class="label">Catégorie</div>
+      <div class="chips" id="chips"></div>
+      <input id="commentaire" class="commentaire" type="text" placeholder="Commentaire (facultatif) — ex. Carrefour" />
+      <button class="ajouter" id="ajouter">Ajouter</button>
+    </section>
+
+    <section class="liste-zone">
+      <div class="total-mois">
+        <span class="mois" id="mois-label"></span>
+        <span class="val" id="total-mois">0,00 €</span>
+      </div>
+      <div id="liste"></div>
+      <p class="vide" id="vide">Aucune dépense ce mois-ci.</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+  const CATEGORIES = [
+    { nom:"Alim. & Courses", bg:"#faeeda", fg:"#854f0b" },
+    { nom:"Déplacements",    bg:"#e6f1fb", fg:"#0c447c" },
+    { nom:"Santé",           bg:"#eaf3de", fg:"#27500a" },
+    { nom:"Loisirs",         bg:"#fbeaf0", fg:"#72243e" },
+    { nom:"Numér. & Tech.",  bg:"#e1f5ee", fg:"#085041" },
+    { nom:"Shopping",        bg:"#eeedfe", fg:"#3c3489" },
+    { nom:"Logement",        bg:"#faece7", fg:"#712b13" },
+    { nom:"Divers",          bg:"#f1efe8", fg:"#444441" },
+  ];
+  let categorieChoisie = CATEGORIES[0].nom;
+  let cleStockage = "depenses";     // sera personnalisé par utilisateur
+  let depenses = [];
+
+  const fmt = n => n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
+  const couleursDe = nom => CATEGORIES.find(c => c.nom === nom) || {bg:"#f1efe8", fg:"#444441"};
+  const moisActuelCle = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); };
+  const nomDuMois = () => new Date().toLocaleDateString("fr-FR",{month:"long", year:"numeric"});
+  const sauvegarder = () => localStorage.setItem(cleStockage, JSON.stringify(depenses));
+
+  function afficherChips(){
+    const c = document.getElementById("chips"); c.innerHTML="";
+    CATEGORIES.forEach(cat => {
+      const b=document.createElement("button");
+      const on = cat.nom===categorieChoisie;
+      b.className="chip"+(on?" on":""); b.textContent=cat.nom;
+      if(on){ b.style.background=cat.bg; b.style.color=cat.fg; b.style.borderColor=cat.fg; }
+      b.onclick=()=>{ categorieChoisie=cat.nom; afficherChips(); };
+      c.appendChild(b);
+    });
+  }
+
+  function afficherListe(){
+    const liste=document.getElementById("liste"); liste.innerHTML="";
+    const mois=moisActuelCle();
+    const duMois=depenses.filter(d=>d.mois===mois);
+    document.getElementById("mois-label").textContent=nomDuMois();
+    document.getElementById("vide").style.display=duMois.length?"none":"block";
+    document.getElementById("total-mois").textContent=fmt(duMois.reduce((s,d)=>s+d.montant,0));
+    const groupes={}; duMois.forEach(d=>{(groupes[d.categorie]=groupes[d.categorie]||[]).push(d);});
+    Object.keys(groupes).forEach(cat=>{
+      const col=couleursDe(cat);
+      const st=groupes[cat].reduce((s,d)=>s+d.montant,0);
+      const e=document.createElement("div"); e.className="cat-entete";
+      e.style.background=col.bg; e.style.color=col.fg;
+      e.innerHTML="<span>"+cat+"</span><span>"+fmt(st)+"</span>"; liste.appendChild(e);
+      groupes[cat].forEach(d=>{
+        const l=document.createElement("div"); l.className="depense";
+        l.innerHTML='<div class="info"><div class="titre">'+(d.commentaire||cat)+'</div><div class="date">'+d.dateAffichee+'</div></div><div class="mnt">'+fmt(d.montant)+'</div>';
+        const b=document.createElement("button"); b.className="suppr"; b.setAttribute("aria-label","Supprimer"); b.textContent="×";
+        b.onclick=()=>{ depenses=depenses.filter(x=>x.id!==d.id); sauvegarder(); afficherListe(); };
+        l.appendChild(b); liste.appendChild(l);
+      });
+    });
+  }
+
+  function ajouter(){
+    const champ=document.getElementById("montant");
+    const v=parseFloat((champ.value||"").replace(",","."));
+    if(!v||v<=0){ champ.focus(); return; }
+    const now=new Date();
+    depenses.push({
+      id:Date.now(), montant:v, categorie:categorieChoisie,
+      commentaire:document.getElementById("commentaire").value.trim(),
+      mois:moisActuelCle(),
+      dateAffichee:now.toLocaleDateString("fr-FR",{day:"numeric", month:"short"})
+    });
+    sauvegarder(); champ.value=""; document.getElementById("commentaire").value="";
+    afficherListe(); champ.focus();
+  }
+
+  document.getElementById("ajouter").onclick=ajouter;
+  document.getElementById("montant").addEventListener("keydown",e=>{ if(e.key==="Enter") ajouter(); });
+
+  // Démarrage : on exige d'être connecté, puis on charge les données DE CET utilisateur.
+  (async () => {
+    const session = await exigerConnexion();
+    if (!session) return;
+    const user = session.user;
+    cleStockage = "depenses_" + user.id;
+    depenses = JSON.parse(localStorage.getItem(cleStockage) || "[]");
+
+    // Avatar dans la barre du haut (photo si dispo, sinon initiale)
+    const av = document.getElementById("avatar-top");
+    const url = user.user_metadata && user.user_metadata.avatar_url;
+    if (url){ av.outerHTML = '<img src="'+url+'" class="avatar-mini" alt="Profil" />'; }
+    else { av.textContent = (user.email || "?").charAt(0).toUpperCase(); }
+
+    afficherChips();
+    afficherListe();
+  })();
+  </script>
+</body>
+</html>

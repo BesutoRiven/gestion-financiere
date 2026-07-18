@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f6e56" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Mon profil</title>
+  <style>
+    .avatar-grand{width:96px; height:96px; border-radius:50%; object-fit:cover; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:600; margin:0 auto;}
+    .qr-box{text-align:center; margin-top:14px;}
+    .qr-box img{width:180px; height:180px;}
+    .secret{font-family:monospace; background:var(--bg); padding:8px 10px; border-radius:8px; font-size:13px; word-break:break-all; margin-top:8px;}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="app.html" aria-label="Retour">‹ Retour</a>
+      <h1>Mon profil</h1>
+      <span style="width:48px;"></span>
+    </div>
+
+    <!-- Photo + email -->
+    <div class="carte" style="text-align:center;">
+      <div id="avatar" class="avatar-grand">…</div>
+      <p id="email" style="margin:14px 0 0; font-weight:500;"></p>
+      <input id="fichier-photo" type="file" accept="image/*" style="display:none;" />
+      <button id="btn-photo" class="btn btn-ligne">Changer la photo de profil</button>
+      <div id="msg-photo"></div>
+    </div>
+
+    <!-- Mot de passe -->
+    <div class="carte">
+      <h2 style="font-size:16px; margin:0 0 4px;">Mot de passe</h2>
+      <input id="nouveau-mdp" class="champ" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />
+      <button id="btn-mdp" class="btn btn-plein">Modifier le mot de passe</button>
+      <div id="msg-mdp"></div>
+    </div>
+
+    <!-- Double authentification -->
+    <div class="carte">
+      <h2 style="font-size:16px; margin:0 0 4px;">Double authentification (2FA)</h2>
+      <small class="aide">Ajoute un code temporaire depuis une app comme Google Authenticator, Authy ou 1Password.</small>
+      <div id="zone-2fa"></div>
+      <div id="msg-2fa"></div>
+    </div>
+
+    <!-- Compte -->
+    <div class="carte">
+      <button id="btn-changer" class="btn btn-ligne">Changer de compte</button>
+      <button id="btn-deconnexion" class="btn btn-danger">Se déconnecter</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+  const $ = id => document.getElementById(id);
+  const msg = (id, txt, type) => { $(id).innerHTML = txt ? '<div class="message '+type+'">'+txt+'</div>' : ""; };
+  let utilisateur = null;
+
+  // ---- Photo de profil ----
+  $("btn-photo").onclick = () => $("fichier-photo").click();
+  $("fichier-photo").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    msg("msg-photo", "Envoi en cours…", "ok");
+    const chemin = utilisateur.id + "/avatar";
+    // 1) On envoie le fichier dans le bucket "avatars" (à créer côté Supabase, public)
+    const up = await sb.storage.from("avatars").upload(chemin, f, { upsert: true });
+    if (up.error){ msg("msg-photo", up.error.message, "err"); return; }
+    // 2) On récupère l'URL publique et on l'enregistre sur le compte
+    const { data } = sb.storage.from("avatars").getPublicUrl(chemin);
+    const url = data.publicUrl + "?t=" + Date.now(); // ?t= évite le cache
+    const maj = await sb.auth.updateUser({ data: { avatar_url: url } });
+    if (maj.error){ msg("msg-photo", maj.error.message, "err"); return; }
+    $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
+    msg("msg-photo", "Photo mise à jour.", "ok");
+  };
+
+  // ---- Mot de passe ----
+  $("btn-mdp").onclick = async () => {
+    const p = $("nouveau-mdp").value;
+    if (p.length < 6){ msg("msg-mdp", "6 caractères minimum.", "err"); return; }
+    const { error } = await sb.auth.updateUser({ password: p });
+    if (error){ msg("msg-mdp", error.message, "err"); return; }
+    $("nouveau-mdp").value = "";
+    msg("msg-mdp", "Mot de passe modifié.", "ok");
+  };
+
+  // ---- 2FA ----
+  async function rafraichir2FA(){
+    const { data } = await sb.auth.mfa.listFactors();
+    const totp = data && data.totp && data.totp.find(f => f.status === "verified");
+    if (totp){
+      $("zone-2fa").innerHTML =
+        '<div class="message ok" style="margin-top:12px;">La 2FA est activée sur ce compte.</div>' +
+        '<button id="btn-off" class="btn btn-danger">Désactiver la 2FA</button>';
+      $("btn-off").onclick = async () => {
+        await sb.auth.mfa.unenroll({ factorId: totp.id });
+        rafraichir2FA(); msg("msg-2fa", "2FA désactivée.", "ok");
+      };
+    } else {
+      $("zone-2fa").innerHTML = '<button id="btn-on" class="btn btn-plein">Activer la 2FA</button>';
+      $("btn-on").onclick = activer2FA;
+    }
+  }
+
+  async function activer2FA(){
+    // On nettoie d'éventuels facteurs non terminés
+    const { data: liste } = await sb.auth.mfa.listFactors();
+    if (liste && liste.all){
+      for (const f of liste.all) if (f.status !== "verified") await sb.auth.mfa.unenroll({ factorId: f.id });
+    }
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp" });
+    if (error){ msg("msg-2fa", error.message, "err"); return; }
+    const fid = data.id;
+    $("zone-2fa").innerHTML =
+      '<div class="qr-box">' +
+        '<p style="font-size:14px; color:var(--muted);">Scanne ce QR code avec ton application :</p>' +
+        '<img src="'+ data.totp.qr_code +'" alt="QR code 2FA" />' +
+        '<div class="secret">'+ data.totp.secret +'</div>' +
+      '</div>' +
+      '<input id="code-verif" class="champ" inputmode="numeric" placeholder="Code à 6 chiffres" />' +
+      '<button id="btn-verif" class="btn btn-plein">Vérifier et activer</button>';
+    $("btn-verif").onclick = async () => {
+      const code = $("code-verif").value.trim();
+      const { data: ch, error: e1 } = await sb.auth.mfa.challenge({ factorId: fid });
+      if (e1){ msg("msg-2fa", e1.message, "err"); return; }
+      const { error: e2 } = await sb.auth.mfa.verify({ factorId: fid, challengeId: ch.id, code });
+      if (e2){ msg("msg-2fa", "Code incorrect, réessaie.", "err"); return; }
+      msg("msg-2fa", "2FA activée !", "ok");
+      rafraichir2FA();
+    };
+  }
+
+  // ---- Changer de compte / déconnexion ----
+  $("btn-changer").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
+  $("btn-deconnexion").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
+
+  // ---- Démarrage ----
+  (async () => {
+    const session = await exigerConnexion();
+    if (!session) return;
+    utilisateur = session.user;
+    $("email").textContent = utilisateur.email || "Compte Google";
+    const url = utilisateur.user_metadata && utilisateur.user_metadata.avatar_url;
+    if (url) $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
+    else $("avatar").textContent = (utilisateur.email || "?").charAt(0).toUpperCase();
+    rafraichir2FA();
+  })();
+  </script>
+</body>
+</html>
