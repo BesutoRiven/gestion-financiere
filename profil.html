@@ -98,6 +98,8 @@
   // ---- Téléphone ----
   $("btn-tel").onclick = async () => {
     const tel = $("tel").value.trim();
+    const formatOk = /^\+?[0-9 .]{9,15}$/.test(tel);
+    if (tel && !formatOk) { msg("msg-tel", "Numéro invalide — chiffres uniquement (ex. +33 6 12 34 56 78).", "err"); return; }
     const { error } = await sb.auth.updateUser({ data: { phone_number: tel } });
     if (error){ msg("msg-tel", messageErreur(error), "err"); return; }
     msg("msg-tel", "Numéro enregistré.", "ok");
