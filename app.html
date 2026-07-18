@@ -127,6 +127,14 @@
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
     .nav-btn.on{color:var(--accent);}
+
+    .ver{position:relative; padding:0 0 16px 20px; border-left:2px solid var(--border); margin-left:6px;}
+    .ver:last-child{border-left-color:transparent; padding-bottom:0;}
+    .ver::before{content:""; position:absolute; left:-7px; top:3px; width:12px; height:12px; border-radius:50%; background:var(--accent);}
+    .ver .num{font-weight:700; color:var(--accent);}
+    .ver .t{font-weight:600; margin-left:6px;}
+    .ver ul{margin:6px 0 0; padding-left:18px;}
+    .ver li{font-size:14px; margin:3px 0;}
   </style>
 </head>
 <body>
@@ -190,6 +198,11 @@
         <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
         <div id="msg-impexp"></div>
       </div>
+      <div class="bloc" id="bloc-admin" style="display:none;">
+        <h2>Administration</h2>
+        <small class="aide">Réservé aux comptes administrateurs — suivi de l'évolution de l'application.</small>
+        <button id="btn-versions" class="btn-plein" style="margin-top:12px;">Historique des versions</button>
+      </div>
     </section>
 
     <!-- ============ CALENDRIER ============ -->
@@ -236,6 +249,14 @@
     <!-- ============ VISIONNEUSE PHOTO ============ -->
     <div id="lb-overlay" class="lb-overlay" style="display:none;"><img id="lb-img" alt="Photo de la dépense" /></div>
 
+    <!-- ============ HISTORIQUE DES VERSIONS (admin) ============ -->
+    <div id="version-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre">Historique des versions</span><button id="ver-fermer" aria-label="Fermer">×</button></div>
+        <div id="version-liste"></div>
+      </div>
+    </div>
+
     <!-- ============ NAVIGATION BASSE ============ -->
     <nav class="navbas">
       <button class="nav-btn on" data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Dépenses</button>
@@ -269,6 +290,22 @@
     "Divers":["Virement banque","Administration","Bouquet de fleur","Remboursement","Urssaf","Investissement"],
   };
   const MOYENS = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
+
+  // Comptes administrateurs (emails). Tu peux en ajouter/retirer ici.
+  // NB : ce fichier est public, donc cet email sera visible dans le dépôt.
+  const ADMINS = ["besutoyunli@gmail.com"];
+
+  // Journal des versions (le plus récent en haut)
+  const CHANGELOG = [
+    {v:"v8", titre:"Ticket de caisse & photos", pts:["Fenêtre « ticket de caisse » pour ajouter une dépense","Sous-catégories (reprises de l'Excel) et moyen de paiement","Photo par dépense (ticket ou souvenir)","Carte du total du jour en haut de la page","Résumé « par catégorie » selon la période choisie"]},
+    {v:"v7", titre:"Confort d'usage", pts:["Confirmation avant de valider une date dans le calendrier","Résumé personnalisable (Tout / Jour / Semaine / Mois / Année)","Ouverture directe sur la saisie du jour"]},
+    {v:"v6", titre:"Tableau de bord & navigation", pts:["Tableau de bord jour / semaine / mois / année","Navigation par jour (hier, aujourd'hui, demain…)","Calendrier maison pour choisir une date","Onglet Réglages","Mise à jour automatique à la réouverture"]},
+    {v:"v5", titre:"Vue mensuelle & Excel", pts:["Vue par mois (les 12 mois)","Modification et suppression des dépenses","Catégories personnalisables (+ Animaux, Voyages)","Import / Export Excel"]},
+    {v:"v4", titre:"Numéro de téléphone", pts:["Vérification du format du numéro"]},
+    {v:"v3", titre:"Comptes affinés", pts:["Messages d'erreur en français","Inscription avec nom d'utilisateur et téléphone","Profil : limite photo, mot de passe actuel requis"]},
+    {v:"v2", titre:"Connexion & profil", pts:["Comptes email/mot de passe et Google","Profil : photo, mot de passe, double authentification","Déconnexion / changer de compte"]},
+    {v:"v1", titre:"Première version", pts:["Saisie rapide des dépenses par catégorie","Application installable (PWA), données sauvegardées"]},
+  ];
   const PALETTE = [{bg:"#faece7",fg:"#712b13"},{bg:"#faeeda",fg:"#854f0b"},{bg:"#e6f1fb",fg:"#0c447c"},{bg:"#eaf3de",fg:"#27500a"},{bg:"#e1f5ee",fg:"#085041"},{bg:"#eeedfe",fg:"#3c3489"},{bg:"#fbeaf0",fg:"#72243e"},{bg:"#fcebeb",fg:"#a32d2d"},{bg:"#f1efe8",fg:"#444441"}];
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
@@ -521,6 +558,19 @@
     sauverDep();sauverCat();$("zone-import").value="";msgIE(n>0?(n+" dépense(s) importée(s)."):"Aucune ligne valide. Vérifie le format.",n>0?"ok":"err");rendreCategories();};
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
+  // ================= Historique des versions (admin) =================
+  function rendreVersions(){
+    const box=$("version-liste"); box.innerHTML="";
+    CHANGELOG.forEach(x=>{
+      const d=document.createElement("div"); d.className="ver";
+      d.innerHTML='<div><span class="num">'+x.v+'</span><span class="t">'+x.titre+'</span></div><ul>'+x.pts.map(p=>'<li>'+p+'</li>').join("")+'</ul>';
+      box.appendChild(d);
+    });
+  }
+  $("btn-versions").onclick=()=>{rendreVersions();$("version-overlay").style.display="flex";};
+  $("ver-fermer").onclick=()=>$("version-overlay").style.display="none";
+  $("version-overlay").onclick=e=>{if(e.target===$("version-overlay"))$("version-overlay").style.display="none";};
+
   // ================= Démarrage =================
   (async()=>{
     const session=await exigerConnexion();if(!session)return;
@@ -536,6 +586,7 @@
     ddPay=initDD("dd-pay",()=>MOYENS,v=>{rPay=v;});
 
     const meta=session.user.user_metadata||{};
+    if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
     document.querySelectorAll(".avatar-slot").forEach(el=>{
       if(meta.avatar_url){const img=document.createElement("img");img.src=meta.avatar_url;img.className="avatar-mini";img.alt="Profil";el.replaceWith(img);}
       else el.textContent=(meta.username||session.user.email||"?").charAt(0).toUpperCase();});
