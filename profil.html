@@ -23,24 +23,38 @@
       <span style="width:48px;"></span>
     </div>
 
-    <!-- Photo + email -->
+    <!-- Photo + identité -->
     <div class="carte" style="text-align:center;">
       <div id="avatar" class="avatar-grand">…</div>
-      <p id="email" style="margin:14px 0 0; font-weight:500;"></p>
+      <p id="pseudo" style="margin:14px 0 0; font-weight:600; font-size:17px;"></p>
+      <p id="email" style="margin:2px 0 0; color:var(--muted); font-size:14px;"></p>
       <input id="fichier-photo" type="file" accept="image/*" style="display:none;" />
       <button id="btn-photo" class="btn btn-ligne">Changer la photo de profil</button>
+      <small class="aide">Image (JPG, PNG…) — 2 Mo maximum.</small>
       <div id="msg-photo"></div>
     </div>
 
-    <!-- Mot de passe -->
+    <!-- Téléphone -->
     <div class="carte">
-      <h2 style="font-size:16px; margin:0 0 4px;">Mot de passe</h2>
-      <input id="nouveau-mdp" class="champ" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />
-      <button id="btn-mdp" class="btn btn-plein">Modifier le mot de passe</button>
+      <h2 style="font-size:16px; margin:0 0 4px;">Numéro de téléphone</h2>
+      <small class="aide">Enregistré comme information de contact (non vérifié par SMS).</small>
+      <input id="tel" class="champ" type="tel" inputmode="tel" placeholder="+33 6 12 34 56 78" />
+      <button id="btn-tel" class="btn btn-ligne">Enregistrer le numéro</button>
+      <div id="msg-tel"></div>
+    </div>
+
+    <!-- Mot de passe -->
+    <div class="carte" id="carte-mdp">
+      <h2 style="font-size:16px; margin:0 0 4px;">Changer le mot de passe</h2>
+      <div id="bloc-mdp">
+        <input id="mdp-actuel" class="champ" type="password" placeholder="Mot de passe actuel" autocomplete="current-password" />
+        <input id="nouveau-mdp" class="champ" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password" />
+        <button id="btn-mdp" class="btn btn-plein">Modifier le mot de passe</button>
+      </div>
       <div id="msg-mdp"></div>
     </div>
 
-    <!-- Double authentification -->
+    <!-- 2FA -->
     <div class="carte">
       <h2 style="font-size:16px; margin:0 0 4px;">Double authentification (2FA)</h2>
       <small class="aide">Ajoute un code temporaire depuis une app comme Google Authenticator, Authy ou 1Password.</small>
@@ -60,33 +74,49 @@
   <script>
   const $ = id => document.getElementById(id);
   const msg = (id, txt, type) => { $(id).innerHTML = txt ? '<div class="message '+type+'">'+txt+'</div>' : ""; };
+  const MAX_PHOTO = 2 * 1024 * 1024; // 2 Mo
   let utilisateur = null;
 
   // ---- Photo de profil ----
   $("btn-photo").onclick = () => $("fichier-photo").click();
   $("fichier-photo").onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
+    if (!f.type.startsWith("image/")){ msg("msg-photo", "Choisis un fichier image.", "err"); return; }
+    if (f.size > MAX_PHOTO){ msg("msg-photo", "Image trop lourde (2 Mo maximum).", "err"); return; }
     msg("msg-photo", "Envoi en cours…", "ok");
     const chemin = utilisateur.id + "/avatar";
-    // 1) On envoie le fichier dans le bucket "avatars" (à créer côté Supabase, public)
     const up = await sb.storage.from("avatars").upload(chemin, f, { upsert: true });
-    if (up.error){ msg("msg-photo", up.error.message, "err"); return; }
-    // 2) On récupère l'URL publique et on l'enregistre sur le compte
+    if (up.error){ msg("msg-photo", messageErreur(up.error), "err"); return; }
     const { data } = sb.storage.from("avatars").getPublicUrl(chemin);
-    const url = data.publicUrl + "?t=" + Date.now(); // ?t= évite le cache
+    const url = data.publicUrl + "?t=" + Date.now();
     const maj = await sb.auth.updateUser({ data: { avatar_url: url } });
-    if (maj.error){ msg("msg-photo", maj.error.message, "err"); return; }
+    if (maj.error){ msg("msg-photo", messageErreur(maj.error), "err"); return; }
     $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
     msg("msg-photo", "Photo mise à jour.", "ok");
   };
 
-  // ---- Mot de passe ----
+  // ---- Téléphone ----
+  $("btn-tel").onclick = async () => {
+    const tel = $("tel").value.trim();
+    const { error } = await sb.auth.updateUser({ data: { phone_number: tel } });
+    if (error){ msg("msg-tel", messageErreur(error), "err"); return; }
+    msg("msg-tel", "Numéro enregistré.", "ok");
+  };
+
+  // ---- Mot de passe (vérifie le mot de passe actuel d'abord) ----
   $("btn-mdp").onclick = async () => {
-    const p = $("nouveau-mdp").value;
-    if (p.length < 6){ msg("msg-mdp", "6 caractères minimum.", "err"); return; }
-    const { error } = await sb.auth.updateUser({ password: p });
-    if (error){ msg("msg-mdp", error.message, "err"); return; }
-    $("nouveau-mdp").value = "";
+    const actuel = $("mdp-actuel").value;
+    const nouveau = $("nouveau-mdp").value;
+    if (!actuel){ msg("msg-mdp", "Saisis ton mot de passe actuel.", "err"); return; }
+    if (nouveau.length < 6){ msg("msg-mdp", "Le nouveau mot de passe doit faire au moins 6 caractères.", "err"); return; }
+    msg("msg-mdp", "Vérification…", "ok");
+    // 1) On vérifie le mot de passe actuel en se ré-authentifiant
+    const { error: eVerif } = await sb.auth.signInWithPassword({ email: utilisateur.email, password: actuel });
+    if (eVerif){ msg("msg-mdp", "Mot de passe actuel incorrect.", "err"); return; }
+    // 2) On applique le nouveau
+    const { error } = await sb.auth.updateUser({ password: nouveau });
+    if (error){ msg("msg-mdp", messageErreur(error), "err"); return; }
+    $("mdp-actuel").value = ""; $("nouveau-mdp").value = "";
     msg("msg-mdp", "Mot de passe modifié.", "ok");
   };
 
@@ -98,10 +128,7 @@
       $("zone-2fa").innerHTML =
         '<div class="message ok" style="margin-top:12px;">La 2FA est activée sur ce compte.</div>' +
         '<button id="btn-off" class="btn btn-danger">Désactiver la 2FA</button>';
-      $("btn-off").onclick = async () => {
-        await sb.auth.mfa.unenroll({ factorId: totp.id });
-        rafraichir2FA(); msg("msg-2fa", "2FA désactivée.", "ok");
-      };
+      $("btn-off").onclick = async () => { await sb.auth.mfa.unenroll({ factorId: totp.id }); rafraichir2FA(); msg("msg-2fa", "2FA désactivée.", "ok"); };
     } else {
       $("zone-2fa").innerHTML = '<button id="btn-on" class="btn btn-plein">Activer la 2FA</button>';
       $("btn-on").onclick = activer2FA;
@@ -109,34 +136,27 @@
   }
 
   async function activer2FA(){
-    // On nettoie d'éventuels facteurs non terminés
     const { data: liste } = await sb.auth.mfa.listFactors();
-    if (liste && liste.all){
-      for (const f of liste.all) if (f.status !== "verified") await sb.auth.mfa.unenroll({ factorId: f.id });
-    }
+    if (liste && liste.all) for (const f of liste.all) if (f.status !== "verified") await sb.auth.mfa.unenroll({ factorId: f.id });
     const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp" });
-    if (error){ msg("msg-2fa", error.message, "err"); return; }
+    if (error){ msg("msg-2fa", messageErreur(error), "err"); return; }
     const fid = data.id;
     $("zone-2fa").innerHTML =
-      '<div class="qr-box">' +
-        '<p style="font-size:14px; color:var(--muted);">Scanne ce QR code avec ton application :</p>' +
-        '<img src="'+ data.totp.qr_code +'" alt="QR code 2FA" />' +
-        '<div class="secret">'+ data.totp.secret +'</div>' +
-      '</div>' +
+      '<div class="qr-box"><p style="font-size:14px; color:var(--muted);">Scanne ce QR code avec ton application :</p>' +
+      '<img src="'+ data.totp.qr_code +'" alt="QR code 2FA" /><div class="secret">'+ data.totp.secret +'</div></div>' +
       '<input id="code-verif" class="champ" inputmode="numeric" placeholder="Code à 6 chiffres" />' +
       '<button id="btn-verif" class="btn btn-plein">Vérifier et activer</button>';
     $("btn-verif").onclick = async () => {
       const code = $("code-verif").value.trim();
       const { data: ch, error: e1 } = await sb.auth.mfa.challenge({ factorId: fid });
-      if (e1){ msg("msg-2fa", e1.message, "err"); return; }
+      if (e1){ msg("msg-2fa", messageErreur(e1), "err"); return; }
       const { error: e2 } = await sb.auth.mfa.verify({ factorId: fid, challengeId: ch.id, code });
       if (e2){ msg("msg-2fa", "Code incorrect, réessaie.", "err"); return; }
-      msg("msg-2fa", "2FA activée !", "ok");
-      rafraichir2FA();
+      msg("msg-2fa", "2FA activée !", "ok"); rafraichir2FA();
     };
   }
 
-  // ---- Changer de compte / déconnexion ----
+  // ---- Compte ----
   $("btn-changer").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
   $("btn-deconnexion").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
 
@@ -145,10 +165,21 @@
     const session = await exigerConnexion();
     if (!session) return;
     utilisateur = session.user;
+    const meta = utilisateur.user_metadata || {};
+    $("pseudo").textContent = meta.username || "Mon compte";
     $("email").textContent = utilisateur.email || "Compte Google";
-    const url = utilisateur.user_metadata && utilisateur.user_metadata.avatar_url;
+    if (meta.phone_number) $("tel").value = meta.phone_number;
+
+    const url = meta.avatar_url;
     if (url) $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
-    else $("avatar").textContent = (utilisateur.email || "?").charAt(0).toUpperCase();
+    else $("avatar").textContent = (meta.username || utilisateur.email || "?").charAt(0).toUpperCase();
+
+    // Comptes Google : pas de mot de passe à gérer ici
+    const fournisseurs = (utilisateur.app_metadata && utilisateur.app_metadata.providers) || [];
+    if (!fournisseurs.includes("email")) {
+      $("bloc-mdp").innerHTML = '<small class="aide">Ce compte se connecte avec Google : le mot de passe est géré directement par Google.</small>';
+    }
+
     rafraichir2FA();
   })();
   </script>

@@ -12,7 +12,6 @@
 <body>
   <div class="app">
 
-    <!-- Bandeau d'accueil -->
     <div style="text-align:center; padding:48px 24px 8px;">
       <img src="icon-192.png" alt="" style="width:72px; height:72px; border-radius:18px;" />
       <h1 style="font-size:26px; margin:18px 0 6px;">Gestion financière</h1>
@@ -22,13 +21,22 @@
     <div class="carte">
       <h2 id="titre-form" style="font-size:18px; margin:0 0 4px;">Se connecter</h2>
 
+      <!-- Champs visibles uniquement à l'inscription -->
+      <div id="zone-inscription" style="display:none;">
+        <label class="lbl" for="pseudo">Nom d'utilisateur</label>
+        <input id="pseudo" class="champ" type="text" placeholder="ex. thomas_w" autocomplete="username" />
+        <small class="aide">3 à 20 caractères : lettres, chiffres, - et _ .</small>
+
+        <label class="lbl" for="tel">Téléphone <span style="color:var(--muted);">(facultatif)</span></label>
+        <input id="tel" class="champ" type="tel" inputmode="tel" placeholder="+33 6 12 34 56 78" autocomplete="tel" />
+      </div>
+
       <label class="lbl" for="email">Email</label>
       <input id="email" class="champ" type="email" inputmode="email" placeholder="ton@email.com" autocomplete="email" />
 
       <label class="lbl" for="mdp">Mot de passe</label>
       <input id="mdp" class="champ" type="password" placeholder="••••••••" autocomplete="current-password" />
 
-      <!-- Champ code 2FA, caché tant qu'il n'est pas nécessaire -->
       <div id="zone-2fa" style="display:none;">
         <label class="lbl" for="code2fa">Code de l'application d'authentification</label>
         <input id="code2fa" class="champ" type="text" inputmode="numeric" placeholder="123456" autocomplete="one-time-code" />
@@ -56,61 +64,57 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script>
-  let mode = "connexion"; // ou "inscription"
+  let mode = "connexion";
   const $ = id => document.getElementById(id);
+  const afficherMessage = (txt, type) => { $("message").innerHTML = txt ? '<div class="message '+type+'">'+txt+'</div>' : ""; };
 
-  function afficherMessage(txt, type){
-    $("message").innerHTML = txt ? '<div class="message ' + type + '">' + txt + '</div>' : "";
-  }
-
-  // Si déjà connecté (et 2FA validée), on va directement dans l'app.
   (async () => {
     const { data } = await sb.auth.getSession();
     if (data.session) {
       const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (!(aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2")) {
-        window.location.href = "app.html";
-      }
+      if (!(aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2")) window.location.href = "app.html";
     }
   })();
 
-  // Basculer entre connexion et inscription
   $("bascule").onclick = () => {
     mode = mode === "connexion" ? "inscription" : "connexion";
     const inscr = mode === "inscription";
     $("titre-form").textContent = inscr ? "Créer un compte" : "Se connecter";
     $("btn-principal").textContent = inscr ? "Créer mon compte" : "Se connecter";
     $("bascule").textContent = inscr ? "Déjà un compte ? Se connecter" : "Pas encore de compte ? Créer un compte";
+    $("zone-inscription").style.display = inscr ? "block" : "none";
     $("mdp").setAttribute("autocomplete", inscr ? "new-password" : "current-password");
     $("zone-2fa").style.display = "none";
     afficherMessage("", "");
   };
 
-  // Bouton principal : connexion OU inscription OU validation du code 2FA
   $("btn-principal").onclick = async () => {
+    if ($("zone-2fa").style.display !== "none") return await verifier2FA();
+
     const email = $("email").value.trim();
     const mdp = $("mdp").value;
-
-    // Cas 1 : on attend le code 2FA
-    if ($("zone-2fa").style.display !== "none") {
-      return await verifier2FA();
-    }
-
     if (!email || !mdp){ afficherMessage("Renseigne ton email et ton mot de passe.", "err"); return; }
-    afficherMessage("Un instant…", "ok");
 
     if (mode === "inscription") {
-      const { error } = await sb.auth.signUp({ email, password: mdp });
-      if (error){ afficherMessage(error.message, "err"); return; }
-      afficherMessage("Compte créé. Vérifie tes emails pour confirmer, puis connecte-toi.", "ok");
+      const pseudo = $("pseudo").value.trim();
+      const tel = $("tel").value.trim();
+      if (!/^[A-Za-z0-9_\-]{3,20}$/.test(pseudo)){
+        afficherMessage("Nom d'utilisateur invalide (3 à 20 caractères : lettres, chiffres, - et _).", "err"); return;
+      }
+      afficherMessage("Un instant…", "ok");
+      const { error } = await sb.auth.signUp({
+        email, password: mdp,
+        options: { data: { username: pseudo, phone_number: tel } }
+      });
+      if (error){ afficherMessage(messageErreur(error), "err"); return; }
+      afficherMessage("Compte créé ! Vérifie tes emails pour confirmer, puis connecte-toi.", "ok");
       return;
     }
 
-    // Connexion classique
+    afficherMessage("Un instant…", "ok");
     const { error } = await sb.auth.signInWithPassword({ email, password: mdp });
-    if (error){ afficherMessage(error.message, "err"); return; }
+    if (error){ afficherMessage(messageErreur(error), "err"); return; }
 
-    // Ce compte a-t-il la 2FA activée ?
     const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
     if (aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2") {
       $("zone-2fa").style.display = "block";
@@ -121,26 +125,24 @@
     window.location.href = "app.html";
   };
 
-  // Vérifie le code TOTP au moment de la connexion
   async function verifier2FA(){
     const code = $("code2fa").value.trim();
     const { data: facteurs } = await sb.auth.mfa.listFactors();
     const totp = facteurs && facteurs.totp && facteurs.totp[0];
     if (!totp){ afficherMessage("Aucun facteur 2FA trouvé.", "err"); return; }
     const { data: ch, error: e1 } = await sb.auth.mfa.challenge({ factorId: totp.id });
-    if (e1){ afficherMessage(e1.message, "err"); return; }
+    if (e1){ afficherMessage(messageErreur(e1), "err"); return; }
     const { error: e2 } = await sb.auth.mfa.verify({ factorId: totp.id, challengeId: ch.id, code });
     if (e2){ afficherMessage("Code incorrect, réessaie.", "err"); return; }
     window.location.href = "app.html";
   }
 
-  // Connexion avec Google
   $("btn-google").onclick = async () => {
     const { error } = await sb.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: new URL("app.html", window.location.href).href }
     });
-    if (error) afficherMessage(error.message, "err");
+    if (error) afficherMessage(messageErreur(error), "err");
   };
 
   $("mdp").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-principal").click(); });

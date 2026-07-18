@@ -18,6 +18,23 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Création du client Supabase (utilisé par toutes les pages).
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Traduit les messages d'erreur techniques de Supabase en français clair.
+function messageErreur(e) {
+  const m = (e && e.message) || "";
+  const table = {
+    "Invalid login credentials": "Email ou mot de passe incorrect.",
+    "Email not confirmed": "Ton email n'est pas encore confirmé. Vérifie ta boîte mail.",
+    "User already registered": "Un compte existe déjà avec cet email.",
+    "Password should be at least 6 characters": "Le mot de passe doit faire au moins 6 caractères.",
+    "Unable to validate email address: invalid format": "Adresse email invalide.",
+    "Signups not allowed for this instance": "Les inscriptions sont désactivées.",
+    "Email rate limit exceeded": "Trop de tentatives, réessaie dans quelques minutes.",
+    "For security purposes, you can only request this after 60 seconds.": "Patiente une minute avant de réessayer.",
+    "Invalid TOTP code entered": "Code incorrect, réessaie.",
+  };
+  return table[m] || m || "Une erreur est survenue.";
+}
+
 // Petit garde-fou : renvoie vers la page de connexion si non connecté.
 async function exigerConnexion() {
   const { data } = await sb.auth.getSession();

@@ -1,6 +1,6 @@
 // IMPORTANT : à chaque modification du site, incrémente ce numéro (v2 -> v3...)
 // pour forcer les téléphones à récupérer la nouvelle version.
-const CACHE = "gf-v2";
+const CACHE = "gf-v3";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
