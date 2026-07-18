@@ -135,6 +135,13 @@
     .ver .t{font-weight:600; margin-left:6px;}
     .ver ul{margin:6px 0 0; padding-left:18px;}
     .ver li{font-size:14px; margin:3px 0;}
+
+    .tb-actions{display:flex; align-items:center; gap:14px;}
+    .tb-amis{border:none; background:transparent; cursor:pointer; color:var(--text); display:flex; padding:0;}
+    .tb-amis svg{width:24px; height:24px;}
+    .amis-lbl{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin:0 0 6px;}
+    .amis-pseudo{font-size:22px; font-weight:700; margin:0;}
+    .amis-pseudo .tag{color:var(--muted); font-weight:600;}
   </style>
 </head>
 <body>
@@ -142,7 +149,7 @@
 
     <!-- ============ DEPENSES (page d'accueil) ============ -->
     <section id="vue-depenses" class="vue">
-      <div class="topbar"><h1>Dépenses</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+      <div class="topbar"><h1>Dépenses</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
       <div class="jour-nav">
         <button class="fleche" id="jour-moins" aria-label="Jour précédent">‹</button>
@@ -168,7 +175,7 @@
 
     <!-- ============ RESUME ============ -->
     <section id="vue-accueil" class="vue" style="display:none;">
-      <div class="topbar"><h1>Résumé</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+      <div class="topbar"><h1>Résumé</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
       <div class="perso" id="perso-chips"></div>
       <div id="kpi-zone"></div>
       <div class="bloc">
@@ -180,7 +187,7 @@
 
     <!-- ============ REGLAGES ============ -->
     <section id="vue-reglages" class="vue" style="display:none;">
-      <div class="topbar"><h1>Réglages</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
+      <div class="topbar"><h1>Réglages</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
       <div class="bloc">
         <h2>Gérer les catégories</h2>
         <div id="cats-liste"></div>
@@ -254,6 +261,33 @@
       <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
         <div class="cal-tete"><span class="titre">Historique des versions</span><button id="ver-fermer" aria-label="Fermer">×</button></div>
         <div id="version-liste"></div>
+      </div>
+    </div>
+
+    <!-- ============ AMIS ============ -->
+    <div id="amis-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre">Amis</span><button id="amis-fermer" aria-label="Fermer">×</button></div>
+
+        <p class="amis-lbl">Mon identifiant</p>
+        <p class="amis-pseudo" id="amis-mon-id">…</p>
+        <button id="amis-modifier" class="btn-ligne" style="height:40px; margin-top:10px;">Modifier mon pseudo</button>
+        <div id="amis-edit" style="display:none;">
+          <input id="amis-input-pseudo" class="champ" type="text" placeholder="Nouveau pseudo" />
+          <button id="amis-sauver" class="btn-plein" style="height:42px;">Enregistrer</button>
+        </div>
+        <div id="amis-msg"></div>
+
+        <hr class="sep" />
+
+        <p class="amis-lbl">Ajouter un ami</p>
+        <input id="amis-recherche" class="champ" type="text" placeholder="Pseudo#0000 ou numéro de téléphone" />
+        <button id="amis-ajouter" class="btn-plein" style="height:42px;">Ajouter</button>
+
+        <hr class="sep" />
+
+        <p class="amis-lbl">Mes amis</p>
+        <div id="amis-liste"><p class="vide" style="padding:12px 0;">Aucun ami pour l'instant.</p></div>
       </div>
     </div>
 
@@ -571,6 +605,28 @@
   $("ver-fermer").onclick=()=>$("version-overlay").style.display="none";
   $("version-overlay").onclick=e=>{if(e.target===$("version-overlay"))$("version-overlay").style.display="none";};
 
+  // ================= Amis / pseudo =================
+  let monPseudo="", monTag="";
+  function rendreAmisId(){ $("amis-mon-id").innerHTML = monPseudo + '<span class="tag">#'+monTag+'</span>'; }
+  function ouvrirAmis(){ rendreAmisId(); $("amis-edit").style.display="none"; $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
+  document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
+  $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
+  $("amis-overlay").onclick=e=>{if(e.target===$("amis-overlay"))$("amis-overlay").style.display="none";};
+  $("amis-modifier").onclick=()=>{ $("amis-input-pseudo").value=monPseudo; $("amis-edit").style.display="block"; $("amis-input-pseudo").focus(); };
+  $("amis-sauver").onclick=async()=>{
+    const p=$("amis-input-pseudo").value.trim();
+    if(p.length<2){ $("amis-msg").innerHTML='<div class="message err" style="margin-top:8px;">Pseudo trop court (2 caractères minimum).</div>'; return; }
+    const { error }=await sb.auth.updateUser({ data:{ username:p } });
+    if(error){ $("amis-msg").innerHTML='<div class="message err" style="margin-top:8px;">'+messageErreur(error)+'</div>'; return; }
+    monPseudo=p; rendreAmisId(); $("amis-edit").style.display="none";
+    $("amis-msg").innerHTML='<div class="message ok" style="margin-top:8px;">Pseudo mis à jour.</div>';
+    // met à jour l'initiale de l'avatar si pas de photo
+    document.querySelectorAll(".avatar-slot").forEach(el=>{ if(el.tagName==="SPAN") el.textContent=p.charAt(0).toUpperCase(); });
+  };
+  $("amis-ajouter").onclick=()=>{
+    $("amis-msg").innerHTML='<div class="message ok" style="margin-top:8px;">L\'ajout d\'amis arrivera avec la base de données partagée (prochaine grande étape). Ton identifiant est déjà prêt à être partagé.</div>';
+  };
+
   // ================= Démarrage =================
   (async()=>{
     const session=await exigerConnexion();if(!session)return;
@@ -587,6 +643,10 @@
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
+    // Pseudo + identifiant à 4 chiffres (façon Discord)
+    monPseudo = meta.username || (session.user.email ? session.user.email.split("@")[0] : "Utilisateur");
+    monTag = meta.tag;
+    if(!monTag){ monTag = String(Math.floor(Math.random()*10000)).padStart(4,"0"); sb.auth.updateUser({ data:{ tag:monTag } }).catch(()=>{}); }
     document.querySelectorAll(".avatar-slot").forEach(el=>{
       if(meta.avatar_url){const img=document.createElement("img");img.src=meta.avatar_url;img.className="avatar-mini";img.alt="Profil";el.replaceWith(img);}
       else el.textContent=(meta.username||session.user.email||"?").charAt(0).toUpperCase();});
