@@ -86,6 +86,15 @@
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
     .nav-btn.on{color:var(--accent);}
+
+    .perso{display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:12px 12px 0;}
+    .perso .lbl-p{font-size:12px; color:var(--muted); margin-right:2px;}
+    .perso .pchip{border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:13px; padding:6px 12px; border-radius:16px; cursor:pointer;}
+    .perso .pchip.on{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;}
+    .kpi-grand{margin:12px 12px 0; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 20px; text-align:center;}
+    .kpi-grand .lbl{font-size:14px; color:var(--muted); margin:0;}
+    .kpi-grand .val{font-size:42px; font-weight:700; margin:8px 0 0; font-variant-numeric:tabular-nums;}
+    .cal-confirmer{width:100%; margin-top:12px; height:44px; border:none; background:var(--accent); color:#fff; border-radius:10px; cursor:pointer; font-weight:600; font-size:15px;}
   </style>
 </head>
 <body>
@@ -94,16 +103,12 @@
     <!-- ================= TABLEAU DE BORD ================= -->
     <section id="vue-accueil" class="vue">
       <div class="topbar"><h1>Tableau de bord</h1><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div>
-      <div class="kpis">
-        <div class="kpi"><p class="lbl">Aujourd'hui</p><p class="val" id="kpi-jour">0,00 €</p></div>
-        <div class="kpi"><p class="lbl">Cette semaine</p><p class="val" id="kpi-sem">0,00 €</p></div>
-        <div class="kpi"><p class="lbl">Ce mois</p><p class="val" id="kpi-mois">0,00 €</p></div>
-        <div class="kpi"><p class="lbl">Cette année</p><p class="val" id="kpi-an">0,00 €</p></div>
-      </div>
+      <div class="perso" id="perso-chips"></div>
+      <div id="kpi-zone"></div>
       <div class="bloc">
-        <h2>Ce mois, par catégorie</h2>
+        <h2>Aujourd'hui, par catégorie</h2>
         <div id="repartition"></div>
-        <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense ce mois-ci.</p>
+        <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense aujourd'hui.</p>
       </div>
     </section>
 
@@ -179,19 +184,20 @@
         </div>
         <div class="cal-grille" id="cal-jsem"></div>
         <div class="cal-grille" id="cal-grille" style="margin-top:4px;"></div>
+        <button class="cal-confirmer" id="cal-confirmer">Confirmer</button>
         <button class="cal-fermer" id="cal-fermer">Fermer</button>
       </div>
     </div>
 
     <!-- ================= NAVIGATION BASSE ================= -->
     <nav class="navbas">
-      <button class="nav-btn on" data-vue="accueil">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-        Accueil
-      </button>
-      <button class="nav-btn" data-vue="depenses">
+      <button class="nav-btn on" data-vue="depenses">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
         Dépenses
+      </button>
+      <button class="nav-btn" data-vue="accueil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        Résumé
       </button>
       <button class="nav-btn" data-vue="reglages">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>
@@ -220,8 +226,10 @@
   let uid, cleDep, cleCat;
   let depenses = [], categories = [];
   let selDate = new Date();      // jour sélectionné (vue Dépenses)
-  let calY, calM;                // mois affiché dans le calendrier
+  let calY, calM, calSel;        // calendrier : mois affiché + jour provisoire
   let catChoisie = null, editionId = null;
+  let dashMode = "tout";         // affichage du résumé
+  let cleDash;
 
   // ================= Utilitaires =================
   const fmt = n => n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
@@ -246,7 +254,6 @@
   function rendreAccueil(){
     const auj = new Date();
     const isoAuj = iso(auj);
-    // Semaine (lundi -> dimanche)
     const lundi = jourZero(auj); lundi.setDate(lundi.getDate() - ((auj.getDay()+6)%7));
     const dim = new Date(lundi); dim.setDate(dim.getDate()+6);
     const isoLundi = iso(lundi), isoDim = iso(dim);
@@ -255,14 +262,24 @@
     let tJ=0,tS=0,tM=0,tA=0; const parCat={};
     depenses.forEach(d=>{
       const dd = depDate(d); if(!dd) return;
-      if(dd===isoAuj) tJ+=d.montant;
+      if(dd===isoAuj){ tJ+=d.montant; parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant; }
       if(dd>=isoLundi && dd<=isoDim) tS+=d.montant;
-      if(dd.slice(0,7)===moisAuj){ tM+=d.montant; parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant; }
+      if(dd.slice(0,7)===moisAuj) tM+=d.montant;
       if(dd.slice(0,4)===anAuj) tA+=d.montant;
     });
-    $("kpi-jour").textContent=fmt(tJ); $("kpi-sem").textContent=fmt(tS);
-    $("kpi-mois").textContent=fmt(tM); $("kpi-an").textContent=fmt(tA);
 
+    // Affichage des KPI selon le mode choisi
+    const cfg = { jour:["Aujourd'hui",tJ], semaine:["Cette semaine",tS], mois:["Ce mois",tM], annee:["Cette année",tA] };
+    const zone = $("kpi-zone");
+    if(dashMode==="tout"){
+      zone.innerHTML = '<div class="kpis">' + kpiCard("Aujourd'hui",tJ) + kpiCard("Cette semaine",tS) + kpiCard("Ce mois",tM) + kpiCard("Cette année",tA) + '</div>';
+    } else {
+      const c = cfg[dashMode] || cfg.jour;
+      zone.innerHTML = '<div class="kpi-grand"><p class="lbl">'+c[0]+'</p><p class="val">'+fmt(c[1])+'</p></div>';
+    }
+    rendrePersoChips();
+
+    // Détail d'aujourd'hui, par catégorie
     const box=$("repartition"); box.innerHTML="";
     const noms=Object.keys(parCat).sort((a,b)=>parCat[b]-parCat[a]);
     $("rep-vide").style.display = noms.length?"none":"block";
@@ -271,6 +288,16 @@
       const l=document.createElement("div"); l.className="rep-ligne";
       l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+n+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
       box.appendChild(l);
+    });
+  }
+  function kpiCard(lbl,val){ return '<div class="kpi"><p class="lbl">'+lbl+'</p><p class="val">'+fmt(val)+'</p></div>'; }
+  function rendrePersoChips(){
+    const modes=[["tout","Tout"],["jour","Jour"],["semaine","Semaine"],["mois","Mois"],["annee","Année"]];
+    const c=$("perso-chips"); c.innerHTML='<span class="lbl-p">Affichage :</span>';
+    modes.forEach(m=>{
+      const b=document.createElement("button"); b.className="pchip"+(dashMode===m[0]?" on":""); b.textContent=m[1];
+      b.onclick=()=>{ dashMode=m[0]; localStorage.setItem(cleDash,dashMode); rendreAccueil(); };
+      c.appendChild(b);
     });
   }
 
@@ -289,11 +316,12 @@
   $("jour-plus").onclick  = () => { selDate.setDate(selDate.getDate()+1); selDate=new Date(selDate); annulerEdition(); rendreDepenses(); };
 
   // ================= Calendrier =================
-  $("btn-cal").onclick = () => { calY=selDate.getFullYear(); calM=selDate.getMonth(); rendreCal(); $("cal-overlay").style.display="flex"; };
+  $("btn-cal").onclick = () => { calSel=new Date(selDate); calY=selDate.getFullYear(); calM=selDate.getMonth(); rendreCal(); $("cal-overlay").style.display="flex"; };
   $("cal-fermer").onclick = () => $("cal-overlay").style.display="none";
   $("cal-overlay").onclick = e => { if(e.target===$("cal-overlay")) $("cal-overlay").style.display="none"; };
   $("cal-moins").onclick = () => { calM--; if(calM<0){calM=11;calY--;} rendreCal(); };
   $("cal-plus").onclick  = () => { calM++; if(calM>11){calM=0;calY++;} rendreCal(); };
+  $("cal-confirmer").onclick = () => { selDate=new Date(calSel); $("cal-overlay").style.display="none"; annulerEdition(); rendreDepenses(); };
   function rendreCal(){
     $("cal-titre").textContent = MOIS_L[calM]+" "+calY;
     const js=$("cal-jsem"); js.innerHTML=""; JSEM.forEach(j=>{ const s=document.createElement("div"); s.className="cal-jsem"; s.textContent=j; js.appendChild(s); });
@@ -302,15 +330,17 @@
     const decalage=(premier.getDay()+6)%7;
     const nbJours=new Date(calY,calM+1,0).getDate();
     for(let i=0;i<decalage;i++){ const v=document.createElement("div"); g.appendChild(v); }
-    const isoAuj=iso(new Date()), isoSel=iso(selDate);
+    const isoAuj=iso(new Date()), isoSel=iso(calSel);
     for(let j=1;j<=nbJours;j++){
       const b=document.createElement("button"); b.className="cal-jour"; b.textContent=j;
       const isoJ=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(j).padStart(2,"0");
       if(isoJ===isoAuj) b.classList.add("auj");
       if(isoJ===isoSel) b.classList.add("sel");
-      b.onclick=()=>{ selDate=new Date(calY,calM,j); $("cal-overlay").style.display="none"; annulerEdition(); rendreDepenses(); };
+      b.onclick=()=>{ calSel=new Date(calY,calM,j); rendreCal(); };
       g.appendChild(b);
     }
+    // Le bouton Confirmer rappelle la date provisoirement choisie
+    $("cal-confirmer").textContent = "Confirmer le " + calSel.toLocaleDateString("fr-FR",{day:"numeric",month:"long"});
   }
 
   // ================= Saisie / liste (vue Dépenses) =================
@@ -448,10 +478,11 @@
   // ================= Démarrage =================
   (async () => {
     const session=await exigerConnexion(); if(!session) return;
-    uid=session.user.id; cleDep="depenses_"+uid; cleCat="categories_"+uid;
+    uid=session.user.id; cleDep="depenses_"+uid; cleCat="categories_"+uid; cleDash="dash_"+uid;
     depenses=JSON.parse(localStorage.getItem(cleDep)||"[]");
     categories=JSON.parse(localStorage.getItem(cleCat)||"null")||CATS_DEFAUT.slice();
     if(!localStorage.getItem(cleCat)) sauverCat();
+    dashMode=localStorage.getItem(cleDash)||"tout";
     catChoisie=categories[0]?categories[0].nom:null;
 
     const meta=session.user.user_metadata||{};
@@ -462,7 +493,7 @@
     });
 
     rendreDepenses(); rendreCategories(); rendreAccueil();
-    changerVue("accueil");
+    changerVue("depenses");
   })();
 
   // ================= Mise à jour automatique (service worker) =================
