@@ -34,6 +34,16 @@
       <div id="msg-photo"></div>
     </div>
 
+    <!-- Pseudo -->
+    <div class="carte">
+      <h2 style="font-size:16px; margin:0 0 4px;">Pseudo</h2>
+      <small class="aide">Ton identifiant public. Le nom n'a pas besoin d'être unique : les 4 chiffres après le # le rendent unique.</small>
+      <p id="pseudo-actuel" style="font-size:22px; font-weight:700; margin:10px 0 12px;">…</p>
+      <input id="pseudo-input" class="champ" type="text" placeholder="Nouveau pseudo" />
+      <button id="pseudo-save" class="btn btn-plein">Enregistrer le pseudo</button>
+      <div id="msg-pseudo"></div>
+    </div>
+
     <!-- Téléphone -->
     <div class="carte">
       <h2 style="font-size:16px; margin:0 0 4px;">Numéro de téléphone</h2>
@@ -105,6 +115,19 @@
     msg("msg-tel", "Numéro enregistré.", "ok");
   };
 
+  // ---- Pseudo ----
+  $("pseudo-save").onclick = async () => {
+    const p = $("pseudo-input").value.trim();
+    if (p.length < 2){ msg("msg-pseudo", "Pseudo trop court (2 caractères minimum).", "err"); return; }
+    const { error } = await sb.auth.updateUser({ data: { username: p } });
+    if (error){ msg("msg-pseudo", messageErreur(error), "err"); return; }
+    const meta = (utilisateur.user_metadata || {});
+    meta.username = p;
+    $("pseudo-actuel").innerHTML = p + '<span style="color:var(--muted); font-weight:600;">#' + (meta.tag || "0000") + '</span>';
+    $("pseudo-input").value = "";
+    msg("msg-pseudo", "Pseudo mis à jour.", "ok");
+  };
+
   // ---- Mot de passe (vérifie le mot de passe actuel d'abord) ----
   $("btn-mdp").onclick = async () => {
     const actuel = $("mdp-actuel").value;
@@ -171,6 +194,12 @@
     $("pseudo").textContent = meta.username || "Mon compte";
     $("email").textContent = utilisateur.email || "Compte Google";
     if (meta.phone_number) $("tel").value = meta.phone_number;
+
+    // Pseudo + identifiant à 4 chiffres
+    let tag = meta.tag;
+    if (!tag){ tag = String(Math.floor(Math.random()*10000)).padStart(4,"0"); sb.auth.updateUser({ data:{ tag } }).catch(()=>{}); meta.tag = tag; }
+    const pseudoNom = meta.username || (utilisateur.email ? utilisateur.email.split("@")[0] : "Utilisateur");
+    $("pseudo-actuel").innerHTML = pseudoNom + '<span style="color:var(--muted); font-weight:600;">#' + tag + '</span>';
 
     const url = meta.avatar_url;
     if (url) $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';

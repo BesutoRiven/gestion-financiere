@@ -128,13 +128,12 @@
     .nav-btn svg{width:22px; height:22px;}
     .nav-btn.on{color:var(--accent);}
 
-    .ver{position:relative; padding:0 0 16px 20px; border-left:2px solid var(--border); margin-left:6px;}
-    .ver:last-child{border-left-color:transparent; padding-bottom:0;}
-    .ver::before{content:""; position:absolute; left:-7px; top:3px; width:12px; height:12px; border-radius:50%; background:var(--accent);}
-    .ver .num{font-weight:700; color:var(--accent);}
-    .ver .t{font-weight:600; margin-left:6px;}
-    .ver ul{margin:6px 0 0; padding-left:18px;}
-    .ver li{font-size:14px; margin:3px 0;}
+    .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+    .vcard-tete{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+    .vcard .vtag{font-family:monospace; font-weight:700; color:var(--accent);}
+    .vcard .ven{font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:10px; font-weight:600;}
+    .vcard .vdate{margin-left:auto; font-size:12px; color:var(--muted);}
+    .vcard .vdesc{font-size:14px; line-height:1.4;}
 
     .tb-actions{display:flex; align-items:center; gap:14px;}
     .tb-amis{border:none; background:transparent; cursor:pointer; color:var(--text); display:flex; padding:0;}
@@ -196,6 +195,14 @@
           <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
         </div>
         <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ».</small>
+        <hr class="sep" />
+        <h2 style="font-size:15px; margin:0 0 8px;">Sous-catégories</h2>
+        <div class="dd" id="dd-cat-sous"><button type="button" class="dd-btn vide">Choisir une catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
+        <div id="sous-liste" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
+        <div class="cat-ligne" style="margin-top:8px;">
+          <input id="nouvelle-sous" type="text" placeholder="Nouvelle sous-catégorie" />
+          <button id="ajouter-sous" style="color:var(--accent); font-size:22px;">＋</button>
+        </div>
       </div>
       <div class="bloc impexp">
         <h2>Import / Export Excel</h2>
@@ -271,18 +278,14 @@
 
         <p class="amis-lbl">Mon identifiant</p>
         <p class="amis-pseudo" id="amis-mon-id">…</p>
-        <button id="amis-modifier" class="btn-ligne" style="height:40px; margin-top:10px;">Modifier mon pseudo</button>
-        <div id="amis-edit" style="display:none;">
-          <input id="amis-input-pseudo" class="champ" type="text" placeholder="Nouveau pseudo" />
-          <button id="amis-sauver" class="btn-plein" style="height:42px;">Enregistrer</button>
-        </div>
+        <small class="aide">Partage-le pour qu'on t'ajoute. Pour changer ton pseudo, va dans l'onglet Profil.</small>
         <div id="amis-msg"></div>
 
         <hr class="sep" />
 
         <p class="amis-lbl">Ajouter un ami</p>
         <input id="amis-recherche" class="champ" type="text" placeholder="Pseudo#0000 ou numéro de téléphone" />
-        <button id="amis-ajouter" class="btn-plein" style="height:42px;">Ajouter</button>
+        <div style="text-align:center;"><button id="amis-ajouter" class="btn-plein" style="height:44px; width:auto; padding:0 34px; border-radius:22px; margin-top:12px;">Ajouter</button></div>
 
         <hr class="sep" />
 
@@ -329,25 +332,16 @@
   // NB : ce fichier est public, donc cet email sera visible dans le dépôt.
   const ADMINS = ["besutoyunli@gmail.com"];
 
-  // Journal des versions (le plus récent en haut)
-  const CHANGELOG = [
-    {v:"v8", titre:"Ticket de caisse & photos", pts:["Fenêtre « ticket de caisse » pour ajouter une dépense","Sous-catégories (reprises de l'Excel) et moyen de paiement","Photo par dépense (ticket ou souvenir)","Carte du total du jour en haut de la page","Résumé « par catégorie » selon la période choisie"]},
-    {v:"v7", titre:"Confort d'usage", pts:["Confirmation avant de valider une date dans le calendrier","Résumé personnalisable (Tout / Jour / Semaine / Mois / Année)","Ouverture directe sur la saisie du jour"]},
-    {v:"v6", titre:"Tableau de bord & navigation", pts:["Tableau de bord jour / semaine / mois / année","Navigation par jour (hier, aujourd'hui, demain…)","Calendrier maison pour choisir une date","Onglet Réglages","Mise à jour automatique à la réouverture"]},
-    {v:"v5", titre:"Vue mensuelle & Excel", pts:["Vue par mois (les 12 mois)","Modification et suppression des dépenses","Catégories personnalisables (+ Animaux, Voyages)","Import / Export Excel"]},
-    {v:"v4", titre:"Numéro de téléphone", pts:["Vérification du format du numéro"]},
-    {v:"v3", titre:"Comptes affinés", pts:["Messages d'erreur en français","Inscription avec nom d'utilisateur et téléphone","Profil : limite photo, mot de passe actuel requis"]},
-    {v:"v2", titre:"Connexion & profil", pts:["Comptes email/mot de passe et Google","Profil : photo, mot de passe, double authentification","Déconnexion / changer de compte"]},
-    {v:"v1", titre:"Première version", pts:["Saisie rapide des dépenses par catégorie","Application installable (PWA), données sauvegardées"]},
-  ];
+  // Dépôt GitHub — l'historique des versions est lu en direct depuis ses commits
+  const REPO_GH = "BesutoRiven/gestion-financiere";
   const PALETTE = [{bg:"#faece7",fg:"#712b13"},{bg:"#faeeda",fg:"#854f0b"},{bg:"#e6f1fb",fg:"#0c447c"},{bg:"#eaf3de",fg:"#27500a"},{bg:"#e1f5ee",fg:"#085041"},{bg:"#eeedfe",fg:"#3c3489"},{bg:"#fbeaf0",fg:"#72243e"},{bg:"#fcebeb",fg:"#a32d2d"},{bg:"#f1efe8",fg:"#444441"}];
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
   const JSEM=["L","M","M","J","V","S","D"];
 
   const $ = id => document.getElementById(id);
-  let uid, cleDep, cleCat, cleDash;
-  let depenses=[], categories=[];
+  let uid, cleDep, cleCat, cleDash, cleSous;
+  let depenses=[], categories=[], souscats={}, souscatSel=null;
   let selDate=new Date(), calY, calM, calSel;
   let dashMode="tout", editionId=null;
   // état de la fenêtre reçu
@@ -360,6 +354,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   const sauverDep=()=>localStorage.setItem(cleDep,JSON.stringify(depenses));
   const sauverCat=()=>localStorage.setItem(cleCat,JSON.stringify(categories));
+  const sauverSous=()=>localStorage.setItem(cleSous,JSON.stringify(souscats));
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
   function dateAff(isoStr){const p=isoStr.split("-");return parseInt(p[2],10)+" "+MOIS_C[parseInt(p[1],10)-1];}
 
@@ -560,15 +555,43 @@
       ligne.appendChild(p);ligne.appendChild(inp);ligne.appendChild(del);box.appendChild(ligne);});
   }
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
-    categories[idx].nom=nv;depenses.forEach(d=>{if(d.categorie===anc)d.categorie=nv;});sauverCat();sauverDep();rendreCategories();}
+    categories[idx].nom=nv;depenses.forEach(d=>{if(d.categorie===anc)d.categorie=nv;});
+    if(souscats[anc]){souscats[nv]=souscats[anc];delete souscats[anc];sauverSous();}
+    if(souscatSel===anc){souscatSel=nv;rendreSousListe();}
+    sauverCat();sauverDep();rendreCategories();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
     if(!confirm("Supprimer « "+nom+" » ? Ses dépenses passeront dans « Divers »."))return;
     categories.splice(idx,1);if(!categories.find(c=>c.nom==="Divers"))categories.push({nom:"Divers",bg:"#f1efe8",fg:"#444441"});
-    depenses.forEach(d=>{if(d.categorie===nom)d.categorie="Divers";});sauverCat();sauverDep();rendreCategories();rendreDepenses();}
+    depenses.forEach(d=>{if(d.categorie===nom)d.categorie="Divers";});
+    delete souscats[nom];sauverSous();if(souscatSel===nom){souscatSel=null;rendreSousListe();}
+    sauverCat();sauverDep();rendreCategories();rendreDepenses();}
   $("ajouter-cat").onclick=()=>{const nom=$("nouvelle-cat").value.trim();if(!nom)return;
     if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){alert("Cette catégorie existe déjà.");return;}
     const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom,bg:coul.bg,fg:coul.fg});
+    souscats[nom]=souscats[nom]||[];sauverSous();
     $("nouvelle-cat").value="";sauverCat();rendreCategories();};
+
+  // Sous-catégories
+  function rendreSousListe(){
+    const box=$("sous-liste"); box.innerHTML="";
+    if(!souscatSel){ box.innerHTML='<small class="aide">Choisis une catégorie ci-dessus pour voir/modifier ses sous-catégories.</small>'; return; }
+    const arr=souscats[souscatSel]||[];
+    if(!arr.length){ box.innerHTML='<small class="aide">Aucune sous-catégorie pour « '+souscatSel+' ».</small>'; return; }
+    arr.forEach((s,i)=>{
+      const l=document.createElement("div"); l.className="cat-ligne";
+      const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
+      const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
+      del.onclick=()=>{ souscats[souscatSel].splice(i,1); sauverSous(); rendreSousListe(); };
+      l.appendChild(span); l.appendChild(del); box.appendChild(l);
+    });
+  }
+  $("ajouter-sous").onclick=()=>{
+    const v=$("nouvelle-sous").value.trim(); if(!v)return;
+    if(!souscatSel){ alert("Choisis d'abord une catégorie."); return; }
+    souscats[souscatSel]=souscats[souscatSel]||[];
+    if(souscats[souscatSel].some(x=>x.toLowerCase()===v.toLowerCase())){ alert("Cette sous-catégorie existe déjà."); return; }
+    souscats[souscatSel].push(v); $("nouvelle-sous").value=""; sauverSous(); rendreSousListe();
+  };
 
   // ================= Import / Export =================
   function moisEnCours(){return iso(new Date()).slice(0,7);}
@@ -592,14 +615,33 @@
     sauverDep();sauverCat();$("zone-import").value="";msgIE(n>0?(n+" dépense(s) importée(s)."):"Aucune ligne valide. Vérifie le format.",n>0?"ok":"err");rendreCategories();};
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
-  // ================= Historique des versions (admin) =================
-  function rendreVersions(){
-    const box=$("version-liste"); box.innerHTML="";
-    CHANGELOG.forEach(x=>{
-      const d=document.createElement("div"); d.className="ver";
-      d.innerHTML='<div><span class="num">'+x.v+'</span><span class="t">'+x.titre+'</span></div><ul>'+x.pts.map(p=>'<li>'+p+'</li>').join("")+'</ul>';
-      box.appendChild(d);
-    });
+  // ================= Historique des versions (admin, en direct depuis GitHub) =================
+  async function rendreVersions(){
+    const box=$("version-liste");
+    box.innerHTML='<p class="vide" style="padding:16px 0;">Chargement de l\'historique…</p>';
+    try{
+      const r=await fetch("https://api.github.com/repos/"+REPO_GH+"/commits?per_page=100");
+      if(!r.ok) throw 0;
+      const commits=await r.json();
+      box.innerHTML="";
+      commits.forEach((c,i)=>{
+        const msg=(c.commit.message||"").split("\n")[0];
+        const d=new Date(c.commit.author.date);
+        const dateStr=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"});
+        let tag="", desc=msg;
+        const m=msg.match(/^(v[\d.]+)\s*[:\-]\s*(.*)$/i);
+        if(m){ tag=m[1]; desc=m[2]; }
+        const card=document.createElement("div"); card.className="vcard";
+        card.innerHTML='<div class="vcard-tete">'+
+          (tag?'<span class="vtag">'+tag+'</span>':'')+
+          (i===0?'<span class="ven">En ligne</span>':'')+
+          '<span class="vdate">'+dateStr+'</span></div>'+
+          '<div class="vdesc">'+desc+'</div>';
+        box.appendChild(card);
+      });
+    }catch(e){
+      box.innerHTML='<p class="vide" style="padding:16px 0;">Impossible de charger l\'historique (hors-ligne, ou limite GitHub atteinte). Réessaie plus tard.</p>';
+    }
   }
   $("btn-versions").onclick=()=>{rendreVersions();$("version-overlay").style.display="flex";};
   $("ver-fermer").onclick=()=>$("version-overlay").style.display="none";
@@ -608,21 +650,10 @@
   // ================= Amis / pseudo =================
   let monPseudo="", monTag="";
   function rendreAmisId(){ $("amis-mon-id").innerHTML = monPseudo + '<span class="tag">#'+monTag+'</span>'; }
-  function ouvrirAmis(){ rendreAmisId(); $("amis-edit").style.display="none"; $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
+  function ouvrirAmis(){ rendreAmisId(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
   $("amis-overlay").onclick=e=>{if(e.target===$("amis-overlay"))$("amis-overlay").style.display="none";};
-  $("amis-modifier").onclick=()=>{ $("amis-input-pseudo").value=monPseudo; $("amis-edit").style.display="block"; $("amis-input-pseudo").focus(); };
-  $("amis-sauver").onclick=async()=>{
-    const p=$("amis-input-pseudo").value.trim();
-    if(p.length<2){ $("amis-msg").innerHTML='<div class="message err" style="margin-top:8px;">Pseudo trop court (2 caractères minimum).</div>'; return; }
-    const { error }=await sb.auth.updateUser({ data:{ username:p } });
-    if(error){ $("amis-msg").innerHTML='<div class="message err" style="margin-top:8px;">'+messageErreur(error)+'</div>'; return; }
-    monPseudo=p; rendreAmisId(); $("amis-edit").style.display="none";
-    $("amis-msg").innerHTML='<div class="message ok" style="margin-top:8px;">Pseudo mis à jour.</div>';
-    // met à jour l'initiale de l'avatar si pas de photo
-    document.querySelectorAll(".avatar-slot").forEach(el=>{ if(el.tagName==="SPAN") el.textContent=p.charAt(0).toUpperCase(); });
-  };
   $("amis-ajouter").onclick=()=>{
     $("amis-msg").innerHTML='<div class="message ok" style="margin-top:8px;">L\'ajout d\'amis arrivera avec la base de données partagée (prochaine grande étape). Ton identifiant est déjà prêt à être partagé.</div>';
   };
@@ -630,16 +661,20 @@
   // ================= Démarrage =================
   (async()=>{
     const session=await exigerConnexion();if(!session)return;
-    uid=session.user.id;cleDep="depenses_"+uid;cleCat="categories_"+uid;cleDash="dash_"+uid;
+    uid=session.user.id;cleDep="depenses_"+uid;cleCat="categories_"+uid;cleDash="dash_"+uid;cleSous="souscat_"+uid;
     depenses=JSON.parse(localStorage.getItem(cleDep)||"[]");
     categories=JSON.parse(localStorage.getItem(cleCat)||"null")||CATS_DEFAUT.slice();
+    souscats=JSON.parse(localStorage.getItem(cleSous)||"null")||JSON.parse(JSON.stringify(SOUS_CAT));
     if(!localStorage.getItem(cleCat))sauverCat();
+    if(!localStorage.getItem(cleSous))sauverSous();
     dashMode=localStorage.getItem(cleDash)||"tout";
 
     // Initialisation des menus déroulants du reçu
     ddCat=initDD("dd-cat",()=>categories.map(c=>c.nom),v=>{rCat=v;rSous=null;ddSous.set(null);});
-    ddSous=initDD("dd-sous",()=>SOUS_CAT[rCat]||[],v=>{rSous=v;});
+    ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v;});
     ddPay=initDD("dd-pay",()=>MOYENS,v=>{rPay=v;});
+    initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
+    rendreSousListe();
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
