@@ -142,6 +142,19 @@
     .amis-lbl{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin:0 0 6px;}
     .amis-pseudo{font-size:22px; font-weight:700; margin:0;}
     .amis-pseudo .tag{color:var(--muted); font-weight:600;}
+
+    .bud-mini-l{font-size:12px; color:var(--muted);}
+    .bud-mini-v{font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px;}
+    .bud-row{padding:10px 2px; border-bottom:1px solid var(--border);}
+    .bud-row:last-child{border-bottom:none;}
+    .bud-tete{display:flex; justify-content:space-between; align-items:center;}
+    .bud-tete .nom{font-weight:600; font-size:15px;}
+    .bud-ecart{font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;}
+    .bud-det{display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:var(--muted);}
+    .bud-det input{width:78px; border:1px solid var(--border); border-radius:8px; padding:6px 8px; font-size:14px; text-align:right; font-family:inherit;}
+    .bud-barre{height:6px; background:var(--border); border-radius:3px; margin-top:8px; overflow:hidden;}
+    .bud-barre span{display:block; height:100%; background:var(--accent); border-radius:3px;}
+    .bud-barre span.over{background:var(--danger);}
   </style>
 </head>
 <body>
@@ -238,6 +251,13 @@
         <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
         <div id="msg-impexp"></div>
       </div>
+      <div class="bloc impexp">
+        <h2>Import Revenus (Excel)</h2>
+        <small class="aide">Colle ton tableau de revenus (avec les lignes d'année « 2023 », « 2024 » et les mois). Les colonnes de sources (Cedric, Auto-entrep.…), Cotisation et Montant net sont détectées automatiquement d'après la 1re ligne.</small>
+        <textarea id="zone-import-rev" placeholder="&#9;Cedric&#9;Auto-entrep.&#9;Cotisation&#9;Montant net&#10;&#9;2024&#10;Mars&#9;2 000,00 €&#9;&#9;492,00 €&#9;1 508,00 €"></textarea>
+        <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
+        <div id="msg-imprev"></div>
+      </div>
       <div class="bloc" id="bloc-admin" style="display:none;">
         <h2>Administration</h2>
         <small class="aide">Réservé aux comptes administrateurs — suivi de l'évolution de l'application.</small>
@@ -304,19 +324,29 @@
 
         <p class="amis-lbl">Mon identifiant</p>
         <p class="amis-pseudo" id="amis-mon-id">…</p>
-        <small class="aide">Partage-le pour qu'on t'ajoute. Pour changer ton pseudo, va dans l'onglet Profil.</small>
+        <small class="aide">Pour changer ton pseudo, va dans l'onglet Profil.</small>
+
+        <hr class="sep" />
+
+        <p class="amis-lbl">Partage du budget</p>
+        <div id="partage-inactif">
+          <small class="aide">Partage tes dépenses et revenus avec quelqu'un (ex. Louise) : vous aurez exactement les mêmes données, comme un Excel commun.</small>
+          <button id="btn-creer-partage" class="btn-plein" style="height:44px; margin-top:12px;">Créer un partage</button>
+          <div style="margin-top:14px;">
+            <input id="code-partage" class="champ" type="text" placeholder="Coller un code de partage reçu" />
+            <button id="btn-rejoindre" class="btn-ligne" style="height:42px; margin-top:8px;">Rejoindre ce partage</button>
+          </div>
+        </div>
+        <div id="partage-actif" style="display:none;">
+          <p style="font-weight:600; color:var(--accent); margin:0 0 8px;">✓ Budget partagé</p>
+          <small class="aide">Transmets ce code à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage ».</small>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <input id="mon-code" class="champ" type="text" readonly style="flex:1; font-size:12px;" />
+            <button id="btn-copier-code" class="btn-ligne" style="width:auto; padding:0 16px;">Copier</button>
+          </div>
+          <button id="btn-quitter-partage" class="btn-ligne" style="height:42px; margin-top:12px; color:var(--danger); border-color:#e0b4b4;">Quitter le partage</button>
+        </div>
         <div id="amis-msg"></div>
-
-        <hr class="sep" />
-
-        <p class="amis-lbl">Ajouter un ami</p>
-        <input id="amis-recherche" class="champ" type="text" placeholder="Pseudo#0000 ou numéro de téléphone" />
-        <div style="text-align:center;"><button id="amis-ajouter" class="btn-plein" style="height:44px; width:auto; padding:0 34px; border-radius:22px; margin-top:12px;">Ajouter</button></div>
-
-        <hr class="sep" />
-
-        <p class="amis-lbl">Mes amis</p>
-        <div id="amis-liste"><p class="vide" style="padding:12px 0;">Aucun ami pour l'instant.</p></div>
       </div>
     </div>
 
@@ -343,15 +373,44 @@
     <div id="catdet-overlay" class="cal-overlay" style="display:none;">
       <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
         <div class="cal-tete"><span class="titre" id="catdet-titre">Détail</span><button id="catdet-fermer" aria-label="Fermer">×</button></div>
+        <div id="catdet-filtre" class="perso" style="padding:0 0 6px;"></div>
         <div id="catdet-liste"></div>
       </div>
     </div>
 
+    <!-- ============ SÉLECTION DE PÉRIODE ============ -->
+    <div id="per-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box">
+        <div class="cal-tete"><button id="per-moins" aria-label="Précédent">‹</button><span class="titre" id="per-titre"></span><button id="per-plus" aria-label="Suivant">›</button></div>
+        <div class="cal-grille" id="per-jsem"></div>
+        <div class="cal-grille" id="per-corps" style="margin-top:4px;"></div>
+        <button class="cal-fermer" id="per-fermer">Fermer</button>
+      </div>
+    </div>
+
     <!-- ============ NAVIGATION BASSE ============ -->
+    <!-- ============ BUDGET ============ -->
+    <section id="vue-budget" class="vue" style="display:none;">
+      <div class="topbar"><h1>Budget</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
+      <div class="perso" id="bud-modes"></div>
+      <div class="jour-nav" id="bud-nav">
+        <button class="fleche" id="bud-moins" aria-label="Période précédente">‹</button>
+        <div class="jour-centre"><div class="jour-grand" id="bud-label" style="text-transform:capitalize;"></div></div>
+        <button class="fleche" id="bud-plus" aria-label="Période suivante">›</button>
+      </div>
+      <div class="bloc" style="display:flex; justify-content:space-around; text-align:center;">
+        <div><div class="bud-mini-l">Prévu</div><div class="bud-mini-v" id="bt-prevu">0,00 €</div></div>
+        <div><div class="bud-mini-l">Réel</div><div class="bud-mini-v" id="bt-reel">0,00 €</div></div>
+        <div><div class="bud-mini-l">Reste</div><div class="bud-mini-v" id="bt-reste">0,00 €</div></div>
+      </div>
+      <div class="bloc"><div id="bud-liste"></div></div>
+    </section>
+
     <nav class="navbas">
       <button class="nav-btn on" data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Dépenses</button>
       <button class="nav-btn" data-vue="revenus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Revenus</button>
       <button class="nav-btn" data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Résumé</button>
+      <button class="nav-btn" data-vue="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Budget</button>
       <button class="nav-btn" data-vue="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Réglages</button>
     </nav>
   </div>
@@ -399,6 +458,7 @@
   const $ = id => document.getElementById(id);
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let depenses=[], categories=[], souscats={}, souscatSel=null;
+  let budgets={}, budMode="mois", budDate=new Date();
   let revenus=[], revtypes=[], revTypeSel=null;
   let rType=null;
   let selDate=new Date(), resDate=new Date(), calY, calM, calSel;
@@ -411,16 +471,19 @@
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
-  // ---- Sauvegarde : cache local immédiat + synchronisation cloud (Supabase) ----
-  let sauvTimer=null;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode }; }
+  // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
+  let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budgets }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
     clearTimeout(sauvTimer);
     sauvTimer=setTimeout(()=>{
-      sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() })
-        .then(({error})=>{ if(error) console.warn("Sync Supabase:", error.message); });
+      dernierSelfSave=Date.now();
+      const req = foyerId
+        ? sb.from("foyers").upsert({ id:foyerId, contenu:c, updated_at:new Date().toISOString() })
+        : sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() });
+      req.then(({error})=>{ if(error) console.warn("Sync Supabase:", error.message); });
     }, 400);
   }
   const sauverDep=sauverCloud, sauverCat=sauverCloud, sauverSous=sauverCloud, sauverRev=sauverCloud, sauverRevType=sauverCloud;
@@ -434,17 +497,10 @@
       categories: JSON.parse(cat||"null")||CATS_DEFAUT.slice(),
       souscats: JSON.parse(localStorage.getItem("souscat_"+uid)||"null")||JSON.parse(JSON.stringify(SOUS_CAT)),
       revtypes: JSON.parse(localStorage.getItem("revtypes_"+uid)||"null")||REVTYPES_DEFAUT.slice(),
-      dash: localStorage.getItem("dash_"+uid)||"tout",
+      dash: localStorage.getItem("dash_"+uid)||"jour",
     };
   }
-  async function chargerTout(){
-    let c=null;
-    try{
-      const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle();
-      if(!error && data && data.contenu) c=data.contenu;
-    }catch(e){ console.warn("Chargement cloud:", e); }
-    if(!c) c=migrerDepuisLocal();                     // 1re fois : on récupère les données locales
-    if(!c){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} } // secours hors-ligne
+  function appliquerContenu(c){
     c=c||{};
     depenses = c.depenses || [];
     revenus  = c.revenus  || [];
@@ -452,7 +508,58 @@
     souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
     revtypes   = c.revtypes   || REVTYPES_DEFAUT.slice();
     dashMode   = (c.dash && c.dash!=="tout") ? c.dash : "jour";
-    sauverCloud(); // enregistre l'état chargé (utile après migration)
+    budgets    = c.budgets || {};
+  }
+  function rafraichirVueCourante(){
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus();
+    if($("vue-accueil").style.display!=="none") rendreAccueil();
+    if($("vue-budget").style.display!=="none") rendreBudget();
+  }
+  function abonnerFoyer(){
+    if(!foyerId || canalFoyer) return;
+    try{
+      canalFoyer = sb.channel("foyer-"+foyerId)
+        .on("postgres_changes", { event:"UPDATE", schema:"public", table:"foyers", filter:"id=eq."+foyerId }, payload=>{
+          if(Date.now()-dernierSelfSave < 1500) return;               // ignore l'écho de ma propre sauvegarde
+          if(payload.new && payload.new.contenu){ appliquerContenu(payload.new.contenu); rafraichirVueCourante(); }
+        }).subscribe();
+    }catch(e){}
+  }
+  async function chargerTout(){
+    foyerId=null;
+    try{ const { data:mem }=await sb.from("foyer_membres").select("foyer_id").eq("user_id",uid).maybeSingle(); if(mem && mem.foyer_id) foyerId=mem.foyer_id; }catch(e){}
+    if(foyerId){
+      let c=null;
+      try{ const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle(); if(data && data.contenu) c=data.contenu; }catch(e){}
+      appliquerContenu(c); abonnerFoyer(); return; // données partagées en place
+    }
+    let c=null;
+    try{ const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle(); if(!error && data && data.contenu) c=data.contenu; }catch(e){ console.warn("Chargement cloud:", e); }
+    if(!c) c=migrerDepuisLocal();
+    if(!c){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} }
+    appliquerContenu(c); sauverCloud();
+  }
+
+  // ---- Partage du budget (foyer) ----
+  async function creerPartage(){
+    foyerId = (crypto.randomUUID? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)));
+    let r=await sb.from("foyers").insert({ id:foyerId, contenu:contenuActuel(), updated_at:new Date().toISOString() });
+    if(r.error){ foyerId=null; return {ok:false, msg:messageErreur(r.error)}; }
+    r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:foyerId });
+    if(r.error){ return {ok:false, msg:messageErreur(r.error)}; }
+    return {ok:true};
+  }
+  async function rejoindrePartage(code){
+    code=(code||"").trim(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
+    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:code });
+    if(r.error) return {ok:false, msg:messageErreur(r.error)};
+    return {ok:true};
+  }
+  async function quitterPartage(){
+    await sb.from("donnees").upsert({ user_id:uid, contenu:contenuActuel(), updated_at:new Date().toISOString() }); // on garde une copie perso
+    const r=await sb.from("foyer_membres").delete().eq("user_id",uid);
+    if(r.error) return {ok:false, msg:messageErreur(r.error)};
+    foyerId=null; return {ok:true};
   }
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
   function dateAff(isoStr){const p=isoStr.split("-");return parseInt(p[2],10)+" "+MOIS_C[parseInt(p[1],10)-1];}
@@ -485,10 +592,11 @@
 
   // ================= Vues =================
   function changerVue(nom){
-    ["accueil","depenses","reglages","revenus"].forEach(v=>$("vue-"+v).style.display=(v===nom?"flex":"none"));
+    ["accueil","depenses","reglages","revenus","budget"].forEach(v=>$("vue-"+v).style.display=(v===nom?"flex":"none"));
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("on",b.dataset.vue===nom));
-    if(nom==="accueil") rendreAccueil();
+    if(nom==="accueil"){ resDate=new Date(); rendreAccueil(); }
     if(nom==="revenus") rendreRevenus();
+    if(nom==="budget"){ budDate=new Date(); rendreBudget(); }
     window.scrollTo(0,0);
   }
   document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>changerVue(b.dataset.vue));
@@ -518,6 +626,7 @@
     return String(d.getFullYear());
   }
   function decalerResume(sens){
+    if(sens>0 && estPeriodeCourante(dashMode, resDate)) return; // pas de futur
     const d=new Date(resDate);
     if(dashMode==="jour") d.setDate(d.getDate()+sens);
     else if(dashMode==="semaine") d.setDate(d.getDate()+7*sens);
@@ -528,6 +637,7 @@
   function rendreAccueil(){
     if(dashMode==="tout"||!dashMode) dashMode="jour";
     rendrePersoChips();
+    $("res-plus").style.visibility = estPeriodeCourante(dashMode, resDate) ? "hidden" : "visible";
     $("res-label").textContent=labelResume();
     const b=bornesResume();
     let total=0; const parCat={};
@@ -543,23 +653,35 @@
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
-  function ouvrirDetailCat(cat){
-    const b=bornesResume();
-    const items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
+  let detCat=null, detFiltre=null;
+  function ouvrirDetailCat(cat){ detCat=cat; detFiltre=null; rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
+  function rendreDetailCat(){
+    const cat=detCat, b=bornesResume();
+    let items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
     $("catdet-titre").textContent=cat+" — "+labelResume();
+    // Filtre par sous-catégorie (uniquement celles présentes)
+    const sousPresentes=[...new Set(items.map(d=>d.sousCat).filter(Boolean))].sort();
+    const fbox=$("catdet-filtre"); fbox.innerHTML="";
+    if(sousPresentes.length){
+      const mk=(val,lbl)=>{ const bb=document.createElement("button"); bb.className="pchip"+(detFiltre===val?" on":""); bb.textContent=lbl; bb.onclick=()=>{detFiltre=val;rendreDetailCat();}; return bb; };
+      fbox.appendChild(mk(null,"Toutes"));
+      sousPresentes.forEach(s=>fbox.appendChild(mk(s,s)));
+    }
+    if(detFiltre) items=items.filter(d=>d.sousCat===detFiltre);
     const box=$("catdet-liste"); box.innerHTML="";
     const total=items.reduce((s,d)=>s+d.montant,0);
     const th=document.createElement("div"); th.style.cssText="display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 10px;border-bottom:1px solid var(--border);margin-bottom:8px;";
     th.innerHTML="<span>Total</span><span>"+fmt(total)+"</span>"; box.appendChild(th);
     items.forEach(d=>{
       const infos=[d.sousCat,d.paiement].filter(Boolean).join(" · ");
-      const l=document.createElement("div"); l.style.cssText="padding:8px 4px;border-bottom:1px solid var(--border);";
-      l.innerHTML='<div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">'+(d.commentaire||d.sousCat||cat)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmt(d.montant)+'</span></div>'+
-        '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div>';
-      box.appendChild(l);
+      const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
+      l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(d.commentaire||d.sousCat||cat)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmt(d.montant)+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div></div>';
+      const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer cette dépense");
+      bx.onclick=async()=>{ if(!confirm("Supprimer « "+(d.commentaire||d.sousCat||cat)+" » ("+fmt(d.montant)+") ?"))return; if(d.photo)await photoDel(d.id); depenses=depenses.filter(x=>x.id!==d.id); sauverDep(); rendreDetailCat(); rendreDepenses(); rendreAccueil(); };
+      l.appendChild(bx); box.appendChild(l);
     });
     if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucune dépense.</p>';
-    $("catdet-overlay").style.display="flex";
   }
   $("catdet-fermer").onclick=()=>$("catdet-overlay").style.display="none";
   $("catdet-overlay").onclick=e=>{if(e.target===$("catdet-overlay"))$("catdet-overlay").style.display="none";};
@@ -571,6 +693,140 @@
   }
   $("res-moins").onclick=()=>decalerResume(-1);
   $("res-plus").onclick=()=>decalerResume(1);
+
+  // ================= Budget (prévu / réel / écart) =================
+  function bornesGen(mode, date){
+    const d=jourZero(date);
+    if(mode==="jour") return {debut:iso(d), fin:iso(d)};
+    if(mode==="semaine"){ const l=new Date(d); l.setDate(l.getDate()-((d.getDay()+6)%7)); const f=new Date(l); f.setDate(f.getDate()+6); return {debut:iso(l), fin:iso(f)}; }
+    if(mode==="mois") return {debut:iso(new Date(d.getFullYear(),d.getMonth(),1)), fin:iso(new Date(d.getFullYear(),d.getMonth()+1,0))};
+    return {debut:d.getFullYear()+"-01-01", fin:d.getFullYear()+"-12-31"};
+  }
+  function labelBudget(){
+    const d=jourZero(budDate);
+    if(budMode==="jour"){ const diff=Math.round((d-jourZero(new Date()))/86400000); if(diff===0)return "Aujourd'hui"; if(diff===-1)return "Hier"; if(diff===1)return "Demain"; return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
+    if(budMode==="semaine"){ const b=bornesGen("semaine",budDate); const l=new Date(b.debut+"T12:00:00"),f=new Date(b.fin+"T12:00:00"); if(l.getMonth()===f.getMonth())return l.getDate()+" – "+f.getDate()+" "+MOIS_C[l.getMonth()]+" "+l.getFullYear(); return l.getDate()+" "+MOIS_C[l.getMonth()]+" – "+f.getDate()+" "+MOIS_C[f.getMonth()]+" "+f.getFullYear(); }
+    if(budMode==="mois") return MOIS_L[d.getMonth()]+" "+d.getFullYear();
+    return String(d.getFullYear());
+  }
+  function rendreBudModes(){
+    const modes=[["jour","Journalier"],["semaine","Hebdo"],["mois","Mensuel"],["annee","Annuel"]];
+    const c=$("bud-modes"); c.innerHTML='<span class="lbl-p">Budget :</span>';
+    modes.forEach(m=>{const b=document.createElement("button");b.className="pchip"+(budMode===m[0]?" on":"");b.textContent=m[1];
+      b.onclick=()=>{budMode=m[0];rendreBudget();};c.appendChild(b);});
+  }
+  function decalerBudget(sens){
+    if(sens>0 && estPeriodeCourante(budMode, budDate)) return; // pas de futur
+    const d=new Date(budDate);
+    if(budMode==="jour") d.setDate(d.getDate()+sens);
+    else if(budMode==="semaine") d.setDate(d.getDate()+7*sens);
+    else if(budMode==="mois") d.setMonth(d.getMonth()+sens);
+    else d.setFullYear(d.getFullYear()+sens);
+    budDate=d; rendreBudget();
+  }
+  function rendreBudget(){
+    rendreBudModes();
+    $("bud-plus").style.visibility = estPeriodeCourante(budMode, budDate) ? "hidden" : "visible";
+    $("bud-label").textContent=labelBudget();
+    const b=bornesGen(budMode, budDate);
+    const reel={};
+    depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin) reel[d.categorie]=(reel[d.categorie]||0)+d.montant; });
+    if(!budgets[budMode]) budgets[budMode]={};
+    const budCat=budgets[budMode];
+    const box=$("bud-liste"); box.innerHTML="";
+    let totPrevu=0, totReel=0;
+    categories.forEach(cat=>{
+      const prevu=budCat[cat.nom]||0, r=reel[cat.nom]||0, ecart=prevu-r;
+      totPrevu+=prevu; totReel+=r;
+      const pct=prevu>0?Math.min(100, r/prevu*100):(r>0?100:0);
+      const over=prevu>0 && r>prevu;
+      const row=document.createElement("div"); row.className="bud-row";
+      row.innerHTML=
+        '<div class="bud-tete"><span class="nom">'+cat.nom+'</span>'+
+        (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'dépassé ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non défini</span>')+'</div>'+
+        '<div class="bud-det">Prévu <input type="text" inputmode="decimal" data-cat="'+cat.nom.replace(/"/g,'&quot;')+'" value="'+(prevu?String(prevu).replace(".",","):"")+'" placeholder="0" /> €'+
+        '<span style="margin-left:auto;">Réel '+fmt(r)+'</span></div>'+
+        '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
+      box.appendChild(row);
+    });
+    box.querySelectorAll("input[data-cat]").forEach(inp=>{
+      inp.onchange=()=>{ const v=parseFloat((inp.value||"").replace(",","."))||0; if(!budgets[budMode])budgets[budMode]={}; budgets[budMode][inp.dataset.cat]=v; sauverCloud(); rendreBudget(); };
+    });
+    $("bt-prevu").textContent=fmt(totPrevu);
+    $("bt-reel").textContent=fmt(totReel);
+    const reste=totPrevu-totReel;
+    $("bt-reste").textContent=fmt(reste);
+    $("bt-reste").style.color = reste>=0 ? "var(--accent)" : "var(--danger)";
+  }
+  $("bud-moins").onclick=()=>decalerBudget(-1);
+  $("bud-plus").onclick=()=>decalerBudget(1);
+
+  // ================= Sélection de période (calendrier) + blocage du futur =================
+  function estPeriodeCourante(mode, date){ return bornesGen(mode, date).debut === bornesGen(mode, new Date()).debut; }
+  let perMode="mois", perView=new Date(), perSel=new Date(), perCb=null;
+  function ouvrirPeriode(mode, date, cb){ perMode=mode; perCb=cb; perSel=new Date(date); perView=new Date(date); rendrePer(); $("per-overlay").style.display="flex"; }
+  $("per-fermer").onclick=()=>$("per-overlay").style.display="none";
+  $("per-overlay").onclick=e=>{ if(e.target===$("per-overlay")) $("per-overlay").style.display="none"; };
+  $("per-moins").onclick=()=>perNav(-1);
+  $("per-plus").onclick=()=>perNav(1);
+  function perNav(sens){
+    if(perMode==="jour"||perMode==="semaine") perView.setMonth(perView.getMonth()+sens);
+    else if(perMode==="mois") perView.setFullYear(perView.getFullYear()+sens);
+    else perView.setFullYear(perView.getFullYear()+12*sens);
+    perView=new Date(perView); rendrePer();
+  }
+  function choisirPer(d){ $("per-overlay").style.display="none"; if(perCb) perCb(new Date(d)); }
+  function rendrePer(){
+    const auj=jourZero(new Date());
+    const jsem=$("per-jsem"), corps=$("per-corps"); jsem.innerHTML=""; corps.innerHTML="";
+    if(perMode==="jour"||perMode==="semaine"){
+      jsem.style.display="grid"; jsem.style.gridTemplateColumns="repeat(7,1fr)"; corps.style.gridTemplateColumns="repeat(7,1fr)";
+      JSEM.forEach(j=>{const s=document.createElement("div");s.className="cal-jsem";s.textContent=j;jsem.appendChild(s);});
+      const y=perView.getFullYear(), m=perView.getMonth();
+      $("per-titre").textContent=MOIS_L[m]+" "+y;
+      $("per-plus").style.visibility=(y>auj.getFullYear()||(y===auj.getFullYear()&&m>=auj.getMonth()))?"hidden":"visible";
+      const dec=(new Date(y,m,1).getDay()+6)%7, nb=new Date(y,m+1,0).getDate();
+      for(let i=0;i<dec;i++) corps.appendChild(document.createElement("div"));
+      // semaine sélectionnée (pour surligner la ligne)
+      let selDeb=null, selFin=null;
+      if(perMode==="semaine"){ const l=jourZero(perSel); l.setDate(l.getDate()-((perSel.getDay()+6)%7)); selDeb=iso(l); const f=new Date(l); f.setDate(f.getDate()+6); selFin=iso(f); }
+      for(let j=1;j<=nb;j++){
+        const dd=new Date(y,m,j), isoDD=iso(dd); const btn=document.createElement("button"); btn.className="cal-jour"; btn.textContent=j;
+        if(jourZero(dd)>auj){ btn.disabled=true; btn.style.opacity=.3; }
+        else {
+          if(perMode==="jour"){ if(isoDD===iso(perSel)) btn.classList.add("sel"); else if(isoDD===iso(auj)) btn.classList.add("auj"); }
+          else { if(isoDD>=selDeb && isoDD<=selFin) btn.classList.add("sel"); else if(isoDD===iso(auj)) btn.classList.add("auj"); }
+          btn.onclick=()=>choisirPer(dd);
+        }
+        corps.appendChild(btn);
+      }
+    } else if(perMode==="mois"){
+      jsem.style.display="none"; corps.style.gridTemplateColumns="repeat(3,1fr)";
+      const y=perView.getFullYear(); $("per-titre").textContent=String(y);
+      $("per-plus").style.visibility=(y>=auj.getFullYear())?"hidden":"visible";
+      for(let mo=0;mo<12;mo++){
+        const btn=document.createElement("button"); btn.className="cal-jour"; btn.style.aspectRatio="auto"; btn.style.padding="14px 0"; btn.textContent=MOIS_C[mo];
+        if(y>auj.getFullYear()||(y===auj.getFullYear()&&mo>auj.getMonth())){ btn.disabled=true; btn.style.opacity=.3; }
+        else { if(y===perSel.getFullYear()&&mo===perSel.getMonth()) btn.classList.add("sel"); else if(y===auj.getFullYear()&&mo===auj.getMonth()) btn.classList.add("auj"); btn.onclick=()=>choisirPer(new Date(y,mo,1)); }
+        corps.appendChild(btn);
+      }
+    } else {
+      jsem.style.display="none"; corps.style.gridTemplateColumns="repeat(3,1fr)";
+      const base=perView.getFullYear(); $("per-titre").textContent="Années";
+      $("per-plus").style.visibility=(base>=auj.getFullYear())?"hidden":"visible";
+      for(let y=base-11;y<=base;y++){
+        const btn=document.createElement("button"); btn.className="cal-jour"; btn.style.aspectRatio="auto"; btn.style.padding="14px 0"; btn.textContent=String(y);
+        if(y>auj.getFullYear()){ btn.disabled=true; btn.style.opacity=.3; }
+        else { if(y===perSel.getFullYear()) btn.classList.add("sel"); else if(y===auj.getFullYear()) btn.classList.add("auj"); btn.onclick=()=>choisirPer(new Date(y,0,1)); }
+        corps.appendChild(btn);
+      }
+    }
+  }
+  // Clic sur le libellé central → ouvre le sélecteur
+  $("res-label").parentElement.style.cursor="pointer";
+  $("res-label").parentElement.onclick=()=>ouvrirPeriode(dashMode, resDate, d=>{ resDate=d; rendreAccueil(); });
+  $("bud-label").parentElement.style.cursor="pointer";
+  $("bud-label").parentElement.onclick=()=>ouvrirPeriode(budMode, budDate, d=>{ budDate=d; rendreBudget(); });
 
   // ================= Navigation par jour =================
   function labelJour(d){const diff=Math.round((jourZero(d)-jourZero(new Date()))/86400000);
@@ -702,7 +958,9 @@
     if(souscatSel===anc){souscatSel=nv;rendreSousListe();}
     sauverCat();sauverDep();rendreCategories();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
-    if(!confirm("Supprimer « "+nom+" » ? Ses dépenses passeront dans « Divers »."))return;
+    const nb=depenses.filter(d=>d.categorie===nom).length;
+    if(!confirm("Supprimer la catégorie « "+nom+" » ?"+(nb?" Ses "+nb+" dépense(s) passeront dans « Divers ».":"")))return;
+    if(!confirm("Es-tu vraiment sûr ? Cette action est définitive."))return;
     categories.splice(idx,1);if(!categories.find(c=>c.nom==="Divers"))categories.push({nom:"Divers",bg:"#f1efe8",fg:"#444441"});
     depenses.forEach(d=>{if(d.categorie===nom)d.categorie="Divers";});
     delete souscats[nom];sauverSous();if(souscatSel===nom){souscatSel=null;rendreSousListe();}
@@ -802,6 +1060,51 @@
     rendreDepenses(); rendreCategories(); rendreSousListe();
   };
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
+
+  // ---- Import des revenus (tableau annuel : années + mois + colonnes sources/cotisation/net) ----
+  $("btn-importer-rev").onclick=()=>{
+    const lignes=($("zone-import-rev").value).split(/\r?\n/);
+    // 1) trouver la ligne d'en-tête (celle qui contient "cotisation" ou "net")
+    let entete=null;
+    for(const l of lignes){ const cs=l.split("\t"); if(cs.some(c=>/cotisation/i.test(c)) || cs.some(c=>/montant net|^net$/i.test(c.trim()))){ entete=cs.map(c=>c.trim()); break; } }
+    if(!entete){ msgIrev("En-tête introuvable. Assure-toi d'inclure la 1re ligne avec « Cotisation » et « Montant net ».","warn"); return; }
+    const cotiIdx=entete.findIndex(c=>/cotisation/i.test(c));
+    const netIdx =entete.findIndex(c=>/montant net|^net$/i.test(c));
+    const sourceIdx=[]; entete.forEach((c,i)=>{ if(i>0 && c && i!==cotiIdx && i!==netIdx) sourceIdx.push(i); });
+    if(!sourceIdx.length){ msgIrev("Aucune colonne de source trouvée (ex. Cedric, Auto-entrep.).","warn"); return; }
+
+    let annee=null, n=0; const nouveauxTypes=[];
+    lignes.forEach(l=>{
+      const cs=l.split("\t").map(c=>c.trim());
+      if(cs.every(c=>!c)) return;                         // ligne vide
+      // ligne d'année : une cellule = 4 chiffres, pas de mois en 1re case
+      const an=cs.find(c=>/^(20\d{2})$/.test(c));
+      const mois=MOIS_PARSE[(cs[0]||"").toLowerCase()];
+      if(an && !mois){ annee=an; return; }
+      if(/^total/i.test(cs[0]||"")) return;               // ligne total
+      if(!mois) return;                                   // pas une ligne de mois
+      if(!annee) return;                                  // pas d'année connue → on saute
+      const coti=cotiIdx>=0?parseMontant(cs[cotiIdx]):null;
+      const net =netIdx>=0?parseMontant(cs[netIdx]):null;
+      sourceIdx.forEach(si=>{
+        const brut=parseMontant(cs[si]);
+        if(brut===null||brut<=0) return;                  // pas de revenu de cette source ce mois-ci
+        const pct=(coti!==null && brut>0)?Math.round(coti/brut*1000)/10:0;
+        const netFinal=(net!==null && sourceIdx.length===1)?net:brut*(1-pct/100);
+        const type=entete[si];
+        if(!revtypes.includes(type) && !nouveauxTypes.includes(type)) nouveauxTypes.push(type);
+        const dIso=annee+"-"+String(mois).padStart(2,"0")+"-01";
+        revenus.push({id:Date.now()+n, montant:brut, cotisation:pct, net:netFinal, type, description:"", date:dIso, mois:dIso.slice(0,7), dateAffichee:dateAff(dIso)});
+        n++;
+      });
+    });
+    if(!n){ msgIrev("Aucun revenu détecté. Vérifie le format (années, mois, montants).","warn"); return; }
+    nouveauxTypes.forEach(t=>{ if(!revtypes.includes(t)) revtypes.push(t); });
+    sauverRev(); sauverRevType(); $("zone-import-rev").value="";
+    msgIrev(n+" revenu(s) importé(s)"+(nouveauxTypes.length?(" — nouveaux types : "+nouveauxTypes.join(", ")):"")+".","ok");
+    rendreRevenus(); rendreRevTypes();
+  };
+  function msgIrev(t,ty){$("msg-imprev").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
   // ================= Revenus =================
   let ddRevType, editionRev=null;
@@ -911,13 +1214,55 @@
   // ================= Amis / pseudo =================
   let monPseudo="", monTag="";
   function rendreAmisId(){ $("amis-mon-id").innerHTML = monPseudo + '<span class="tag">#'+monTag+'</span>'; }
-  function ouvrirAmis(){ rendreAmisId(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
+  function rendrePartage(){
+    const actif=!!foyerId;
+    $("partage-actif").style.display=actif?"block":"none";
+    $("partage-inactif").style.display=actif?"none":"block";
+    if(actif) $("mon-code").value=foyerId;
+  }
+  function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
   $("amis-overlay").onclick=e=>{if(e.target===$("amis-overlay"))$("amis-overlay").style.display="none";};
-  $("amis-ajouter").onclick=()=>{
-    $("amis-msg").innerHTML='<div class="message ok" style="margin-top:8px;">L\'ajout d\'amis arrivera avec la base de données partagée (prochaine grande étape). Ton identifiant est déjà prêt à être partagé.</div>';
+  function msgAmis(t,ty){ $("amis-msg").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>'; }
+
+  $("btn-creer-partage").onclick=async()=>{
+    if(!confirm("Créer un partage à partir de tes données actuelles ? Tu obtiendras un code à transmettre.")) return;
+    msgAmis("Création du partage…","ok");
+    const r=await creerPartage();
+    if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
+    msgAmis("Partage créé ! Transmets le code affiché. L'app va se recharger.","ok");
+    setTimeout(()=>location.reload(),1200);
   };
+  $("btn-rejoindre").onclick=async()=>{
+    const code=$("code-partage").value.trim();
+    if(!confirm("Rejoindre ce partage ? Tu utiliseras les données partagées (tes données perso actuelles ne seront pas fusionnées).")) return;
+    msgAmis("Connexion au partage…","ok");
+    const r=await rejoindrePartage(code);
+    if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
+    msgAmis("Partage rejoint ! L'app va se recharger avec les données communes.","ok");
+    setTimeout(()=>location.reload(),1200);
+  };
+  $("btn-quitter-partage").onclick=async()=>{
+    if(!confirm("Quitter le partage ? Tu repasseras sur tes données personnelles (une copie des données actuelles est gardée pour toi).")) return;
+    const r=await quitterPartage();
+    if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
+    msgAmis("Partage quitté. L'app va se recharger.","ok");
+    setTimeout(()=>location.reload(),1000);
+  };
+  $("btn-copier-code").onclick=async()=>{
+    try{ await navigator.clipboard.writeText($("mon-code").value); msgAmis("Code copié !","ok"); }
+    catch(e){ $("mon-code").select(); msgAmis("Sélectionne et copie le code manuellement.","warn"); }
+  };
+
+  // Rafraîchir les données partagées en revenant sur l'app
+  document.addEventListener("visibilitychange", async ()=>{
+    if(document.visibilityState!=="visible" || !foyerId) return;
+    const ouvert=[...document.querySelectorAll('.recu-overlay,.cal-overlay,.lb-overlay')].some(o=>o.style.display==="flex")
+      || $("amis-overlay").style.display==="flex" || $("catdet-overlay").style.display==="flex" || $("version-overlay").style.display==="flex";
+    if(ouvert) return;
+    try{ const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle(); if(data && data.contenu){ appliquerContenu(data.contenu); rafraichirVueCourante(); } }catch(e){}
+  });
 
   // ================= Démarrage =================
   (async()=>{
