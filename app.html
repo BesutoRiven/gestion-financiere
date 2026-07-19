@@ -155,6 +155,8 @@
     .bud-barre{height:6px; background:var(--border); border-radius:3px; margin-top:8px; overflow:hidden;}
     .bud-barre span{display:block; height:100%; background:var(--accent); border-radius:3px;}
     .bud-barre span.over{background:var(--danger);}
+    .btn-auj{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600; padding:7px 16px; border-radius:20px; cursor:pointer;}
+    .btn-auj svg{width:15px; height:15px;}
   </style>
 </head>
 <body>
@@ -206,6 +208,7 @@
         <div class="jour-centre"><div class="jour-grand" id="res-label" style="text-transform:capitalize;"></div></div>
         <button class="fleche" id="res-plus" aria-label="Période suivante">›</button>
       </div>
+      <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button></div>
       <div id="kpi-zone"></div>
       <div class="bloc">
         <h2 id="rep-titre">Ce mois, par catégorie</h2>
@@ -399,6 +402,7 @@
         <div class="jour-centre"><div class="jour-grand" id="bud-label" style="text-transform:capitalize;"></div></div>
         <button class="fleche" id="bud-plus" aria-label="Période suivante">›</button>
       </div>
+      <div style="text-align:center; margin-top:8px;"><button id="bud-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Ce mois</span></button></div>
       <div class="bloc" style="display:flex; justify-content:space-around; text-align:center;">
         <div><div class="bud-mini-l">Prévu</div><div class="bud-mini-v" id="bt-prevu">0,00 €</div></div>
         <div><div class="bud-mini-l">Réel</div><div class="bud-mini-v" id="bt-reel">0,00 €</div></div>
@@ -455,6 +459,7 @@
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
   const JSEM=["L","M","M","J","V","S","D"];
+  const LBL_AUJ={jour:"Aujourd'hui", semaine:"Cette semaine", mois:"Ce mois", annee:"Cette année"};
 
   const $ = id => document.getElementById(id);
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
@@ -638,7 +643,10 @@
   function rendreAccueil(){
     if(dashMode==="tout"||!dashMode) dashMode="jour";
     rendrePersoChips();
-    $("res-plus").style.visibility = estPeriodeCourante(dashMode, resDate) ? "hidden" : "visible";
+    const curR=estPeriodeCourante(dashMode, resDate);
+    $("res-plus").style.visibility = curR ? "hidden" : "visible";
+    $("res-auj").style.display = curR ? "none" : "inline-flex";
+    $("res-auj").querySelector(".t").textContent = LBL_AUJ[dashMode]||"Aujourd'hui";
     $("res-label").textContent=labelResume();
     const b=bornesResume();
     let total=0; const parCat={};
@@ -727,7 +735,10 @@
   }
   function rendreBudget(){
     rendreBudModes();
-    $("bud-plus").style.visibility = estPeriodeCourante(budMode, budDate) ? "hidden" : "visible";
+    const curB=estPeriodeCourante(budMode, budDate);
+    $("bud-plus").style.visibility = curB ? "hidden" : "visible";
+    $("bud-auj").style.display = curB ? "none" : "inline-flex";
+    $("bud-auj").querySelector(".t").textContent = LBL_AUJ[budMode]||"Ce mois";
     $("bud-label").textContent=labelBudget();
     const b=bornesGen(budMode, budDate);
     const reel={};
@@ -837,6 +848,8 @@
   $("res-label").parentElement.onclick=()=>ouvrirPeriode(dashMode, resDate, d=>{ resDate=d; rendreAccueil(); });
   $("bud-label").parentElement.style.cursor="pointer";
   $("bud-label").parentElement.onclick=()=>ouvrirPeriode(budMode, budDate, d=>{ budDate=d; rendreBudget(); });
+  $("res-auj").onclick=()=>{ resDate=new Date(); rendreAccueil(); };
+  $("bud-auj").onclick=()=>{ budDate=new Date(); rendreBudget(); };
 
   // ================= Navigation par jour =================
   function labelJour(d){const diff=Math.round((jourZero(d)-jourZero(new Date()))/86400000);
