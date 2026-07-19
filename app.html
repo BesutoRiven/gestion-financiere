@@ -315,17 +315,21 @@
     </div>
 
     <!-- ============ REVENU (ajout / édition) ============ -->
-    <div id="rev-overlay" class="cal-overlay" style="display:none;">
-      <div class="cal-box" style="max-width:360px; max-height:88vh; overflow-y:auto;">
-        <div class="cal-tete"><span class="titre" id="rev-modal-titre">Nouveau revenu</span><button id="rev-fermer" aria-label="Fermer">×</button></div>
-        <label style="font-size:12px; color:var(--muted);">Montant brut</label>
-        <div class="montant-ligne" style="border-bottom:1px solid var(--border);"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" style="font-size:32px;" /><span>€</span></div>
-        <div class="recu-champ"><label style="font-size:12px; color:var(--muted);">Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div class="recu-champ"><label style="font-size:12px; color:var(--muted);">Cotisation (%)</label><input id="rev-cot" class="champ" type="text" inputmode="decimal" placeholder="ex. 25,6" /></div>
-        <p style="text-align:center; font-size:15px; margin:14px 0 0;">Net estimé : <strong id="rev-net" style="font-size:20px;">0,00 €</strong></p>
-        <div class="recu-champ"><label style="font-size:12px; color:var(--muted);">Description</label><input id="rev-desc" class="champ" type="text" placeholder="Ex. Cedric — prestation" /></div>
-        <button class="btn-plein" id="rev-valider" style="margin-top:16px; height:48px;">Valider ✓</button>
-        <button class="cal-fermer" id="rev-annuler">Annuler</button>
+    <div id="rev-overlay" class="recu-overlay" style="display:none;">
+      <div class="recu" style="background:#f1f8f4;">
+        <div class="recu-tete">
+          <div class="marque">Gestion financière</div>
+          <h3 id="rev-modal-titre">Nouveau revenu</h3>
+          <div class="date" id="rev-date-aff"></div>
+        </div>
+        <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><span>€</span></div>
+        <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:#fff;">Choisir la date</button></div>
+        <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
+        <div class="recu-champ"><label>Cotisation (%)</label><input id="rev-cot" class="recu-desc" type="text" inputmode="decimal" placeholder="ex. 25,6" /></div>
+        <p style="text-align:center; font-size:15px; margin:16px 0 4px; color:#3a5247;">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
+        <div class="recu-champ"><label>Description</label><input id="rev-desc" class="recu-desc" type="text" placeholder="Ex. Cedric — prestation" /></div>
+        <button class="recu-valider" id="rev-valider">Valider ✓</button>
+        <button class="recu-annuler" id="rev-annuler">Annuler</button>
       </div>
     </div>
 
@@ -401,11 +405,49 @@
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
-  const sauverDep=()=>localStorage.setItem(cleDep,JSON.stringify(depenses));
-  const sauverCat=()=>localStorage.setItem(cleCat,JSON.stringify(categories));
-  const sauverSous=()=>localStorage.setItem(cleSous,JSON.stringify(souscats));
-  const sauverRev=()=>localStorage.setItem(cleRev,JSON.stringify(revenus));
-  const sauverRevType=()=>localStorage.setItem(cleRevType,JSON.stringify(revtypes));
+  // ---- Sauvegarde : cache local immédiat + synchronisation cloud (Supabase) ----
+  let sauvTimer=null;
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode }; }
+  function sauverCloud(){
+    const c=contenuActuel();
+    try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
+    clearTimeout(sauvTimer);
+    sauvTimer=setTimeout(()=>{
+      sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() })
+        .then(({error})=>{ if(error) console.warn("Sync Supabase:", error.message); });
+    }, 400);
+  }
+  const sauverDep=sauverCloud, sauverCat=sauverCloud, sauverSous=sauverCloud, sauverRev=sauverCloud, sauverRevType=sauverCloud;
+
+  function migrerDepuisLocal(){
+    const dep=localStorage.getItem("depenses_"+uid), rev=localStorage.getItem("revenus_"+uid), cat=localStorage.getItem("categories_"+uid);
+    if(!dep && !rev && !cat) return null;
+    return {
+      depenses: JSON.parse(dep||"[]"),
+      revenus: JSON.parse(rev||"[]"),
+      categories: JSON.parse(cat||"null")||CATS_DEFAUT.slice(),
+      souscats: JSON.parse(localStorage.getItem("souscat_"+uid)||"null")||JSON.parse(JSON.stringify(SOUS_CAT)),
+      revtypes: JSON.parse(localStorage.getItem("revtypes_"+uid)||"null")||REVTYPES_DEFAUT.slice(),
+      dash: localStorage.getItem("dash_"+uid)||"tout",
+    };
+  }
+  async function chargerTout(){
+    let c=null;
+    try{
+      const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle();
+      if(!error && data && data.contenu) c=data.contenu;
+    }catch(e){ console.warn("Chargement cloud:", e); }
+    if(!c) c=migrerDepuisLocal();                     // 1re fois : on récupère les données locales
+    if(!c){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} } // secours hors-ligne
+    c=c||{};
+    depenses = c.depenses || [];
+    revenus  = c.revenus  || [];
+    categories = c.categories || CATS_DEFAUT.slice();
+    souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
+    revtypes   = c.revtypes   || REVTYPES_DEFAUT.slice();
+    dashMode   = c.dash       || "tout";
+    sauverCloud(); // enregistre l'état chargé (utile après migration)
+  }
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
   function dateAff(isoStr){const p=isoStr.split("-");return parseInt(p[2],10)+" "+MOIS_C[parseInt(p[1],10)-1];}
 
@@ -511,7 +553,7 @@
     const modes=[["tout","Tout"],["jour","Jour"],["semaine","Semaine"],["mois","Mois"],["annee","Année"]];
     const c=$("perso-chips"); c.innerHTML='<span class="lbl-p">Affichage :</span>';
     modes.forEach(m=>{const b=document.createElement("button");b.className="pchip"+(dashMode===m[0]?" on":"");b.textContent=m[1];
-      b.onclick=()=>{dashMode=m[0];localStorage.setItem(cleDash,dashMode);rendreAccueil();};c.appendChild(b);});
+      b.onclick=()=>{dashMode=m[0];sauverCloud();rendreAccueil();};c.appendChild(b);});
   }
 
   // ================= Navigation par jour =================
@@ -522,13 +564,15 @@
   $("jour-moins").onclick=()=>{selDate.setDate(selDate.getDate()-1);selDate=new Date(selDate);rendreDepenses();};
   $("jour-plus").onclick =()=>{selDate.setDate(selDate.getDate()+1);selDate=new Date(selDate);rendreDepenses();};
 
-  // ================= Calendrier =================
-  $("btn-cal").onclick=()=>{calSel=new Date(selDate);calY=selDate.getFullYear();calM=selDate.getMonth();rendreCal();$("cal-overlay").style.display="flex";};
+  // ================= Calendrier (réutilisable via callback) =================
+  let calCb=null;
+  function ouvrirCal(date, cb){ calCb=cb; calSel=new Date(date); calY=calSel.getFullYear(); calM=calSel.getMonth(); rendreCal(); $("cal-overlay").style.display="flex"; }
+  $("btn-cal").onclick=()=>ouvrirCal(selDate, d=>{ selDate=d; rendreDepenses(); });
   $("cal-fermer").onclick=()=>$("cal-overlay").style.display="none";
   $("cal-overlay").onclick=e=>{if(e.target===$("cal-overlay"))$("cal-overlay").style.display="none";};
   $("cal-moins").onclick=()=>{calM--;if(calM<0){calM=11;calY--;}rendreCal();};
   $("cal-plus").onclick =()=>{calM++;if(calM>11){calM=0;calY++;}rendreCal();};
-  $("cal-confirmer").onclick=()=>{selDate=new Date(calSel);$("cal-overlay").style.display="none";rendreDepenses();};
+  $("cal-confirmer").onclick=()=>{ $("cal-overlay").style.display="none"; if(calCb) calCb(new Date(calSel)); };
   function rendreCal(){
     $("cal-titre").textContent=MOIS_L[calM]+" "+calY;
     const js=$("cal-jsem");js.innerHTML="";JSEM.forEach(j=>{const s=document.createElement("div");s.className="cal-jsem";s.textContent=j;js.appendChild(s);});
@@ -725,26 +769,29 @@
       });
     });
   }
+  let revDate=new Date();
+  function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); $("rev-date-btn").textContent=revDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRev(id){
     editionRev=id||null;
     $("rev-modal-titre").textContent=id?"Modifier le revenu":"Nouveau revenu";
     if(id){ const r=revenus.find(x=>x.id===id);
       $("rev-brut").value=String(r.montant||"").replace(".",","); $("rev-cot").value=r.cotisation!=null?String(r.cotisation).replace(".",","):"";
       $("rev-desc").value=r.description||""; rType=r.type||null; ddRevType.set(rType);
-    } else { $("rev-brut").value=""; $("rev-cot").value=""; $("rev-desc").value=""; rType=revtypes[0]||null; ddRevType.set(rType); }
-    calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
+      revDate=r.date?new Date(r.date+"T12:00:00"):new Date();
+    } else { $("rev-brut").value=""; $("rev-cot").value=""; $("rev-desc").value=""; rType=revtypes[0]||null; ddRevType.set(rType); revDate=new Date(selDate); }
+    majRevDate(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("ouvrir-rev-2").onclick=()=>ouvrirRev(null);
-  $("rev-fermer").onclick=()=>$("rev-overlay").style.display="none";
   $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay"))$("rev-overlay").style.display="none";};
+  $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
   $("rev-brut").addEventListener("input",calcNet); $("rev-cot").addEventListener("input",calcNet);
   $("rev-valider").onclick=()=>{
     const brut=parseFloat(($("rev-brut").value||"").replace(",","."));
     if(!brut||brut<=0){$("rev-brut").focus();return;}
     const cot=parseFloat(($("rev-cot").value||"").replace(",","."))||0;
-    const net=brut*(1-cot/100); const isoJour=iso(selDate); const desc=$("rev-desc").value.trim();
+    const net=brut*(1-cot/100); const isoJour=iso(revDate); const desc=$("rev-desc").value.trim();
     if(editionRev){ const r=revenus.find(x=>x.id===editionRev); Object.assign(r,{montant:brut,cotisation:cot,net,type:rType,description:desc,date:isoJour}); }
     else { revenus.push({id:Date.now(),montant:brut,cotisation:cot,net,type:rType,description:desc,date:isoJour}); }
     sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus();
@@ -813,16 +860,8 @@
   // ================= Démarrage =================
   (async()=>{
     const session=await exigerConnexion();if(!session)return;
-    uid=session.user.id;cleDep="depenses_"+uid;cleCat="categories_"+uid;cleDash="dash_"+uid;cleSous="souscat_"+uid;cleRev="revenus_"+uid;cleRevType="revtypes_"+uid;
-    depenses=JSON.parse(localStorage.getItem(cleDep)||"[]");
-    categories=JSON.parse(localStorage.getItem(cleCat)||"null")||CATS_DEFAUT.slice();
-    souscats=JSON.parse(localStorage.getItem(cleSous)||"null")||JSON.parse(JSON.stringify(SOUS_CAT));
-    revenus=JSON.parse(localStorage.getItem(cleRev)||"[]");
-    revtypes=JSON.parse(localStorage.getItem(cleRevType)||"null")||REVTYPES_DEFAUT.slice();
-    if(!localStorage.getItem(cleCat))sauverCat();
-    if(!localStorage.getItem(cleSous))sauverSous();
-    if(!localStorage.getItem(cleRevType))sauverRevType();
-    dashMode=localStorage.getItem(cleDash)||"tout";
+    uid=session.user.id;
+    await chargerTout();
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
     ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null);});

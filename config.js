@@ -16,7 +16,15 @@ const SUPABASE_URL = "https://kxuorzhlejxzvlkriaoo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4dW9yemhsZWp4enZsa3JpYW9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzODcwMzYsImV4cCI6MjA5OTk2MzAzNn0.ZiU0rT4XMvmbg_9-NNP9XRvrsEfoUltXVTIne9xHg9w";
 
 // Création du client Supabase (utilisé par toutes les pages).
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// persistSession + autoRefreshToken = on reste connecté après avoir fermé l'app.
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
 
 // Traduit les messages d'erreur techniques de Supabase en français clair.
 function messageErreur(e) {
