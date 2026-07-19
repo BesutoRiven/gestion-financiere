@@ -188,6 +188,11 @@
     <section id="vue-accueil" class="vue" style="display:none;">
       <div class="topbar"><h1>Résumé</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
       <div class="perso" id="perso-chips"></div>
+      <div class="jour-nav" id="res-nav">
+        <button class="fleche" id="res-moins" aria-label="Période précédente">‹</button>
+        <div class="jour-centre"><div class="jour-grand" id="res-label" style="text-transform:capitalize;"></div></div>
+        <button class="fleche" id="res-plus" aria-label="Période suivante">›</button>
+      </div>
       <div id="kpi-zone"></div>
       <div class="bloc">
         <h2 id="rep-titre">Ce mois, par catégorie</h2>
@@ -396,7 +401,7 @@
   let depenses=[], categories=[], souscats={}, souscatSel=null;
   let revenus=[], revtypes=[], revTypeSel=null;
   let rType=null;
-  let selDate=new Date(), calY, calM, calSel;
+  let selDate=new Date(), resDate=new Date(), calY, calM, calSel;
   let dashMode="tout", editionId=null;
   // état de la fenêtre reçu
   let rCat=null, rSous=null, rPay=null, photoEtat="aucune", photoBlob=null;
@@ -446,7 +451,7 @@
     categories = c.categories || CATS_DEFAUT.slice();
     souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
     revtypes   = c.revtypes   || REVTYPES_DEFAUT.slice();
-    dashMode   = c.dash       || "tout";
+    dashMode   = (c.dash && c.dash!=="tout") ? c.dash : "jour";
     sauverCloud(); // enregistre l'état chargé (utile après migration)
   }
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
@@ -488,52 +493,60 @@
   }
   document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>changerVue(b.dataset.vue));
 
-  // ================= Résumé =================
+  // ================= Résumé (navigable par période) =================
+  function bornesResume(){
+    const d=jourZero(resDate);
+    if(dashMode==="jour") return {debut:iso(d), fin:iso(d)};
+    if(dashMode==="semaine"){ const l=new Date(d); l.setDate(l.getDate()-((d.getDay()+6)%7)); const f=new Date(l); f.setDate(f.getDate()+6); return {debut:iso(l), fin:iso(f)}; }
+    if(dashMode==="mois") return {debut:iso(new Date(d.getFullYear(),d.getMonth(),1)), fin:iso(new Date(d.getFullYear(),d.getMonth()+1,0))};
+    return {debut:d.getFullYear()+"-01-01", fin:d.getFullYear()+"-12-31"};
+  }
+  function labelResume(){
+    const d=jourZero(resDate);
+    if(dashMode==="jour"){
+      const diff=Math.round((d-jourZero(new Date()))/86400000);
+      if(diff===0) return "Aujourd'hui"; if(diff===-1) return "Hier"; if(diff===1) return "Demain";
+      return d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    }
+    if(dashMode==="semaine"){
+      const b=bornesResume(); const l=new Date(b.debut+"T12:00:00"), f=new Date(b.fin+"T12:00:00");
+      if(l.getMonth()===f.getMonth()) return l.getDate()+" – "+f.getDate()+" "+MOIS_C[l.getMonth()]+" "+l.getFullYear();
+      if(l.getFullYear()===f.getFullYear()) return l.getDate()+" "+MOIS_C[l.getMonth()]+" – "+f.getDate()+" "+MOIS_C[f.getMonth()]+" "+f.getFullYear();
+      return l.getDate()+" "+MOIS_C[l.getMonth()]+" "+l.getFullYear()+" – "+f.getDate()+" "+MOIS_C[f.getMonth()]+" "+f.getFullYear();
+    }
+    if(dashMode==="mois") return MOIS_L[d.getMonth()]+" "+d.getFullYear();
+    return String(d.getFullYear());
+  }
+  function decalerResume(sens){
+    const d=new Date(resDate);
+    if(dashMode==="jour") d.setDate(d.getDate()+sens);
+    else if(dashMode==="semaine") d.setDate(d.getDate()+7*sens);
+    else if(dashMode==="mois") d.setMonth(d.getMonth()+sens);
+    else d.setFullYear(d.getFullYear()+sens);
+    resDate=d; rendreAccueil();
+  }
   function rendreAccueil(){
-    const auj=new Date(), isoAuj=iso(auj);
-    const lundi=jourZero(auj); lundi.setDate(lundi.getDate()-((auj.getDay()+6)%7));
-    const dim=new Date(lundi); dim.setDate(dim.getDate()+6);
-    const isoLundi=iso(lundi), isoDim=iso(dim), moisAuj=isoAuj.slice(0,7), anAuj=isoAuj.slice(0,4);
-    let tJ=0,tS=0,tM=0,tA=0;
-    depenses.forEach(d=>{const dd=depDate(d);if(!dd)return;
-      if(dd===isoAuj)tJ+=d.montant; if(dd>=isoLundi&&dd<=isoDim)tS+=d.montant;
-      if(dd.slice(0,7)===moisAuj)tM+=d.montant; if(dd.slice(0,4)===anAuj)tA+=d.montant;});
-    const cfg={jour:["Aujourd'hui",tJ],semaine:["Cette semaine",tS],mois:["Ce mois",tM],annee:["Cette année",tA]};
-    const zone=$("kpi-zone");
-    if(dashMode==="tout") zone.innerHTML='<div class="kpis">'+kpiCard("Aujourd'hui",tJ)+kpiCard("Cette semaine",tS)+kpiCard("Ce mois",tM)+kpiCard("Cette année",tA)+'</div>';
-    else { const c=cfg[dashMode]||cfg.mois; zone.innerHTML='<div class="kpi-grand"><p class="lbl">'+c[0]+'</p><p class="val">'+fmt(c[1])+'</p></div>'; }
+    if(dashMode==="tout"||!dashMode) dashMode="jour";
     rendrePersoChips();
-
-    // Répartition selon la période choisie (mois par défaut si "tout")
-    const periode = dashMode==="tout" ? "mois" : dashMode;
-    const titres={jour:"Aujourd'hui, par catégorie",semaine:"Cette semaine, par catégorie",mois:"Ce mois, par catégorie",annee:"Cette année, par catégorie"};
-    $("rep-titre").textContent=titres[periode];
-    const parCat={};
-    depenses.forEach(d=>{const dd=depDate(d);if(!dd)return; let ok=false;
-      if(periode==="jour")ok=(dd===isoAuj); else if(periode==="semaine")ok=(dd>=isoLundi&&dd<=isoDim);
-      else if(periode==="mois")ok=(dd.slice(0,7)===moisAuj); else ok=(dd.slice(0,4)===anAuj);
-      if(ok)parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant;});
+    $("res-label").textContent=labelResume();
+    const b=bornesResume();
+    let total=0; const parCat={};
+    depenses.forEach(d=>{ const dd=depDate(d); if(!dd) return; if(dd>=b.debut && dd<=b.fin){ total+=d.montant; parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant; } });
+    $("kpi-zone").innerHTML='<div class="kpi-grand"><p class="lbl">Total de la période</p><p class="val">'+fmt(total)+'</p></div>';
+    $("rep-titre").textContent="Par catégorie";
     const box=$("repartition"); box.innerHTML="";
-    const noms=Object.keys(parCat).sort((a,b)=>parCat[b]-parCat[a]);
+    const noms=Object.keys(parCat).sort((a,c)=>parCat[c]-parCat[a]);
     $("rep-vide").style.display=noms.length?"none":"block";
-    noms.forEach(n=>{const col=couleursDe(n);const l=document.createElement("div");l.className="rep-ligne";l.style.cursor="pointer";
+    noms.forEach(n=>{ const col=couleursDe(n); const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
       l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+n+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
-      l.onclick=()=>ouvrirDetailCat(n,periode); box.appendChild(l);});
+      l.onclick=()=>ouvrirDetailCat(n); box.appendChild(l); });
   }
 
-  // ---- Détail d'une catégorie (clic depuis le résumé) ----
-  function bornesPeriode(){
-    const auj=new Date(), isoAuj=iso(auj);
-    const lundi=jourZero(auj); lundi.setDate(lundi.getDate()-((auj.getDay()+6)%7));
-    const dim=new Date(lundi); dim.setDate(dim.getDate()+6);
-    return {isoAuj, isoLundi:iso(lundi), isoDim:iso(dim), mois:isoAuj.slice(0,7), an:isoAuj.slice(0,4)};
-  }
-  function dansPeriode(dd,p,b){ if(p==="jour")return dd===b.isoAuj; if(p==="semaine")return dd>=b.isoLundi&&dd<=b.isoDim; if(p==="mois")return dd.slice(0,7)===b.mois; return dd.slice(0,4)===b.an; }
-  function ouvrirDetailCat(cat,periode){
-    const b=bornesPeriode();
-    const items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dansPeriode(dd,periode,b);}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
-    const libelles={jour:"aujourd'hui",semaine:"cette semaine",mois:"ce mois",annee:"cette année"};
-    $("catdet-titre").textContent=cat+" — "+(libelles[periode]||"");
+  // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
+  function ouvrirDetailCat(cat){
+    const b=bornesResume();
+    const items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
+    $("catdet-titre").textContent=cat+" — "+labelResume();
     const box=$("catdet-liste"); box.innerHTML="";
     const total=items.reduce((s,d)=>s+d.montant,0);
     const th=document.createElement("div"); th.style.cssText="display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 10px;border-bottom:1px solid var(--border);margin-bottom:8px;";
@@ -545,17 +558,19 @@
         '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div>';
       box.appendChild(l);
     });
+    if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucune dépense.</p>';
     $("catdet-overlay").style.display="flex";
   }
   $("catdet-fermer").onclick=()=>$("catdet-overlay").style.display="none";
   $("catdet-overlay").onclick=e=>{if(e.target===$("catdet-overlay"))$("catdet-overlay").style.display="none";};
-  function kpiCard(l,v){return '<div class="kpi"><p class="lbl">'+l+'</p><p class="val">'+fmt(v)+'</p></div>';}
   function rendrePersoChips(){
-    const modes=[["tout","Tout"],["jour","Jour"],["semaine","Semaine"],["mois","Mois"],["annee","Année"]];
+    const modes=[["jour","Jour"],["semaine","Semaine"],["mois","Mois"],["annee","Année"]];
     const c=$("perso-chips"); c.innerHTML='<span class="lbl-p">Affichage :</span>';
     modes.forEach(m=>{const b=document.createElement("button");b.className="pchip"+(dashMode===m[0]?" on":"");b.textContent=m[1];
       b.onclick=()=>{dashMode=m[0];sauverCloud();rendreAccueil();};c.appendChild(b);});
   }
+  $("res-moins").onclick=()=>decalerResume(-1);
+  $("res-plus").onclick=()=>decalerResume(1);
 
   // ================= Navigation par jour =================
   function labelJour(d){const diff=Math.round((jourZero(d)-jourZero(new Date()))/86400000);
