@@ -384,6 +384,7 @@
         <div class="cal-tete"><button id="per-moins" aria-label="Précédent">‹</button><span class="titre" id="per-titre"></span><button id="per-plus" aria-label="Suivant">›</button></div>
         <div class="cal-grille" id="per-jsem"></div>
         <div class="cal-grille" id="per-corps" style="margin-top:4px;"></div>
+        <button class="cal-confirmer" id="per-confirmer">Confirmer</button>
         <button class="cal-fermer" id="per-fermer">Fermer</button>
       </div>
     </div>
@@ -796,7 +797,7 @@
         else {
           if(perMode==="jour"){ if(isoDD===iso(perSel)) btn.classList.add("sel"); else if(isoDD===iso(auj)) btn.classList.add("auj"); }
           else { if(isoDD>=selDeb && isoDD<=selFin) btn.classList.add("sel"); else if(isoDD===iso(auj)) btn.classList.add("auj"); }
-          btn.onclick=()=>choisirPer(dd);
+          btn.onclick=()=>{ perSel=new Date(dd); rendrePer(); };
         }
         corps.appendChild(btn);
       }
@@ -807,7 +808,7 @@
       for(let mo=0;mo<12;mo++){
         const btn=document.createElement("button"); btn.className="cal-jour"; btn.style.aspectRatio="auto"; btn.style.padding="14px 0"; btn.textContent=MOIS_C[mo];
         if(y>auj.getFullYear()||(y===auj.getFullYear()&&mo>auj.getMonth())){ btn.disabled=true; btn.style.opacity=.3; }
-        else { if(y===perSel.getFullYear()&&mo===perSel.getMonth()) btn.classList.add("sel"); else if(y===auj.getFullYear()&&mo===auj.getMonth()) btn.classList.add("auj"); btn.onclick=()=>choisirPer(new Date(y,mo,1)); }
+        else { if(y===perSel.getFullYear()&&mo===perSel.getMonth()) btn.classList.add("sel"); else if(y===auj.getFullYear()&&mo===auj.getMonth()) btn.classList.add("auj"); btn.onclick=()=>{ perSel=new Date(y,mo,1); rendrePer(); }; }
         corps.appendChild(btn);
       }
     } else {
@@ -817,11 +818,20 @@
       for(let y=base-11;y<=base;y++){
         const btn=document.createElement("button"); btn.className="cal-jour"; btn.style.aspectRatio="auto"; btn.style.padding="14px 0"; btn.textContent=String(y);
         if(y>auj.getFullYear()){ btn.disabled=true; btn.style.opacity=.3; }
-        else { if(y===perSel.getFullYear()) btn.classList.add("sel"); else if(y===auj.getFullYear()) btn.classList.add("auj"); btn.onclick=()=>choisirPer(new Date(y,0,1)); }
+        else { if(y===perSel.getFullYear()) btn.classList.add("sel"); else if(y===auj.getFullYear()) btn.classList.add("auj"); btn.onclick=()=>{ perSel=new Date(y,0,1); rendrePer(); }; }
         corps.appendChild(btn);
       }
     }
+    $("per-confirmer").textContent = "Confirmer · " + labelPeriode(perMode, perSel);
   }
+  function labelPeriode(mode, date){
+    const d=jourZero(date);
+    if(mode==="jour") return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+    if(mode==="semaine"){ const b=bornesGen("semaine",date); const l=new Date(b.debut+"T12:00:00"),f=new Date(b.fin+"T12:00:00"); if(l.getMonth()===f.getMonth()) return l.getDate()+" – "+f.getDate()+" "+MOIS_C[l.getMonth()]+" "+l.getFullYear(); return l.getDate()+" "+MOIS_C[l.getMonth()]+" – "+f.getDate()+" "+MOIS_C[f.getMonth()]+" "+f.getFullYear(); }
+    if(mode==="mois") return MOIS_L[d.getMonth()]+" "+d.getFullYear();
+    return String(d.getFullYear());
+  }
+  $("per-confirmer").onclick=()=>{ $("per-overlay").style.display="none"; if(perCb) perCb(new Date(perSel)); };
   // Clic sur le libellé central → ouvre le sélecteur
   $("res-label").parentElement.style.cursor="pointer";
   $("res-label").parentElement.onclick=()=>ouvrirPeriode(dashMode, resDate, d=>{ resDate=d; rendreAccueil(); });
