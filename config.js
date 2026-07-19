@@ -52,3 +52,16 @@ async function exigerConnexion() {
   }
   return data.session;
 }
+
+// ---- Thème clair / sombre (partagé sur toutes les pages) ----
+function appliquerTheme(sombre) {
+  document.documentElement.classList.toggle("sombre", !!sombre);
+}
+function themeEstSombre() {
+  return localStorage.getItem("gf_theme") === "sombre";
+}
+function basculerTheme(sombre) {
+  localStorage.setItem("gf_theme", sombre ? "sombre" : "clair");
+  appliquerTheme(sombre);
+}
+appliquerTheme(themeEstSombre()); // appliqué au chargement de chaque page

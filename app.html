@@ -62,7 +62,9 @@
     .cat-ligne input{flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit;}
     .cat-ligne .pastille{width:18px; height:18px; border-radius:50%; flex:0 0 auto;}
     .cat-ligne button{border:none; background:transparent; color:var(--danger); font-size:18px; cursor:pointer;}
-    .impexp textarea{width:100%; min-height:90px; border:1px solid var(--border); border-radius:10px; padding:10px; font-family:monospace; font-size:13px; margin-top:8px;}
+    .impexp textarea{width:100%; min-height:190px; border:1.5px solid var(--border); border-radius:14px; padding:14px; font-family:'Courier New',monospace; font-size:13.5px; line-height:1.6; margin-top:10px; background:var(--bg); color:var(--text); resize:vertical; transition:border-color .15s;}
+    .impexp textarea:focus{outline:none; border-color:var(--accent);}
+    .impexp h2{display:flex; align-items:center; gap:8px;}
     .rangee{display:flex; gap:8px; margin-top:10px;}
     .rangee button{flex:1; height:40px; border:1px solid var(--border); background:var(--surface); border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
 
@@ -165,6 +167,12 @@
     details.det summary::-webkit-details-marker{display:none;}
     details.det .det-corps{padding:0 16px 16px;}
     details.det .det-corps h2{font-size:15px; margin:0 0 8px;}
+    details.det-nested{border-top:1px solid var(--border);}
+    details.det-nested summary{list-style:none; cursor:pointer; padding:14px 16px; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:space-between; color:var(--text);}
+    details.det-nested summary::after{content:"▾"; color:var(--muted); font-weight:400;}
+    details.det-nested[open] summary::after{transform:rotate(180deg); display:inline-block;}
+    details.det-nested summary::-webkit-details-marker{display:none;}
+    details.det-nested .det-corps{padding:0 16px 16px;}
 
     .cat-ligne .emoji-in{width:38px; text-align:center; flex:0 0 auto; border:1px solid var(--border); border-radius:8px; padding:8px 4px; font-size:16px;}
     .cat-ligne .color-in{width:34px; height:34px; flex:0 0 auto; border:none; padding:0; border-radius:8px; overflow:hidden; background:none; cursor:pointer;}
@@ -178,6 +186,14 @@
     .txn-revenu{border-left:3px solid var(--accent);}
     .txn-remb{border-left:3px solid #b98900;}
     .bud-ro{font-size:13px; color:var(--muted); margin-top:4px;}
+    .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
+    .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
+    .switch.on{background:var(--accent);}
+    .switch.on .knob{transform:translateX(22px);}
+
+    .actions3{display:flex; gap:10px; margin:14px 12px 0; justify-content:space-around;}
+    .actions3 button{background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text); font-size:12px; flex:1;}
+    .actions3 .rond{width:46px; height:46px; border-radius:50%; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent); box-shadow:0 1px 4px rgba(0,0,0,.06);}
   </style>
 </head>
 <body>
@@ -202,14 +218,16 @@
       <div class="jour-total"><p class="lbl" id="jt-lbl">Aujourd'hui</p><p class="val" id="jt-val">0,00 €</p></div>
 
       <div class="segmented" id="txn-filtre">
+        <button data-f="tout" class="on">Tout</button>
         <button data-f="depenses">Dépenses</button>
         <button data-f="revenus">Revenus</button>
-        <button data-f="tout" class="on">Tout</button>
       </div>
 
-      <button class="btn-plus" id="ouvrir-recu">＋ Dépense</button>
-      <button class="btn-plus" id="ouvrir-rev" style="margin-top:8px;">＋ Revenu</button>
-      <button class="btn-plus" id="ouvrir-remb" style="margin-top:8px;">＋ Remboursement</button>
+      <div class="actions3">
+        <button id="ouvrir-recu"><span class="rond">－</span>Dépense</button>
+        <button id="ouvrir-rev"><span class="rond">＋</span>Revenu</button>
+        <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
+      </div>
 
       <div class="liste-zone">
         <div id="liste"></div>
@@ -218,14 +236,15 @@
     </section>
 
     <!-- ============ REVENUS ============ -->
-    <section id="vue-revenus" class="vue" style="display:none;">
-      <div class="topbar"><h1>Revenus</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
-      <button class="btn-plus" id="ouvrir-rev-2" style="margin-top:12px;">＋ Revenu</button>
-      <div class="liste-zone">
-        <div id="rev-liste"></div>
+    <!-- ============ LISTE DES REVENUS (ouverte depuis le Résumé) ============ -->
+    <div id="revlist-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:420px; max-height:85vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre">Mes revenus</span><button id="revlist-fermer" aria-label="Fermer">×</button></div>
+        <button class="btn-plus" id="ouvrir-rev-2" style="margin-top:4px;">＋ Revenu</button>
+        <div id="rev-liste" style="margin-top:12px;"></div>
         <p class="vide" id="rev-vide">Aucun revenu enregistré.</p>
       </div>
-    </section>
+    </div>
 
     <!-- ============ RESUME ============ -->
     <section id="vue-accueil" class="vue" style="display:none;">
@@ -238,11 +257,12 @@
       </div>
       <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button></div>
       <div class="segmented" id="res-filtre">
+        <button data-f="tout" class="on">Tout</button>
         <button data-f="depenses">Dépenses</button>
         <button data-f="revenus">Revenus</button>
-        <button data-f="tout" class="on">Tout</button>
       </div>
       <div id="kpi-zone"></div>
+      <div style="text-align:center; margin:12px 0 0;"><button id="ouvrir-revlist" class="btn-ligne" style="width:auto; padding:0 20px; height:38px; border-radius:19px;">📋 Gérer mes revenus</button></div>
       <div class="bloc">
         <h2 id="rep-titre">Ce mois, par catégorie</h2>
         <div id="repartition"></div>
@@ -254,61 +274,69 @@
     <section id="vue-reglages" class="vue" style="display:none;">
       <div class="topbar"><h1>Réglages</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
+      <div class="bloc" style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-weight:600;">🌙 Mode sombre</span>
+        <button id="theme-switch" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode sombre"><span class="knob"></span></button>
+      </div>
+
       <details class="bloc det" open>
         <summary>Gestion</summary>
-        <div class="det-corps">
-          <h2>Participants</h2>
-          <div id="part-liste"></div>
-          <div class="cat-ligne" style="margin-top:12px;">
-            <input id="nouveau-part" type="text" placeholder="Ex. Louise" />
-            <button id="ajouter-part" style="color:var(--accent); font-size:22px;">＋</button>
-          </div>
-          <small class="aide">Ces participants sont proposés lors de l'ajout d'une dépense (Moi, Nous deux, ou une personne précise).</small>
-          <hr class="sep" />
-
-          <h2>Catégories</h2>
-          <div id="cats-liste"></div>
-          <div class="cat-ligne" style="margin-top:12px;">
-            <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
-            <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
-          </div>
-          <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ». L'émoji et la couleur sont modifiables directement sur chaque ligne.</small>
-          <hr class="sep" />
-          <h2 style="font-size:15px; margin:0 0 8px;">Sous-catégories</h2>
-          <div class="dd" id="dd-cat-sous"><button type="button" class="dd-btn vide">Choisir une catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
-          <div id="sous-liste" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
-          <div class="cat-ligne" style="margin-top:8px;">
-            <input id="nouvelle-sous" type="text" placeholder="Nouvelle sous-catégorie" />
-            <button id="ajouter-sous" style="color:var(--accent); font-size:22px;">＋</button>
-          </div>
-          <hr class="sep" />
-
-          <h2>Types de revenu</h2>
-          <div id="revtypes-liste"></div>
-          <div class="cat-ligne" style="margin-top:12px;">
-            <input id="nouveau-revtype" type="text" placeholder="Nouveau type de revenu" />
-            <button id="ajouter-revtype" style="color:var(--accent); font-size:22px;">＋</button>
-          </div>
-          <small class="aide">Personnalise les sources de revenu (salaire, freelance, prime…).</small>
-          <hr class="sep" />
-
-          <h2>Budget personnalisé</h2>
-          <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
-          <div id="bud-gestion-liste" style="margin-top:10px;"></div>
+        <div class="det-corps" style="padding:0;">
+          <details class="det-nested" open>
+            <summary>Catégories</summary>
+            <div class="det-corps">
+              <div id="cats-liste"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+              <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ». L'émoji et la couleur sont modifiables directement sur chaque ligne.</small>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary>Sous-catégories</summary>
+            <div class="det-corps">
+              <div class="dd" id="dd-cat-sous"><button type="button" class="dd-btn vide">Choisir une catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
+              <div id="sous-liste" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
+              <div class="cat-ligne" style="margin-top:8px;">
+                <input id="nouvelle-sous" type="text" placeholder="Nouvelle sous-catégorie" />
+                <button id="ajouter-sous" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary>Types de revenu</summary>
+            <div class="det-corps">
+              <div id="revtypes-liste"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouveau-revtype" type="text" placeholder="Nouveau type de revenu" />
+                <button id="ajouter-revtype" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+              <small class="aide">Personnalise les sources de revenu (salaire, freelance, prime…).</small>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary>Budget personnalisé</summary>
+            <div class="det-corps">
+              <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
+              <div id="bud-gestion-liste" style="margin-top:10px;"></div>
+            </div>
+          </details>
         </div>
       </details>
+
 
       <details class="bloc det">
         <summary>Import / Export</summary>
         <div class="det-corps">
-          <h2>Dépenses — Excel</h2>
+          <h2>📤 Dépenses — Excel</h2>
           <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant.</small>
-          <div class="rangee"><button id="exp-copier">Copier pour Excel</button><button id="exp-csv">Télécharger CSV</button></div>
+          <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
           <textarea id="zone-import" placeholder="01/05/2026&#9;Alim. &amp; Courses&#9;Carrefour&#9;1,40"></textarea>
           <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
           <div id="msg-impexp"></div>
           <hr class="sep" />
-          <h2>Revenus — Excel</h2>
+          <h2>💰 Revenus — Excel</h2>
           <small class="aide">Colle ton tableau de revenus (avec les lignes d'année « 2023 », « 2024 » et les mois). Les colonnes de sources (Cedric, Auto-entrep.…), Cotisation et Montant net sont détectées automatiquement d'après la 1re ligne.</small>
           <textarea id="zone-import-rev" placeholder="&#9;Cedric&#9;Auto-entrep.&#9;Cotisation&#9;Montant net&#10;&#9;2024&#10;Mars&#9;2 000,00 €&#9;&#9;492,00 €&#9;1 508,00 €"></textarea>
           <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
@@ -384,6 +412,16 @@
         <p class="amis-lbl">Mon identifiant</p>
         <p class="amis-pseudo" id="amis-mon-id">…</p>
         <small class="aide">Pour changer ton pseudo, va dans l'onglet Profil.</small>
+
+        <hr class="sep" />
+
+        <p class="amis-lbl">Amis (repères)</p>
+        <small class="aide">Une liste simple pour te repérer sur les dépenses partagées (ex. « Amine a participé, il me doit sa part »). Pour l'instant ce ne sont pas de vrais comptes reliés — juste des noms que tu choisis.</small>
+        <div id="part-liste" style="margin-top:10px;"></div>
+        <div class="cat-ligne" style="margin-top:10px;">
+          <input id="nouveau-part" type="text" placeholder="Ex. Amine, Maman…" />
+          <button id="ajouter-part" style="color:var(--accent); font-size:22px;">＋</button>
+        </div>
 
         <hr class="sep" />
 
@@ -496,7 +534,6 @@
 
     <nav class="navbas">
       <button class="nav-btn on" data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Dépenses</button>
-      <button class="nav-btn" data-vue="revenus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Revenus</button>
       <button class="nav-btn" data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Résumé</button>
       <button class="nav-btn" data-vue="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Budget</button>
       <button class="nav-btn" data-vue="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Réglages</button>
@@ -686,10 +723,9 @@
 
   // ================= Vues =================
   function changerVue(nom){
-    ["accueil","depenses","reglages","revenus","budget"].forEach(v=>$("vue-"+v).style.display=(v===nom?"flex":"none"));
+    ["accueil","depenses","reglages","budget"].forEach(v=>$("vue-"+v).style.display=(v===nom?"flex":"none"));
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("on",b.dataset.vue===nom));
     if(nom==="accueil"){ resDate=new Date(); rendreAccueil(); }
-    if(nom==="revenus") rendreRevenus();
     if(nom==="budget"){ budDate=new Date(); rendreBudget(); }
     window.scrollTo(0,0);
   }
@@ -1181,10 +1217,11 @@
     sauverCat();sauverDep();rendreCategories();rendreBudGestion();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
     const nb=depenses.filter(d=>d.categorie===nom).length;
-    if(!confirm("Supprimer la catégorie « "+nom+" » ?"+(nb?" Ses "+nb+" dépense(s) passeront dans « Divers ».":"")))return;
+    if(!confirm("Supprimer la catégorie « "+nom+" » ?"+(nb?" Ses "+nb+" dépense(s) passeront dans « "+(categories.find((c,i)=>i!==idx&&c.nom==="Divers")?"Divers":categories.find((c,i)=>i!==idx).nom)+" ».":"")))return;
     if(!confirm("Es-tu vraiment sûr ? Cette action est définitive."))return;
-    categories.splice(idx,1);if(!categories.find(c=>c.nom==="Divers"))categories.push({nom:"Divers",bg:"#f1efe8",fg:"#444441",emoji:"📎"});
-    depenses.forEach(d=>{if(d.categorie===nom)d.categorie="Divers";});
+    categories.splice(idx,1);
+    const fallback = categories.find(c=>c.nom==="Divers") || categories[0];
+    depenses.forEach(d=>{if(d.categorie===nom)d.categorie=fallback.nom;});
     delete souscats[nom];sauverSous();if(souscatSel===nom){souscatSel=null;rendreSousListe();}
     delete budCat[nom];
     sauverCat();sauverDep();rendreCategories();rendreDepenses();rendreBudget();rendreBudGestion();}
@@ -1390,6 +1427,9 @@
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("ouvrir-rev-2").onclick=()=>ouvrirRev(null);
+  $("ouvrir-revlist").onclick=()=>{ rendreRevenus(); $("revlist-overlay").style.display="flex"; };
+  $("revlist-fermer").onclick=()=>$("revlist-overlay").style.display="none";
+  $("revlist-overlay").onclick=e=>{if(e.target===$("revlist-overlay"))$("revlist-overlay").style.display="none";};
   $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay"))$("rev-overlay").style.display="none";};
   $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
@@ -1549,6 +1589,10 @@
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes,v=>{rType=v;});
     rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion();
+    // Mode sombre
+    const sw=$("theme-switch");
+    sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
+    sw.onclick=()=>{ const nv=!sw.classList.contains("on"); sw.classList.toggle("on",nv); sw.setAttribute("aria-checked",nv); basculerTheme(nv); };
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
