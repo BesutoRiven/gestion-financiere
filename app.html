@@ -95,7 +95,7 @@
     .cal-fermer{width:100%; margin-top:8px; height:42px; border:1px solid var(--border); background:var(--surface); border-radius:10px; cursor:pointer; color:var(--text);}
 
     /* Reçu (ajout de dépense) */
-    .recu{background:#fffdf7; width:100%; max-width:360px; max-height:88vh; overflow-y:auto; padding:0 20px 20px; position:relative;
+    .recu{background:var(--papier); width:100%; max-width:360px; max-height:88vh; overflow-y:auto; padding:0 20px 20px; position:relative;
       border-radius:16px 16px 0 0;
       -webkit-mask:
         linear-gradient(#000 0 0) top/100% calc(100% - 11px) no-repeat,
@@ -104,23 +104,23 @@
         linear-gradient(#000 0 0) top/100% calc(100% - 11px) no-repeat,
         radial-gradient(circle at 9px 11px, #0000 8px, #000 8.5px) bottom left/18px 22px repeat-x;
       box-shadow:0 12px 40px rgba(0,0,0,.3);}
-    .recu-tete{text-align:center; padding:18px 0 10px; border-bottom:2px dashed #d9d3c4;}
-    .recu-tete .marque{font-size:13px; letter-spacing:3px; color:#9a917d; text-transform:uppercase;}
-    .recu-tete h3{margin:6px 0 2px; font-size:20px; font-family:'Courier New',monospace; color:#3a3527;}
-    .recu-tete .date{font-size:12px; color:#9a917d;}
-    .recu-montant{display:flex; align-items:baseline; justify-content:center; gap:6px; padding:16px 0 6px; border-bottom:2px dashed #d9d3c4;}
-    .recu-montant input{border:none; outline:none; background:transparent; width:60%; text-align:right; font-size:38px; font-weight:700; font-family:'Courier New',monospace; color:#3a3527;}
-    .recu-montant span{font-size:30px; color:#9a917d;}
+    .recu-tete{text-align:center; padding:18px 0 10px; border-bottom:2px dashed var(--papier-border);}
+    .recu-tete .marque{font-size:13px; letter-spacing:3px; color:var(--papier-muted); text-transform:uppercase;}
+    .recu-tete h3{margin:6px 0 2px; font-size:20px; font-family:'Courier New',monospace; color:var(--papier-txt);}
+    .recu-tete .date{font-size:12px; color:var(--papier-muted);}
+    .recu-montant{display:flex; align-items:baseline; justify-content:center; gap:6px; padding:16px 0 6px; border-bottom:2px dashed var(--papier-border);}
+    .recu-montant input{border:none; outline:none; background:transparent; width:60%; text-align:right; font-size:38px; font-weight:700; font-family:'Courier New',monospace; color:var(--papier-txt);}
+    .recu-montant span{font-size:30px; color:var(--papier-muted);}
     .recu-champ{margin-top:12px;}
-    .recu-champ label{font-size:12px; color:#9a917d; text-transform:uppercase; letter-spacing:.5px;}
-    .recu-desc{width:100%; margin-top:6px; border:1px solid #e4ddca; border-radius:10px; padding:10px 12px; font-size:15px; font-family:inherit; background:#fff; outline:none;}
-    .recu .dd-btn{background:#fff; border-color:#e4ddca;}
-    .recu-photo{margin-top:14px; border-top:2px dashed #d9d3c4; padding-top:14px;}
+    .recu-champ label{font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;}
+    .recu-desc{width:100%; margin-top:6px; border:1px solid var(--papier-border); border-radius:10px; padding:10px 12px; font-size:15px; font-family:inherit; background:var(--papier); color:var(--papier-txt); outline:none;}
+    .recu .dd-btn{background:var(--papier); border-color:var(--papier-border); color:var(--papier-txt);}
+    .recu-photo{margin-top:14px; border-top:2px dashed var(--papier-border); padding-top:14px;}
     .recu-photo .zone{display:flex; align-items:center; gap:12px;}
     .recu-photo img{width:64px; height:64px; object-fit:cover; border-radius:10px;}
-    .recu-photo button{border:1px dashed #c9b98f; background:#fff; color:#8a7c55; border-radius:10px; padding:10px 14px; font-size:14px; cursor:pointer;}
+    .recu-photo button{border:1px dashed var(--papier-muted); background:var(--papier); color:var(--papier-muted); border-radius:10px; padding:10px 14px; font-size:14px; cursor:pointer;}
     .recu-valider{width:100%; margin-top:18px; height:50px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
-    .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:#9a917d; border:none; font-size:14px; cursor:pointer;}
+    .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--papier-muted); border:none; font-size:14px; cursor:pointer;}
 
     /* Visionneuse photo */
     .lb-overlay img{max-width:100%; max-height:85vh; border-radius:12px;}
@@ -224,8 +224,8 @@
       </div>
 
       <div class="actions3">
-        <button id="ouvrir-recu"><span class="rond">－</span>Dépense</button>
         <button id="ouvrir-rev"><span class="rond">＋</span>Revenu</button>
+        <button id="ouvrir-recu"><span class="rond">－</span>Dépense</button>
         <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
 
@@ -237,14 +237,7 @@
 
     <!-- ============ REVENUS ============ -->
     <!-- ============ LISTE DES REVENUS (ouverte depuis le Résumé) ============ -->
-    <div id="revlist-overlay" class="cal-overlay" style="display:none;">
-      <div class="cal-box" style="max-width:420px; max-height:85vh; overflow-y:auto;">
-        <div class="cal-tete"><span class="titre">Mes revenus</span><button id="revlist-fermer" aria-label="Fermer">×</button></div>
-        <button class="btn-plus" id="ouvrir-rev-2" style="margin-top:4px;">＋ Revenu</button>
-        <div id="rev-liste" style="margin-top:12px;"></div>
-        <p class="vide" id="rev-vide">Aucun revenu enregistré.</p>
-      </div>
-    </div>
+
 
     <!-- ============ RESUME ============ -->
     <section id="vue-accueil" class="vue" style="display:none;">
@@ -262,7 +255,6 @@
         <button data-f="revenus">Revenus</button>
       </div>
       <div id="kpi-zone"></div>
-      <div style="text-align:center; margin:12px 0 0;"><button id="ouvrir-revlist" class="btn-ligne" style="width:auto; padding:0 20px; height:38px; border-radius:19px;">📋 Gérer mes revenus</button></div>
       <div class="bloc">
         <h2 id="rep-titre">Ce mois, par catégorie</h2>
         <div id="repartition"></div>
@@ -277,6 +269,10 @@
       <div class="bloc" style="display:flex; align-items:center; justify-content:space-between;">
         <span style="font-weight:600;">🌙 Mode sombre</span>
         <button id="theme-switch" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode sombre"><span class="knob"></span></button>
+      </div>
+      <div class="bloc" style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-weight:600;">💱 Devise</span>
+        <select id="devise-select" style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:var(--surface); color:var(--text); font-family:inherit; font-size:14px;"></select>
       </div>
 
       <details class="bloc det" open>
@@ -370,7 +366,7 @@
           <h3 id="recu-titre">Nouvelle dépense</h3>
           <div class="date" id="recu-date"></div>
         </div>
-        <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><span>€</span></div>
+        <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><span id="r-devise-sym">€</span></div>
 
         <div class="recu-champ"><label>Catégorie</label><div class="dd" id="dd-cat"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
@@ -379,7 +375,7 @@
         <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" placeholder="Ex. Kebab avec Louise" /></div>
 
         <div class="recu-photo">
-          <label style="font-size:12px; color:#9a917d; text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
+          <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
           <div class="zone" style="margin-top:8px;">
             <img id="r-photo-apercu" alt="" style="display:none;" />
             <button type="button" id="r-photo-btn">Ajouter une photo</button>
@@ -449,17 +445,17 @@
 
     <!-- ============ REVENU (ajout / édition) ============ -->
     <div id="rev-overlay" class="recu-overlay" style="display:none;">
-      <div class="recu" style="background:#f1f8f4;">
+      <div class="recu" style="background:var(--papier-vert);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3 id="rev-modal-titre">Nouveau revenu</h3>
           <div class="date" id="rev-date-aff"></div>
         </div>
-        <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><span>€</span></div>
-        <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:#fff;">Choisir la date</button></div>
+        <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><span id="rev-devise-sym">€</span></div>
+        <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:var(--papier); color:var(--papier-txt); border-color:var(--papier-border);">Choisir la date</button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Cotisation (%)</label><input id="rev-cot" class="recu-desc" type="text" inputmode="decimal" placeholder="ex. 25,6" /></div>
-        <p style="text-align:center; font-size:15px; margin:16px 0 4px; color:#3a5247;">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
+        <p style="text-align:center; font-size:15px; margin:16px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
         <div class="recu-champ"><label>Description</label><input id="rev-desc" class="recu-desc" type="text" placeholder="Ex. Cedric — prestation" /></div>
         <button class="recu-valider" id="rev-valider">Valider ✓</button>
         <button class="recu-annuler" id="rev-annuler">Annuler</button>
@@ -468,17 +464,17 @@
 
     <!-- ============ REMBOURSEMENT ============ -->
     <div id="remb-overlay" class="recu-overlay" style="display:none;">
-      <div class="recu" style="background:#fdf7ea;">
+      <div class="recu" style="background:var(--papier-jaune);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3>Nouveau remboursement</h3>
           <div class="date" id="remb-date-aff"></div>
         </div>
-        <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><span>€</span></div>
+        <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><span id="remb-devise-sym">€</span></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
-          <div id="remb-depenses" style="max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid #e4ddca; border-radius:10px; background:#fff;"></div>
+          <div id="remb-depenses" style="max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--papier-border); border-radius:10px; background:var(--papier);"></div>
         </div>
         <button class="recu-valider" id="remb-valider" style="background:#b98900;">Valider ✓</button>
         <button class="recu-annuler" id="remb-annuler">Annuler</button>
@@ -595,13 +591,16 @@
   let rCat=null, rSous=null, rPay=null, rPart=null, photoEtat="aucune", photoBlob=null;
 
   // ================= Utilitaires =================
-  const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+  const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"}];
+  let deviseDefaut="EUR";
+  const symboleDevise=()=> (DEVISES.find(d=>d.code===deviseDefaut)||DEVISES[0]).sym;
+  const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -640,6 +639,7 @@
     budCat     = c.budCat || {};
     participants = c.participants || PARTICIPANTS_DEFAUT.slice();
     remboursements = c.remboursements || [];
+    deviseDefaut = c.devise || "EUR";
   }
   function rafraichirVueCourante(){
     rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion();
@@ -796,26 +796,52 @@
       $("rep-titre").textContent="Par type de revenu";
       const noms=Object.keys(parType).sort((a,c)=>parType[c]-parType[a]);
       $("rep-vide").style.display=noms.length?"none":"block";
-      noms.forEach(n=>{ const l=document.createElement("div"); l.className="rep-ligne";
-        l.innerHTML='<span class="pt" style="background:var(--accent)"></span><span class="nom">💰 '+n+'</span><span class="mt">'+fmt(parType[n])+'</span>'; box.appendChild(l); });
+      noms.forEach(n=>{ const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
+        l.innerHTML='<span class="pt" style="background:var(--accent)"></span><span class="nom">💰 '+n+'</span><span class="mt">'+fmt(parType[n])+'</span>';
+        l.onclick=()=>ouvrirDetailRevType(n); box.appendChild(l); });
     } else {
       const solde=totalRev-totalDep;
       $("kpi-zone").innerHTML='<div class="kpis"><div class="kpi"><p class="lbl">Revenus</p><p class="val" style="color:var(--accent);">'+fmt(totalRev)+'</p></div><div class="kpi"><p class="lbl">Dépenses</p><p class="val">'+fmt(totalDep)+'</p></div></div><div class="kpi-grand"><p class="lbl">Solde net</p><p class="val" style="color:'+(solde>=0?'var(--accent)':'var(--danger)')+';">'+fmt(solde)+'</p></div>';
       $("rep-titre").textContent="Par catégorie et type";
       const lignes=[];
       Object.keys(parCat).forEach(n=>lignes.push({n, v:parCat[n], dep:true}));
-      Object.keys(parType).forEach(n=>lignes.push({n:"💰 "+n, v:parType[n], dep:false}));
+      Object.keys(parType).forEach(n=>lignes.push({n:"💰 "+n, typeBrut:n, v:parType[n], dep:false}));
       lignes.sort((a,c)=>c.v-a.v);
       $("rep-vide").style.display=lignes.length?"none":"block";
-      lignes.forEach(x=>{ const col=x.dep?couleursDe(x.n):{fg:"var(--accent)"}; const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; if(x.dep) l.style.cursor="pointer";
+      lignes.forEach(x=>{ const col=x.dep?couleursDe(x.n):{fg:"var(--accent)"}; const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
         l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+x.n+'</span><span class="mt">'+fmt(x.v)+'</span>';
-        if(x.dep) l.onclick=()=>ouvrirDetailCat(x.n); box.appendChild(l); });
+        l.onclick=()=>{ x.dep?ouvrirDetailCat(x.n):ouvrirDetailRevType(x.typeBrut); }; box.appendChild(l); });
     }
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
   let detCat=null, detFiltre=null;
   function ouvrirDetailCat(cat){ detCat=cat; detFiltre=null; rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
+
+  // ---- Détail d'un type de revenu (clic depuis le résumé, même période) ----
+  function ouvrirDetailRevType(type){
+    const b=bornesResume();
+    const items=revenus.filter(r=>(r.type||"Autre")===type && r.date>=b.debut && r.date<=b.fin).sort((x,y)=>(y.date||"").localeCompare(x.date||""));
+    $("catdet-titre").textContent="💰 "+type+" — "+labelResume();
+    $("catdet-filtre").innerHTML="";
+    const box=$("catdet-liste"); box.innerHTML="";
+    const total=items.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0);
+    const th=document.createElement("div"); th.style.cssText="display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 10px;border-bottom:1px solid var(--border);margin-bottom:8px;";
+    th.innerHTML="<span>Total</span><span>"+fmt(total)+"</span>"; box.appendChild(th);
+    items.forEach(r=>{
+      const infos=[r.cotisation?("cotis. "+String(r.cotisation).replace(".",",")+"%"):null, r.montant?("brut "+fmt(r.montant)):null].filter(Boolean).join(" · ");
+      const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
+      l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(r.description||type)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmt(r.net!=null?r.net:r.montant)+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted);">'+(dateAff(r.date)||"")+(infos?' · '+infos:'')+'</div></div>';
+      const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--accent);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier ce revenu");
+      be.onclick=()=>{ $("catdet-overlay").style.display="none"; ouvrirRev(r.id); };
+      const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer ce revenu");
+      bx.onclick=()=>{ if(!confirm("Supprimer « "+(r.description||type)+" » ("+fmt(r.net!=null?r.net:r.montant)+") ?"))return; revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); ouvrirDetailRevType(type); rendreAccueil(); rendreDepenses(); };
+      l.appendChild(be); l.appendChild(bx); box.appendChild(l);
+    });
+    if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucun revenu.</p>';
+    $("catdet-overlay").style.display="flex";
+  }
   function rendreDetailCat(){
     const cat=detCat, b=bornesResume();
     let items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
@@ -838,9 +864,12 @@
       const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
       l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(d.commentaire||d.sousCat||cat)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmt(d.montant)+'</span></div>'+
         '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div></div>';
+      if(rembLiees(d.id).length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.style.cssText="border:none;background:transparent;font-size:15px;cursor:pointer;padding:0 2px;"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
+      const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier cette dépense");
+      be.onclick=()=>{ $("catdet-overlay").style.display="none"; selDate=new Date(d.date+"T12:00:00"); ouvrirRecu(d.id); };
       const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer cette dépense");
       bx.onclick=async()=>{ if(!confirm("Supprimer « "+(d.commentaire||d.sousCat||cat)+" » ("+fmt(d.montant)+") ?"))return; if(d.photo)await photoDel(d.id); depenses=depenses.filter(x=>x.id!==d.id); remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(id=>id!==d.id);}); sauverDep(); rendreDetailCat(); rendreDepenses(); rendreAccueil(); };
-      l.appendChild(bx); box.appendChild(l);
+      l.appendChild(be); l.appendChild(bx); box.appendChild(l);
     });
     if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucune dépense.</p>';
   }
@@ -1139,6 +1168,7 @@
   let ddCat, ddSous, ddPay, ddPart;
   function ouvrirRecu(id){
     editionId=id||null; photoEtat="aucune"; photoBlob=null;
+    $("r-devise-sym").textContent=symboleDevise();
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
     $("recu-date").textContent = selDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
     $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").style.display="inline-block";
@@ -1393,7 +1423,7 @@
     $("rev-net").textContent=fmt(brut*(1-cot/100));
   }
   function rendreRevenus(){
-    const box=$("rev-liste"); box.innerHTML="";
+    const box=$("rev-liste"); if(!box) return; box.innerHTML="";
     $("rev-vide").style.display=revenus.length?"none":"block";
     const groupes={};
     revenus.forEach(r=>{ const m=(r.date||"").slice(0,7)||"?"; (groupes[m]=groupes[m]||[]).push(r); });
@@ -1417,6 +1447,7 @@
   function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); $("rev-date-btn").textContent=revDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRev(id){
     editionRev=id||null;
+    $("rev-devise-sym").textContent=symboleDevise();
     $("rev-modal-titre").textContent=id?"Modifier le revenu":"Nouveau revenu";
     if(id){ const r=revenus.find(x=>x.id===id);
       $("rev-brut").value=String(r.montant||"").replace(".",","); $("rev-cot").value=r.cotisation!=null?String(r.cotisation).replace(".",","):"";
@@ -1426,10 +1457,6 @@
     majRevDate(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
-  $("ouvrir-rev-2").onclick=()=>ouvrirRev(null);
-  $("ouvrir-revlist").onclick=()=>{ rendreRevenus(); $("revlist-overlay").style.display="flex"; };
-  $("revlist-fermer").onclick=()=>$("revlist-overlay").style.display="none";
-  $("revlist-overlay").onclick=e=>{if(e.target===$("revlist-overlay"))$("revlist-overlay").style.display="none";};
   $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay"))$("rev-overlay").style.display="none";};
   $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
@@ -1447,6 +1474,7 @@
   // ---- Remboursement ----
   function ouvrirRemb(){
     $("remb-montant").value=""; $("remb-desc").value="";
+    $("remb-devise-sym").textContent=symboleDevise();
     $("remb-date-aff").textContent = selDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
     const box=$("remb-depenses"); box.innerHTML="";
     const recentes=depenses.slice().sort((a,b)=>(depDate(b)||"").localeCompare(depDate(a)||"")).slice(0,80);
@@ -1593,6 +1621,11 @@
     const sw=$("theme-switch");
     sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
     sw.onclick=()=>{ const nv=!sw.classList.contains("on"); sw.classList.toggle("on",nv); sw.setAttribute("aria-checked",nv); basculerTheme(nv); };
+
+    // Devise
+    const selDev=$("devise-select");
+    selDev.innerHTML=DEVISES.map(d=>'<option value="'+d.code+'"'+(d.code===deviseDefaut?" selected":"")+'>'+d.code+" ("+d.sym+")</option>").join("");
+    selDev.onchange=()=>{ deviseDefaut=selDev.value; sauverCloud(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); };
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";

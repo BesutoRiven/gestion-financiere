@@ -5,6 +5,12 @@
 :root.sombre{
   --bg:#12161a; --surface:#1c2128; --text:#eef1ee; --muted:#8b9a94;
   --accent:#22a382; --accent-soft:#173a30; --border:#2c333b; --danger:#e07a7a;
+  --papier:#20262c; --papier-vert:#182620; --papier-jaune:#2a2318;
+  --papier-txt:#eef1ee; --papier-muted:#9aa39c; --papier-border:#343c44;
+}
+:root{
+  --papier:#fffdf7; --papier-vert:#f1f8f4; --papier-jaune:#fdf7ea;
+  --papier-txt:#3a3527; --papier-muted:#9a917d; --papier-border:#d9d3c4;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; min-height:100%;}
