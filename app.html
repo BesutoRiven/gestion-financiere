@@ -185,7 +185,7 @@
     .part-badge{display:inline-block; font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:10px; font-weight:600; margin-left:6px;}
     .remb-badge{color:var(--accent); font-size:14px; margin-left:4px;}
     .txn-revenu{border-left:3px solid var(--accent);}
-    .txn-remb{border-left:3px solid #b98900;}
+    .txn-remb{border-left:3px solid #2f6fb0;}
     .bud-ro{font-size:13px; color:var(--muted); margin-top:4px;}
     .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
     .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
@@ -270,7 +270,7 @@
       </div>
       <div class="bloc" style="display:flex; align-items:center; justify-content:space-between;">
         <span style="font-weight:600;">💱 Devise</span>
-        <select id="devise-select" style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:var(--surface); color:var(--text); font-family:inherit; font-size:14px;"></select>
+        <select id="devise-select" style="height:28px; border:1px solid var(--border); border-radius:8px; padding:0 8px; background:var(--surface); color:var(--text); font-family:inherit; font-size:13px;"></select>
       </div>
 
       <details class="bloc det" open>
@@ -471,7 +471,7 @@
 
     <!-- ============ REMBOURSEMENT ============ -->
     <div id="remb-overlay" class="recu-overlay" style="display:none;">
-      <div class="recu" style="background:var(--papier-jaune);">
+      <div class="recu" style="background:var(--papier-bleu);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3>Nouveau remboursement</h3>
@@ -481,9 +481,11 @@
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
-          <div id="remb-depenses" style="max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--papier-border); border-radius:10px; background:var(--papier);"></div>
+          <input id="remb-recherche" class="recu-desc" type="text" placeholder="Rechercher : date, catégorie, moyen de paiement…" />
+          <div id="remb-selection" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+          <div id="remb-depenses" style="display:none; max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--papier-border); border-radius:10px; background:var(--papier);"></div>
         </div>
-        <button class="recu-valider" id="remb-valider" style="background:#b98900;">Valider ✓</button>
+        <button class="recu-valider" id="remb-valider" style="background:#2f6fb0;">Valider ✓</button>
         <button class="recu-annuler" id="remb-annuler">Annuler</button>
       </div>
     </div>
@@ -1506,22 +1508,78 @@
   };
 
   // ---- Remboursement ----
+  // ---- Recherche intelligente (tolérante aux fautes de frappe + quelques synonymes courants) ----
+  function normTxt(s){ return (s||"").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+  function levenshtein(a,b){
+    const m=a.length,n=b.length; if(!m)return n; if(!n)return m;
+    let prev=Array.from({length:n+1},(_,i)=>i);
+    for(let i=1;i<=m;i++){
+      const cur=[i];
+      for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      prev=cur;
+    }
+    return prev[n];
+  }
+  // Quelques synonymes de langage courant -> catégorie (liste volontairement modeste, pas une IA sémantique)
+  const SYNONYMES_RECH = {"bouffe":"Alim. & Courses","manger":"Alim. & Courses","nourriture":"Alim. & Courses",
+    "fringues":"Shopping","fripe":"Shopping","frusques":"Shopping",
+    "bagnole":"Déplacements","caisse":"Déplacements","essence":"Déplacements",
+    "medoc":"Santé","medocs":"Santé","docteur":"Santé","medecin":"Santé",
+    "jeu":"Loisirs","jeux":"Loisirs","jouer":"Loisirs","cinema":"Loisirs",
+    "loyer":"Logement","maison":"Logement","appart":"Logement"};
+  function motDansChamp(mot, champ){
+    if(!champ) return false;
+    const c=normTxt(champ);
+    if(c.includes(mot)) return true;
+    const mots=c.split(/[^a-z0-9]+/).filter(Boolean);
+    return mots.some(w=> w.length>=4 && mot.length>=4 && levenshtein(w,mot)<=(w.length>=7?2:1));
+  }
+  function depenseCorrespond(q, d){
+    const tokens=normTxt(q).trim().split(/\s+/).filter(Boolean);
+    if(!tokens.length) return false;
+    const champs=[d.dateAffichee, d.categorie, d.sousCat, d.paiement, d.commentaire, String(d.montant).replace(".",",")];
+    return tokens.every(tok=>{
+      const catSyn=SYNONYMES_RECH[tok];
+      if(catSyn && normTxt(catSyn)===normTxt(d.categorie)) return true;
+      return champs.some(ch=>motDansChamp(tok,ch));
+    });
+  }
+  let rembSelection=[];
+  function rendreRembSelection(){
+    const box=$("remb-selection"); box.innerHTML="";
+    rembSelection.forEach(id=>{
+      const d=depenses.find(x=>x.id===id); if(!d) return;
+      const chip=document.createElement("span"); chip.style.cssText="display:inline-flex;align-items:center;gap:6px;background:var(--papier);border:1px solid var(--papier-border);border-radius:14px;padding:5px 6px 5px 10px;font-size:13px;color:var(--papier-txt);";
+      chip.textContent=(d.commentaire||d.sousCat||d.categorie)+" · "+fmtDev(d.montant,d.devise);
+      const x=document.createElement("button"); x.textContent="×"; x.style.cssText="border:none;background:none;color:var(--danger);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;";
+      x.onclick=()=>{ rembSelection=rembSelection.filter(i=>i!==id); rendreRembSelection(); rendreRembResultats($("remb-recherche").value); };
+      chip.appendChild(x); box.appendChild(chip);
+    });
+  }
+  function rendreRembResultats(q){
+    const box=$("remb-depenses"); const query=(q||"").trim();
+    if(!query){ box.style.display="none"; box.innerHTML=""; return; }
+    const resultats=depenses.filter(d=>!rembSelection.includes(d.id) && depenseCorrespond(query,d))
+      .sort((a,b)=>(depDate(b)||"").localeCompare(depDate(a)||"")).slice(0,40);
+    box.style.display="block"; box.innerHTML="";
+    if(!resultats.length){ box.innerHTML='<p class="vide" style="padding:12px;">Aucune dépense trouvée.</p>'; return; }
+    resultats.forEach(d=>{
+      const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--papier-border);font-size:14px;cursor:pointer;color:var(--papier-txt);";
+      l.innerHTML='<span style="flex:1;">'+(d.commentaire||d.sousCat||d.categorie)+'<span style="color:var(--papier-muted);font-size:12px;display:block;">'+(d.dateAffichee||"")+' · '+d.categorie+(d.sousCat?(' · '+d.sousCat):'')+(d.paiement?(' · '+d.paiement):'')+'</span></span>'+
+        '<span style="font-weight:600;">'+fmtDev(d.montant,d.devise)+'</span>';
+      l.onclick=()=>{ rembSelection.push(d.id); $("remb-recherche").value=""; rendreRembSelection(); rendreRembResultats(""); };
+      box.appendChild(l);
+    });
+  }
+  $("remb-recherche").addEventListener("input", ()=>rendreRembResultats($("remb-recherche").value));
+
   let rembDeviseTicket="EUR";
   function ouvrirRemb(){
-    $("remb-montant").value=""; $("remb-desc").value="";
+    $("remb-montant").value=""; $("remb-desc").value=""; $("remb-recherche").value="";
+    rembSelection=[]; rendreRembSelection(); rendreRembResultats("");
     rembDeviseTicket = deviseDefaut;
     $("remb-devise-sym").textContent=symboleDevise(rembDeviseTicket);
     $("remb-date-aff").textContent = selDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-    const box=$("remb-depenses"); box.innerHTML="";
-    const recentes=depenses.slice().sort((a,b)=>(depDate(b)||"").localeCompare(depDate(a)||"")).slice(0,80);
-    if(!recentes.length){ box.innerHTML='<p class="vide" style="padding:12px;">Aucune dépense enregistrée pour l\'instant.</p>'; }
-    recentes.forEach(d=>{
-      const l=document.createElement("label"); l.style.cssText="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f0ead8;font-size:14px;cursor:pointer;";
-      l.innerHTML='<input type="checkbox" value="'+d.id+'" style="flex:0 0 auto;width:17px;height:17px;" />'+
-        '<span style="flex:1;">'+(d.commentaire||d.sousCat||d.categorie)+'<span style="color:var(--muted);font-size:12px;display:block;">'+(d.dateAffichee||"")+' · '+d.categorie+'</span></span>'+
-        '<span style="font-weight:600;">'+fmtDev(d.montant,d.devise)+'</span>';
-      box.appendChild(l);
-    });
     $("remb-overlay").style.display="flex";
     setTimeout(()=>$("remb-montant").focus(),50);
   }
@@ -1531,10 +1589,9 @@
   $("remb-devise-sym").onclick=()=>ouvrirDevisePick(rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
   $("remb-valider").onclick=()=>{
     const v=parseFloat(($("remb-montant").value||"").replace(",",".")); if(!v||v<=0){$("remb-montant").focus();return;}
-    const ids=[...$("remb-depenses").querySelectorAll("input:checked")].map(i=>parseInt(i.value,10));
-    if(!ids.length){ alert("Sélectionne au moins une dépense concernée."); return; }
+    if(!rembSelection.length){ alert("Recherche et sélectionne au moins une dépense concernée."); return; }
     const isoJour=iso(selDate); const desc=$("remb-desc").value.trim();
-    remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:ids, date:isoJour, dateAffichee:dateAff(isoJour)});
+    remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
     sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses();
   };
 
