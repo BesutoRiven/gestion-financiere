@@ -77,7 +77,8 @@
     .dd-opt.on{color:var(--accent); font-weight:600;}
 
     /* Calendrier */
-    .cal-overlay,.recu-overlay,.lb-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:70; padding:16px;}
+    .recu-overlay,.lb-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:70; padding:16px;}
+    .cal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:95; padding:16px;}
     .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px;}
     .cal-tete{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
     .cal-tete button{border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); width:34px; height:34px; border-radius:8px;}
@@ -729,16 +730,62 @@
     duMoisCourant().forEach(d=>rows.push([d.dateAffichee||"",d.categorie,d.sousCat||"",d.commentaire||"",String(d.montant).replace(".",",")]));
     const csv="\uFEFF"+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(";")).join("\r\n");
     const b=new Blob([csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="depenses_"+moisEnCours()+".csv";a.click();msgIE("Fichier CSV téléchargé.","ok");};
-  function parseDate(t){t=(t||"").trim();let m=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
-    if(m){let a=m[3];if(a.length===2)a="20"+a;return a+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");}
-    m=t.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return t;return iso(new Date());}
-  $("btn-importer").onclick=()=>{const lignes=($("zone-import").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);let n=0;
-    lignes.forEach(l=>{if(/^date[\t;,]/i.test(l))return;const cols=l.includes("\t")?l.split("\t"):(l.includes(";")?l.split(";"):l.split(","));if(cols.length<2)return;
-      const dIso=parseDate(cols[0]);const cat=(cols[1]||"Divers").trim()||"Divers";const com=(cols[2]||"").trim();
-      const mt=parseFloat((cols[cols.length-1]||"").replace(/[^0-9,.-]/g,"").replace(",","."));if(!mt||mt<=0)return;
-      if(!categories.some(c=>c.nom===cat)){const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom:cat,bg:coul.bg,fg:coul.fg});}
-      depenses.push({id:Date.now()+n,montant:mt,categorie:cat,commentaire:com,date:dIso,mois:dIso.slice(0,7),dateAffichee:dateAff(dIso),photo:false});n++;});
-    sauverDep();sauverCat();$("zone-import").value="";msgIE(n>0?(n+" dépense(s) importée(s)."):"Aucune ligne valide. Vérifie le format.",n>0?"ok":"err");rendreCategories();};
+  // ---- Lecture de date (formats FR : « 1 mai 2025 », jj/mm/aaaa, aaaa-mm-jj) ----
+  const MOIS_PARSE={janvier:1,"janv":1,"janv.":1,fevrier:2,"février":2,"fevr":2,"févr":2,"févr.":2,"fevr.":2,mars:3,avril:4,"avr":4,"avr.":4,mai:5,juin:6,juillet:7,"juil":7,"juil.":7,aout:8,"août":8,septembre:9,"sept":9,"sept.":9,octobre:10,"oct":10,"oct.":10,novembre:11,"nov":11,"nov.":11,decembre:12,"décembre":12,"déc":12,"déc.":12,"dec":12};
+  function parseDate(t){
+    t=(t||"").trim();
+    let m=t.match(/^(\d{1,2})\s+([A-Za-zûéêàùôîçÉÈ.]+)\s+(\d{4})$/);
+    if(m){ const mo=MOIS_PARSE[m[2].toLowerCase()]; if(mo) return m[3]+"-"+String(mo).padStart(2,"0")+"-"+m[1].padStart(2,"0"); }
+    m=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if(m){ let a=m[3]; if(a.length===2)a="20"+a; return a+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0"); }
+    m=t.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return t;
+    return null;
+  }
+  const parseMontant=t=>{ const n=parseFloat(String(t).replace(/[^0-9,.-]/g,"").replace(",",".")); return isNaN(n)?null:n; };
+  const trouverCategorie=x=>{ const c=categories.find(c=>c.nom.toLowerCase()===String(x).toLowerCase()); return c?c.nom:null; };
+  const trouverParentSousCat=x=>{ const xx=String(x).toLowerCase(); for(const cat of Object.keys(souscats)){ if((souscats[cat]||[]).some(s=>s.toLowerCase()===xx)) return cat; } return null; };
+
+  $("btn-importer").onclick=()=>{
+    const lignes=($("zone-import").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    const aImporter=[]; const problemes=[]; const sousAjouter=[]; // {cat, sous}
+    lignes.forEach(l=>{
+      let cells=(l.includes("\t")?l.split("\t"):l.split(/ {2,}|;/)).map(s=>s.trim()).filter(Boolean);
+      if(cells.length<2) return;
+      // montant = dernière cellule
+      const mt=parseMontant(cells[cells.length-1]); if(mt===null||mt<=0) return; // ignore en-tête / ligne invalide
+      cells=cells.slice(0,-1);
+      // date = 1re cellule qui ressemble à une date
+      let dIso=null;
+      for(let i=0;i<cells.length;i++){ const d=parseDate(cells[i]); if(d){ dIso=d; cells.splice(i,1); break; } }
+      if(!dIso) dIso=iso(new Date());
+      // catégorie = cellule correspondant à une catégorie connue
+      let cat=null;
+      for(let i=0;i<cells.length;i++){ const c=trouverCategorie(cells[i]); if(c){ cat=c; cells.splice(i,1); break; } }
+      // sous-catégorie = cellule correspondant à une sous-catégorie connue
+      let sous=null;
+      for(let i=0;i<cells.length;i++){ const p=trouverParentSousCat(cells[i]); if(p){ sous=cells[i]; if(!cat) cat=p; cells.splice(i,1); break; } }
+      const desc=cells.join(" ").trim();
+      if(!cat){ problemes.push(l); return; }
+      if(sous && cat && !(souscats[cat]||[]).some(s=>s.toLowerCase()===sous.toLowerCase())) sousAjouter.push({cat,sous});
+      aImporter.push({montant:mt,categorie:cat,sousCat:sous||"",commentaire:desc,date:dIso});
+    });
+
+    if(problemes.length){
+      const apercu=problemes.slice(0,3).map(p=>"« "+p+" »").join(", ");
+      msgIE("Import annulé : "+problemes.length+" ligne(s) sans catégorie ni sous-catégorie reconnue ("+apercu+(problemes.length>3?"…":"")+"). Vérifie que la catégorie ou la sous-catégorie existe dans l'app, puis ajoute-la avant d'importer.","warn");
+      return;
+    }
+    if(!aImporter.length){ msgIE("Aucune ligne valide trouvée. Vérifie le format.","warn"); return; }
+
+    // On complète les sous-catégories manquantes dans leur catégorie
+    sousAjouter.forEach(({cat,sous})=>{ souscats[cat]=souscats[cat]||[]; if(!souscats[cat].some(s=>s.toLowerCase()===sous.toLowerCase())) souscats[cat].push(sous); });
+    let n=0;
+    aImporter.forEach(x=>{ depenses.push({id:Date.now()+n, montant:x.montant, categorie:x.categorie, sousCat:x.sousCat, commentaire:x.commentaire, date:x.date, mois:x.date.slice(0,7), dateAffichee:dateAff(x.date), photo:false}); n++; });
+    sauverDep(); sauverSous();
+    $("zone-import").value="";
+    msgIE(n+" dépense(s) importée(s) avec leur date et catégorie.","ok");
+    rendreDepenses(); rendreCategories(); rendreSousListe();
+  };
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
   // ================= Revenus =================

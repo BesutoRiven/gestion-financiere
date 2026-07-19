@@ -33,6 +33,7 @@ label.lbl{font-size:13px; color:var(--muted); display:block; margin-top:14px;}
 .lien{background:none; border:none; color:var(--accent); font-size:14px; cursor:pointer; padding:0; margin-top:14px; text-align:center; width:100%;}
 .message{font-size:14px; border-radius:10px; padding:10px 12px; margin-top:12px;}
 .message.err{background:#fceeee; color:var(--danger);}
+.message.warn{background:#fdf0dd; color:#8a5a00;}
 .message.ok{background:var(--accent-soft); color:var(--accent);}
 .titre-page{font-size:22px; font-weight:600; margin:20px 20px 0;}
 .sep{height:1px; background:var(--border); margin:16px 0; border:none;}
