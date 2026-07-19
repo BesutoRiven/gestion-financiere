@@ -6,10 +6,12 @@
   --bg:#12161a; --surface:#1c2128; --text:#eef1ee; --muted:#8b9a94;
   --accent:#22a382; --accent-soft:#173a30; --border:#2c333b; --danger:#e07a7a;
   --papier:#20262c; --papier-vert:#182620; --papier-bleu:#182430;
+  --remb-bg:#182430; --remb-fg:#5b9bdb;
   --papier-txt:#eef1ee; --papier-muted:#9aa39c; --papier-border:#343c44;
 }
 :root{
   --papier:#fffdf7; --papier-vert:#f1f8f4; --papier-bleu:#eef4fb;
+  --remb-bg:#e8f0fb; --remb-fg:#2f6fb0;
   --papier-txt:#3a3527; --papier-muted:#9a917d; --papier-border:#d9d3c4;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}

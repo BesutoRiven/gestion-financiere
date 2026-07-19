@@ -122,6 +122,7 @@
     .recu-valider{width:100%; margin-top:18px; height:50px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
     .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--papier-muted); border:none; font-size:14px; cursor:pointer;}
     .devise-btn{font-size:28px; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 0 0 4px; font-family:inherit;}
+    .gestion-case{width:20px; height:20px; flex:0 0 auto; accent-color:var(--accent); cursor:pointer;}
 
     /* Visionneuse photo */
     .lb-overlay img{max-width:100%; max-height:85vh; border-radius:12px;}
@@ -219,6 +220,13 @@
         <button data-f="tout" class="on">Tout</button>
         <button data-f="depenses">Dépenses</button>
         <button data-f="revenus">Revenus</button>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin:10px 12px 0;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="btn-gestion-toggle" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
+          <span style="font-size:13px; color:var(--muted); font-weight:600;">Gérer</span>
+        </div>
+        <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:32px; padding:0 14px; border-radius:16px; color:var(--danger); border-color:var(--danger); font-size:13px;">Supprimer (<span id="gestion-compte">0</span>)</button>
       </div>
 
       <div class="actions3">
@@ -1114,6 +1122,20 @@
   document.querySelectorAll("#txn-filtre button").forEach(b=>{
     b.onclick=()=>{ filtreTxn=b.dataset.f; document.querySelectorAll("#txn-filtre button").forEach(x=>x.classList.toggle("on",x===b)); rendreDepenses(); };
   });
+  let modeGestion=false, gestionSelection=new Set();
+  function majBarreGestion(){
+    const n=gestionSelection.size;
+    $("gestion-compte").textContent=n;
+    $("btn-suppr-selection").style.display=n>0?"inline-block":"none";
+  }
+  function ligneCase(cle, l){
+    if(!modeGestion) return;
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case";
+    cb.checked=gestionSelection.has(cle);
+    cb.onclick=e=>e.stopPropagation();
+    cb.onchange=()=>{ if(cb.checked) gestionSelection.add(cle); else gestionSelection.delete(cle); majBarreGestion(); };
+    l.insertBefore(cb, l.firstChild);
+  }
   function rendreDepenses(){
     $("jour-grand").textContent=labelJour(selDate);
     $("jour-sous").textContent=selDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
@@ -1141,9 +1163,14 @@
           if(liees.length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
           if(d.photo){const p=document.createElement("button");p.className="act photo-ic";p.textContent="🖼";p.setAttribute("aria-label","Voir la photo");p.onclick=()=>voirPhoto(d.id);l.appendChild(p);}
           const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRecu(d.id);
-          const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
-          bx.onclick=async()=>{if(d.photo)await photoDel(d.id);depenses=depenses.filter(x=>x.id!==d.id);remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(id=>id!==d.id);});sauverDep();rendreDepenses();};
-          l.appendChild(be);l.appendChild(bx);liste.appendChild(l);
+          l.appendChild(be);
+          if(modeGestion){
+            const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
+            bx.onclick=async()=>{ if(!confirm("Supprimer « "+titre+" » ("+fmtDev(d.montant,d.devise)+") ?"))return; if(d.photo)await photoDel(d.id);depenses=depenses.filter(x=>x.id!==d.id);remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(id=>id!==d.id);});sauverDep();rendreDepenses();};
+            l.appendChild(bx);
+          }
+          liste.appendChild(l);
+          ligneCase("dep:"+d.id, l);
         });
       });
     }
@@ -1152,25 +1179,57 @@
       e.innerHTML="<span>💰 Revenus</span><span>"+fmt(rev.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0))+"</span>";liste.appendChild(e);
       rev.forEach(r=>{
         const l=document.createElement("div");l.className="dep txn-revenu";
-        l.innerHTML='<div class="info"><div class="titre">'+(r.description||r.type||"Revenu")+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
+        const titre=r.description||r.type||"Revenu";
+        l.innerHTML='<div class="info"><div class="titre">'+titre+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
         const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRev(r.id);
-        const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
-        bx.onclick=()=>{ revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreDepenses(); };
-        l.appendChild(be);l.appendChild(bx);liste.appendChild(l);
+        l.appendChild(be);
+        if(modeGestion){
+          const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
+          bx.onclick=()=>{ if(!confirm("Supprimer « "+titre+" » ("+fmtDev(r.net!=null?r.net:r.montant,r.devise)+") ?"))return; revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreDepenses(); };
+          l.appendChild(bx);
+        }
+        liste.appendChild(l);
+        ligneCase("rev:"+r.id, l);
       });
     }
     if(filtreTxn!=="revenus" && remb.length){
-      const e=document.createElement("div");e.className="cat-entete";e.style.background="#fdf0dd";e.style.color="#8a5a00";
+      const e=document.createElement("div");e.className="cat-entete";e.style.background="var(--remb-bg)";e.style.color="var(--remb-fg)";
       e.innerHTML="<span>↩ Remboursements</span><span>-"+fmt(remb.reduce((s,r)=>s+r.montant,0))+"</span>";liste.appendChild(e);
       remb.forEach(r=>{
         const l=document.createElement("div");l.className="dep txn-remb";
-        l.innerHTML='<div class="info"><div class="titre">'+(r.description||"Remboursement")+'</div></div><div class="mnt">-'+fmtDev(r.montant,r.devise)+'</div>';
-        const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
-        bx.onclick=()=>{ remboursements=remboursements.filter(x=>x.id!==r.id); sauverCloud(); rendreDepenses(); };
-        l.appendChild(bx); liste.appendChild(l);
+        const titre=r.description||"Remboursement";
+        l.innerHTML='<div class="info"><div class="titre">'+titre+'</div></div><div class="mnt">-'+fmtDev(r.montant,r.devise)+'</div>';
+        if(modeGestion){
+          const bx=document.createElement("button");bx.className="act";bx.style.color="var(--danger)";bx.textContent="×";bx.setAttribute("aria-label","Supprimer");
+          bx.onclick=()=>{ if(!confirm("Supprimer « "+titre+" » ("+fmtDev(r.montant,r.devise)+") ?"))return; remboursements=remboursements.filter(x=>x.id!==r.id); sauverCloud(); rendreDepenses(); };
+          l.appendChild(bx);
+        }
+        liste.appendChild(l);
+        ligneCase("remb:"+r.id, l);
       });
     }
+    majBarreGestion();
   }
+  $("btn-gestion-toggle").onclick=()=>{
+    modeGestion=!modeGestion;
+    $("btn-gestion-toggle").classList.toggle("on",modeGestion);
+    $("btn-gestion-toggle").setAttribute("aria-checked",modeGestion);
+    if(!modeGestion) gestionSelection.clear();
+    rendreDepenses();
+  };
+  $("btn-suppr-selection").onclick = async ()=>{
+    const n=gestionSelection.size; if(!n) return;
+    if(!confirm("Supprimer les "+n+" opération(s) sélectionnée(s) ? Cette action est définitive.")) return;
+    for(const cle of gestionSelection){
+      const [type,idStr]=cle.split(":"); const id=parseInt(idStr,10);
+      if(type==="dep"){ const d=depenses.find(x=>x.id===id); if(d && d.photo) await photoDel(id); depenses=depenses.filter(x=>x.id!==id); remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(i=>i!==id);}); }
+      else if(type==="rev"){ revenus=revenus.filter(x=>x.id!==id); }
+      else if(type==="remb"){ remboursements=remboursements.filter(x=>x.id!==id); }
+    }
+    gestionSelection.clear();
+    sauverCloud();
+    rendreDepenses();
+  };
   function voirRembLiees(d){
     const liees=rembLiees(d.id);
     const box=$("rembdet-liste"); box.innerHTML="";
