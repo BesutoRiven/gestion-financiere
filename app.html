@@ -381,7 +381,25 @@
             <summary>Budget personnalisé</summary>
             <div class="det-corps">
               <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+                <span style="font-size:13px; font-weight:600;">Détailler aussi par sous-catégorie</span>
+                <button id="toggle-bud-souscat" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le budget par sous-catégorie"><span class="knob"></span></button>
+              </div>
               <div id="bud-gestion-liste" style="margin-top:10px;"></div>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary>Dépenses récurrentes</summary>
+            <div class="det-corps">
+              <small class="aide">Une dépense de ce type est créée automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé).</small>
+              <div id="recur-liste" style="margin-top:10px;"></div>
+              <div class="cat-ligne" style="margin-top:12px; flex-wrap:wrap;">
+                <input id="recur-nom" type="text" placeholder="Nom (ex. Loyer)" style="flex:2 1 120px;" />
+                <input id="recur-montant" type="text" inputmode="decimal" placeholder="Montant" style="flex:1 1 80px;" />
+                <input id="recur-jour" type="number" min="1" max="28" placeholder="Jour" style="flex:0 0 60px;" />
+              </div>
+              <div class="dd" id="dd-recur-cat" style="margin-top:8px;"><button type="button" class="dd-btn vide">Catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
+              <button id="ajouter-recur" class="btn-ligne" style="height:40px; margin-top:8px;">＋ Ajouter la récurrence</button>
             </div>
           </details>
         </div>
@@ -391,6 +409,14 @@
       <details class="bloc det">
         <summary>Import / Export</summary>
         <div class="det-corps impexp">
+          <h2>💾 Sauvegarde complète</h2>
+          <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
+          <div class="rangee"><button id="exp-sauvegarde" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">⬇️ Télécharger la sauvegarde</button></div>
+          <input id="imp-sauvegarde-fichier" type="file" accept="application/json" style="display:none;" />
+          <div class="rangee" style="margin-top:8px;"><button id="imp-sauvegarde-btn" style="color:var(--danger); border-color:var(--danger);">⚠️ Restaurer une sauvegarde</button></div>
+          <small class="aide">Restaurer <strong>remplace toutes les données actuelles</strong> par celles du fichier — pense à faire une sauvegarde d'abord si tu n'es pas sûr.</small>
+          <div id="msg-sauvegarde"></div>
+          <hr class="sep" />
           <h2>📤 Dépenses — Excel</h2>
           <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant. Tu peux aussi mettre une ligne « Nom de la catégorie » seule (ou suivie de tirets) au-dessus d'un bloc : elle s'appliquera à toutes les lignes suivantes qui n'ont pas de catégorie propre.</small>
           <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
@@ -679,6 +705,8 @@
   // ================= Utilitaires =================
   const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"CN¥"}];
   let deviseDefaut="EUR", devisesPerso=[], moyensPaiement=MOYENS_DEFAUT.slice();
+  let recurrentes=[]; // {id, nom, montant, categorie, sousCat, jour, dernierMoisGenere}
+  let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
@@ -795,7 +823,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -837,9 +865,12 @@
     deviseDefaut = c.devise || "EUR";
     devisesPerso = c.devisesPerso || [];
     moyensPaiement = c.moyensPaiement || MOYENS_DEFAUT.slice();
+    recurrentes = c.recurrentes || [];
+    budgetParSousCat = !!c.budgetParSousCat;
+    budSousCat = c.budSousCat || {};
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -859,13 +890,13 @@
     if(foyerId){
       let c=null;
       try{ const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle(); if(data && data.contenu) c=data.contenu; }catch(e){}
-      appliquerContenu(c); abonnerFoyer(); return; // données partagées en place
+      appliquerContenu(c); genererRecurrentes(); abonnerFoyer(); return; // données partagées en place
     }
     let c=null;
     try{ const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle(); if(!error && data && data.contenu) c=data.contenu; }catch(e){ console.warn("Chargement cloud:", e); }
     if(!c) c=migrerDepuisLocal();
     if(!c){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} }
-    appliquerContenu(c); sauverCloud();
+    appliquerContenu(c); genererRecurrentes(); sauverCloud();
   }
 
   // ---- Partage du budget (foyer) ----
@@ -1224,6 +1255,11 @@
     const parJour = b.montant / JOURS_PAR[b.unite||"mois"];
     return parJour * JOURS_PAR[modeAffiche];
   }
+  function budgetSousCatPourPeriode(cle, modeAffiche){
+    const b=budSousCat[cle]; if(!b || !b.montant) return 0;
+    const parJour = b.montant / JOURS_PAR[b.unite||"mois"];
+    return parJour * JOURS_PAR[modeAffiche];
+  }
   function rendreBudget(){
     rendreBudModes();
     const curB=estPeriodeCourante(budMode, budDate);
@@ -1245,6 +1281,16 @@
     });
     const box=$("bud-liste"); box.innerHTML="";
     let totPrevu=0, totReel=0;
+    const reelSousCat={};
+    if(budgetParSousCat){
+      depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin && d.sousCat){ const cle=d.categorie+"|"+d.sousCat; reelSousCat[cle]=(reelSousCat[cle]||0)+d.montant; } });
+      remboursementsPeriode(b).forEach(r=>{
+        const liees=(r.depenseIds||[]).map(id=>depenses.find(d=>d.id===id)).filter(Boolean);
+        const totalLiees=liees.reduce((s,d)=>s+d.montant,0);
+        if(!totalLiees) return;
+        liees.forEach(d=>{ if(!d.sousCat) return; const part=r.montant*(d.montant/totalLiees); const cle=d.categorie+"|"+d.sousCat; reelSousCat[cle]=(reelSousCat[cle]||0)-part; });
+      });
+    }
     categories.forEach(cat=>{
       const prevu=budgetPourPeriode(cat.nom, budMode), r=reel[cat.nom]||0, ecart=prevu-r;
       totPrevu+=prevu; totReel+=r;
@@ -1259,6 +1305,19 @@
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
       row.onclick=()=>ouvrirDetailCat(cat.nom, true);
       box.appendChild(row);
+      if(budgetParSousCat){
+        (souscats[cat.nom]||[]).forEach(sous=>{
+          const cle=cat.nom+"|"+sous, sprevu=budgetSousCatPourPeriode(cle,budMode);
+          if(!sprevu) return; // seules les sous-catégories avec un budget défini sont affichées, pour ne pas surcharger
+          const sr=reelSousCat[cle]||0, secart=sprevu-sr, spct=sprevu>0?Math.min(100, sr/sprevu*100):(sr>0?100:0), sover=sprevu>0 && sr>sprevu;
+          const srow=document.createElement("div"); srow.className="bud-row"; srow.style.cssText="margin-left:18px; opacity:.9;";
+          srow.innerHTML='<div class="bud-tete"><span class="nom" style="font-size:13px; font-weight:500;">↳ '+sous+'</span>'+
+            '<span class="bud-ecart" style="color:'+(secart>=0?'var(--accent)':'var(--danger)')+'; font-size:12px;">'+(secart>=0?'reste ':'dépassé ')+fmt(Math.abs(secart))+'</span></div>'+
+            '<div class="bud-det" style="font-size:12px;">Prévu '+fmt(sprevu)+'<span style="margin-left:auto;">Réel '+fmt(sr)+'</span></div>'+
+            '<div class="bud-barre"><span class="'+(sover?"over":"")+'" style="width:'+spct+'%;"></span></div>';
+          box.appendChild(srow);
+        });
+      }
     });
     // Ligne informative (le montant est déjà déduit ci-dessus, catégorie par catégorie)
     const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
@@ -1277,12 +1336,24 @@
   // ---- Gestion du budget personnalisé (dans Réglages > Gestion) ----
   function rendreBudGestion(){
     const box=$("bud-gestion-liste"); if(!box) return; box.innerHTML="";
+    const sw=$("toggle-bud-souscat");
+    if(sw){ sw.classList.toggle("on",budgetParSousCat); sw.setAttribute("aria-checked",budgetParSousCat); }
     categories.forEach(cat=>{
       const b=budCat[cat.nom]||{montant:0,unite:"mois"};
       const row=document.createElement("div"); row.className="bud-row";
       row.innerHTML='<div class="bud-tete"><span class="nom">'+(cat.emoji?cat.emoji+" ":"")+cat.nom+'</span></div>'+
         '<div class="bud-det"><input type="text" inputmode="decimal" data-bcat="'+cat.nom.replace(/"/g,'&quot;')+'" value="'+(b.montant?String(b.montant).replace(".",","):"")+'" placeholder="0" style="width:90px;" /> € par <select data-bunit="'+cat.nom.replace(/"/g,'&quot;')+'" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-family:inherit;"><option value="jour"'+(b.unite==="jour"?" selected":"")+'>jour</option><option value="semaine"'+(b.unite==="semaine"?" selected":"")+'>semaine</option><option value="mois"'+((!b.unite||b.unite==="mois")?" selected":"")+'>mois</option><option value="annee"'+(b.unite==="annee"?" selected":"")+'>année</option></select></div>';
       box.appendChild(row);
+      if(budgetParSousCat){
+        const sousArr=souscats[cat.nom]||[];
+        sousArr.forEach(sous=>{
+          const cle=cat.nom+"|"+sous; const bs=budSousCat[cle]||{montant:0,unite:"mois"};
+          const srow=document.createElement("div"); srow.className="bud-row"; srow.style.cssText="margin-left:18px; opacity:.9;";
+          srow.innerHTML='<div class="bud-tete"><span class="nom" style="font-size:13px; font-weight:500;">↳ '+sous+'</span></div>'+
+            '<div class="bud-det"><input type="text" inputmode="decimal" data-bscle="'+cle.replace(/"/g,'&quot;')+'" value="'+(bs.montant?String(bs.montant).replace(".",","):"")+'" placeholder="0" style="width:90px;" /> € par <select data-bsunit="'+cle.replace(/"/g,'&quot;')+'" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-family:inherit;"><option value="jour"'+(bs.unite==="jour"?" selected":"")+'>jour</option><option value="semaine"'+(bs.unite==="semaine"?" selected":"")+'>semaine</option><option value="mois"'+((!bs.unite||bs.unite==="mois")?" selected":"")+'>mois</option><option value="annee"'+(bs.unite==="annee"?" selected":"")+'>année</option></select></div>';
+          box.appendChild(srow);
+        });
+      }
     });
     box.querySelectorAll("input[data-bcat]").forEach(inp=>{
       inp.onchange=()=>{ const nom=inp.dataset.bcat; const v=parseFloat((inp.value||"").replace(",","."))||0; budCat[nom]=budCat[nom]||{unite:"mois"}; budCat[nom].montant=v; sauverCloud(); rendreBudget(); };
@@ -1290,6 +1361,55 @@
     box.querySelectorAll("select[data-bunit]").forEach(sel=>{
       sel.onchange=()=>{ const nom=sel.dataset.bunit; budCat[nom]=budCat[nom]||{montant:0}; budCat[nom].unite=sel.value; sauverCloud(); rendreBudget(); };
     });
+    box.querySelectorAll("input[data-bscle]").forEach(inp=>{
+      inp.onchange=()=>{ const cle=inp.dataset.bscle; const v=parseFloat((inp.value||"").replace(",","."))||0; budSousCat[cle]=budSousCat[cle]||{unite:"mois"}; budSousCat[cle].montant=v; sauverCloud(); rendreBudget(); };
+    });
+    box.querySelectorAll("select[data-bsunit]").forEach(sel=>{
+      sel.onchange=()=>{ const cle=sel.dataset.bsunit; budSousCat[cle]=budSousCat[cle]||{montant:0}; budSousCat[cle].unite=sel.value; sauverCloud(); rendreBudget(); };
+    });
+  }
+  $("toggle-bud-souscat").onclick=()=>{ budgetParSousCat=!budgetParSousCat; sauverCloud(); rendreBudGestion(); rendreBudget(); };
+
+  // ---- Dépenses récurrentes ----
+  let ddRecurCat=null, recurCatSel=null;
+  function rendreRecur(){
+    const box=$("recur-liste"); if(!box) return; box.innerHTML="";
+    recurrentes.forEach((r,idx)=>{
+      const l=document.createElement("div"); l.className="cat-ligne";
+      const span=document.createElement("span"); span.style.cssText="flex:1; font-size:14px;";
+      span.textContent=r.nom+" · "+fmt(r.montant)+" · le "+r.jour+" · "+(r.categorie||"?");
+      const monter=document.createElement("button"); monter.textContent="▲"; monter.className="cat-move"; monter.disabled=idx===0;
+      monter.onclick=()=>{ if(idx===0)return; [recurrentes[idx-1],recurrentes[idx]]=[recurrentes[idx],recurrentes[idx-1]]; sauverCloud(); rendreRecur(); };
+      const descendre=document.createElement("button"); descendre.textContent="▼"; descendre.className="cat-move"; descendre.disabled=idx===recurrentes.length-1;
+      descendre.onclick=()=>{ if(idx===recurrentes.length-1)return; [recurrentes[idx+1],recurrentes[idx]]=[recurrentes[idx],recurrentes[idx+1]]; sauverCloud(); rendreRecur(); };
+      const del=document.createElement("button"); del.textContent="×"; del.onclick=()=>{ if(!confirmDouble("Supprimer la récurrence « "+r.nom+" » ? (les dépenses déjà créées restent)")) return; recurrentes.splice(idx,1); sauverCloud(); rendreRecur(); };
+      l.appendChild(span); l.appendChild(monter); l.appendChild(descendre); l.appendChild(del); box.appendChild(l);
+    });
+    if(!recurrentes.length) box.innerHTML='<small class="aide">Aucune dépense récurrente pour l\'instant.</small>';
+  }
+  $("ajouter-recur").onclick=()=>{
+    const nom=$("recur-nom").value.trim();
+    const montant=parseFloat(($("recur-montant").value||"").replace(",","."));
+    const jour=Math.min(28,Math.max(1,parseInt($("recur-jour").value,10)||1));
+    if(!nom||!montant||montant<=0){ alert("Renseigne un nom et un montant valide."); return; }
+    if(!recurCatSel){ alert("Choisis une catégorie."); return; }
+    recurrentes.push({id:Date.now(), nom, montant, categorie:recurCatSel, jour, dernierMoisGenere:null});
+    $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value="";
+    sauverCloud(); rendreRecur();
+  };
+  // Génère automatiquement les dépenses récurrentes du mois en cours si pas déjà fait, et si le jour indiqué est passé (ou aujourd'hui)
+  function genererRecurrentes(){
+    const auj=new Date(), moisAuj=moisEnCours(), jourAuj=auj.getDate();
+    let cree=false;
+    recurrentes.forEach(r=>{
+      if(r.dernierMoisGenere===moisAuj) return;
+      if(jourAuj<r.jour) return;
+      const isoJour=moisAuj+"-"+String(r.jour).padStart(2,"0");
+      depenses.push({id:Date.now()+Math.random(), montant:r.montant, categorie:r.categorie, sousCat:null, paiement:null, participant:participants[0]||"Moi", devise:deviseDefaut, commentaire:r.nom+" (récurrent)", date:isoJour, mois:moisAuj, dateAffichee:dateAff(isoJour), photo:false});
+      r.dernierMoisGenere=moisAuj; cree=true;
+    });
+    if(cree){ sauverCloud(); }
+    return cree;
   }
   $("bud-moins").onclick=()=>decalerBudget(-1);
   $("bud-plus").onclick=()=>decalerBudget(1);
@@ -1720,6 +1840,36 @@
     souscats[souscatSel]=souscats[souscatSel]||[];
     if(souscats[souscatSel].some(x=>x.toLowerCase()===v.toLowerCase())){ alert("Cette sous-catégorie existe déjà."); return; }
     souscats[souscatSel].push(v); $("nouvelle-sous").value=""; sauverSous(); rendreSousListe();
+  };
+
+  // ================= Sauvegarde complète (export/import de tout) =================
+  function msgSauv(t,ty){ $("msg-sauvegarde").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>'; }
+  $("exp-sauvegarde").onclick=()=>{
+    const paquet={ app:"Gestion financière", exporte_le:new Date().toISOString(), contenu:contenuActuel() };
+    const blob=new Blob([JSON.stringify(paquet,null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="sauvegarde-gestion-financiere-"+iso(new Date())+".json"; a.click();
+    msgSauv("Sauvegarde téléchargée.","ok");
+  };
+  $("imp-sauvegarde-btn").onclick=()=>$("imp-sauvegarde-fichier").click();
+  $("imp-sauvegarde-fichier").onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      let paquet;
+      try{ paquet=JSON.parse(reader.result); }catch(err){ msgSauv("Fichier invalide : ce n'est pas une sauvegarde JSON valide.","err"); return; }
+      const c=paquet.contenu||paquet; // tolère aussi un export brut sans enveloppe
+      if(!c || typeof c!=="object"){ msgSauv("Fichier invalide : contenu introuvable.","err"); return; }
+      const nbDep=(c.depenses||[]).length, nbRev=(c.revenus||[]).length;
+      if(!confirm("Restaurer cette sauvegarde va REMPLACER toutes tes données actuelles par celles du fichier ("+nbDep+" dépense(s), "+nbRev+" revenu(s)). Continuer ?")) return;
+      if(!confirmDouble("Dernière confirmation : cette action est définitive et écrase tout ce qui est actuellement dans l'app.")) return;
+      appliquerContenu(c);
+      sauverCloud();
+      rafraichirVueCourante(); rendreAccueil(); rendreBudget();
+      msgSauv("Sauvegarde restaurée : "+nbDep+" dépense(s), "+nbRev+" revenu(s).","ok");
+      $("imp-sauvegarde-fichier").value="";
+    };
+    reader.readAsText(f);
   };
 
   // ================= Import / Export =================
@@ -2196,12 +2346,13 @@
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
     ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null);});
+    ddRecurCat=initDD("dd-recur-cat",()=>categories.map(c=>c.nom),v=>{recurCatSel=v;});
     ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v;});
     ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens();
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur();
     // Mode sombre
     const sw=$("theme-switch");
     sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
