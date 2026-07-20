@@ -352,7 +352,7 @@
         <summary>Import / Export</summary>
         <div class="det-corps impexp">
           <h2>📤 Dépenses — Excel</h2>
-          <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant.</small>
+          <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant. Tu peux aussi mettre une ligne « Nom de la catégorie » seule (ou suivie de tirets) au-dessus d'un bloc : elle s'appliquera à toutes les lignes suivantes qui n'ont pas de catégorie propre.</small>
           <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
           <textarea id="zone-import" placeholder="01/05/2026&#9;Alim. &amp; Courses&#9;Carrefour&#9;1,40"></textarea>
           <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
@@ -1561,31 +1561,51 @@
     return null;
   }
   const parseMontant=t=>{ const n=parseFloat(String(t).replace(/[^0-9,.-]/g,"").replace(",",".")); return isNaN(n)?null:n; };
-  const trouverCategorie=x=>{ const c=categories.find(c=>c.nom.toLowerCase()===String(x).toLowerCase()); return c?c.nom:null; };
-  const trouverParentSousCat=x=>{ const xx=String(x).toLowerCase(); for(const cat of Object.keys(souscats)){ if((souscats[cat]||[]).some(s=>s.toLowerCase()===xx)) return cat; } return null; };
+  const normaliser=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+  const trouverCategorie=x=>{ const xx=normaliser(x); const c=categories.find(c=>normaliser(c.nom)===xx); return c?c.nom:null; };
+  const trouverParentSousCat=x=>{ const xx=normaliser(x); for(const cat of Object.keys(souscats)){ if((souscats[cat]||[]).some(s=>normaliser(s)===xx)) return cat; } return null; };
 
   $("btn-importer").onclick=()=>{
     const lignes=($("zone-import").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
     const aImporter=[]; const problemes=[]; const sousAjouter=[]; // {cat, sous}
+    let catCourante=null; // catégorie fixée par une éventuelle ligne d'en-tête (ex. « Activités » au-dessus d'un bloc)
     lignes.forEach(l=>{
       let cells=(l.includes("\t")?l.split("\t"):l.split(/ {2,}|;/)).map(s=>s.trim()).filter(Boolean);
+      if(!cells.length) return;
+      const mtBrut=parseMontant(cells[cells.length-1]);
+      if(mtBrut===null||mtBrut<=0){
+        // Pas de montant valide en fin de ligne : ligne d'en-tête (ex. « Activités  -  -  -  - ») ou séparateur.
+        // Si elle nomme une catégorie existante, elle s'applique aux lignes suivantes jusqu'au prochain en-tête.
+        const catEntete=cells.map(trouverCategorie).find(Boolean);
+        if(catEntete) catCourante=catEntete;
+        return;
+      }
       if(cells.length<2) return;
-      // montant = dernière cellule
-      const mt=parseMontant(cells[cells.length-1]); if(mt===null||mt<=0) return; // ignore en-tête / ligne invalide
+      const mt=mtBrut;
       cells=cells.slice(0,-1);
       // date = 1re cellule qui ressemble à une date
       let dIso=null;
       for(let i=0;i<cells.length;i++){ const d=parseDate(cells[i]); if(d){ dIso=d; cells.splice(i,1); break; } }
       if(!dIso) dIso=iso(new Date());
-      // catégorie = cellule correspondant à une catégorie connue
+      // catégorie explicite sur la ligne (prioritaire sur celle de l'en-tête au-dessus)
       let cat=null;
       for(let i=0;i<cells.length;i++){ const c=trouverCategorie(cells[i]); if(c){ cat=c; cells.splice(i,1); break; } }
-      // sous-catégorie = cellule correspondant à une sous-catégorie connue
+      if(!cat) cat=catCourante;
+      // sous-catégorie : cherchée en priorité DANS la catégorie déjà connue (pour ne pas confondre avec la
+      // sous-catégorie de même nom d'une autre catégorie) ; sinon recherche globale, qui déduit alors la catégorie.
       let sous=null;
-      for(let i=0;i<cells.length;i++){ const p=trouverParentSousCat(cells[i]); if(p){ sous=cells[i]; if(!cat) cat=p; cells.splice(i,1); break; } }
+      for(let i=0;i<cells.length;i++){
+        if(cat){
+          const match=(souscats[cat]||[]).find(s=>normaliser(s)===normaliser(cells[i]));
+          if(match){ sous=match; cells.splice(i,1); break; }
+        } else {
+          const p=trouverParentSousCat(cells[i]);
+          if(p){ sous=cells[i]; cat=p; cells.splice(i,1); break; }
+        }
+      }
       const desc=cells.join(" ").trim();
       if(!cat){ problemes.push(l); return; }
-      if(sous && cat && !(souscats[cat]||[]).some(s=>s.toLowerCase()===sous.toLowerCase())) sousAjouter.push({cat,sous});
+      if(sous && !(souscats[cat]||[]).some(s=>normaliser(s)===normaliser(sous))) sousAjouter.push({cat,sous});
       aImporter.push({montant:mt,categorie:cat,sousCat:sous||"",commentaire:desc,date:dIso});
     });
 
