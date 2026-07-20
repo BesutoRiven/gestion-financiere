@@ -35,7 +35,8 @@ body{
 .champ:focus{border-color:var(--accent);}
 label.lbl{font-size:13px; color:var(--muted); display:block; margin-top:14px;}
 .btn{width:100%; height:48px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; border:none; margin-top:14px;}
-.btn-plein{background:var(--accent); color:#fff;}
+.btn-plein,.btn-ligne,.btn-danger{width:100%; height:48px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; margin-top:14px; font-family:inherit;}
+.btn-plein{background:var(--accent); color:#fff; border:none;}
 .btn-plein:active{transform:scale(.99);}
 .btn-ligne{background:transparent; color:var(--text); border:1px solid var(--border);}
 .btn-danger{background:transparent; color:var(--danger); border:1px solid var(--border);}
