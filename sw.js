@@ -1,5 +1,5 @@
 // IMPORTANT : incrémente ce numéro à chaque déploiement (gf-v32 -> gf-v7...).
-const CACHE = "gf-v37";
+const CACHE = "gf-v38";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",

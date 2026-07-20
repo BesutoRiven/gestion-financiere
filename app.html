@@ -127,6 +127,8 @@
     .recu-montant span{font-size:30px; color:var(--papier-muted);}
     .recu-champ{margin-top:12px;}
     .recu-champ label{font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;}
+    .rev-cot-clic{cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;}
+    .rev-cot-input{width:56px; height:26px; border:1px solid var(--papier-border); border-radius:6px; padding:0 6px; font-size:13px; font-family:inherit; text-align:center; background:var(--papier); color:var(--papier-txt);}
     .recu-desc{width:100%; margin-top:6px; border:1px solid var(--papier-border); border-radius:10px; padding:10px 12px; font-size:15px; font-family:inherit; background:var(--papier); color:var(--papier-txt); outline:none;}
     .recu .dd-btn{background:var(--papier); border-color:var(--papier-border); color:var(--papier-txt);}
     .recu-photo{margin-top:14px; border-top:2px dashed var(--papier-border); padding-top:14px;}
@@ -311,12 +313,14 @@
         <span style="font-weight:600;">🌙 Mode sombre</span>
         <button id="theme-switch" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode sombre"><span class="knob"></span></button>
       </div>
-      <div class="bloc">
-        <h2 style="font-size:16px; margin:0 0 4px;">💱 Devise par défaut</h2>
-        <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
-        <div class="dd" id="dd-devise-reglages" style="margin-top:12px;"><button type="button" class="dd-btn" id="devise-reglages-btn"></button><div class="dd-panel" id="devise-reglages-panel" style="display:none;"></div></div>
-        <small class="aide">Les devises intégrées (EUR, USD…) ne peuvent pas être supprimées. Une devise que tu as ajoutée peut l'être, sauf si elle est encore utilisée par une opération ou si c'est ta devise par défaut actuelle.</small>
-      </div>
+      <details class="bloc det">
+        <summary>💱 Devise par défaut</summary>
+        <div class="det-corps">
+          <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
+          <div class="dd" id="dd-devise-reglages" style="margin-top:12px;"><button type="button" class="dd-btn" id="devise-reglages-btn"></button><div class="dd-panel" id="devise-reglages-panel" style="display:none;"></div></div>
+          <small class="aide">Les devises intégrées (EUR, USD…) ne peuvent pas être supprimées. Une devise que tu as ajoutée peut l'être, sauf si elle est encore utilisée par une opération ou si c'est ta devise par défaut actuelle.</small>
+        </div>
+      </details>
 
       <details class="bloc det" open>
         <summary>Gestion</summary>
@@ -505,7 +509,7 @@
         <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:var(--papier); color:var(--papier-txt); border-color:var(--papier-border);">Choisir la date</button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <p id="rev-cot-info" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0;">Cotisation : 0 %</p>
+        <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
         <div class="recu-champ"><label>Description</label><input id="rev-desc" class="recu-desc" type="text" placeholder="Ex. Cedric — prestation" /></div>
         <button class="recu-valider" id="rev-valider">Valider ✓</button>
@@ -1750,8 +1754,21 @@
   let rCotCourante=0;
   function calcNet(){
     const brut=parseFloat(($("rev-brut").value||"").replace(",","."))||0;
-    $("rev-cot-info").textContent="Cotisation : "+String(rCotCourante).replace(".",",")+" %";
     $("rev-net").textContent=fmtDev(brut*(1-rCotCourante/100), revDeviseTicket);
+  }
+  function rendreCotAffichage(){
+    const zone=$("rev-cot-zone");
+    zone.innerHTML='<span id="rev-cot-info" class="rev-cot-clic">Cotisation : '+String(rCotCourante).replace(".",",")+' %</span>';
+    $("rev-cot-info").onclick=()=>{
+      zone.innerHTML='Cotisation : <input type="text" id="rev-cot-input" class="rev-cot-input" inputmode="decimal" /> %';
+      const inp=$("rev-cot-input"); inp.value=String(rCotCourante).replace(".",","); inp.focus(); inp.select();
+      const valider=()=>{
+        const v=parseFloat((inp.value||"0").replace(",",".")); rCotCourante=isNaN(v)||v<0?0:Math.min(100,v);
+        rendreCotAffichage(); calcNet();
+      };
+      inp.addEventListener("blur",valider);
+      inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); inp.blur(); } });
+    };
   }
   function rendreRevenus(){
     const box=$("rev-liste"); if(!box) return; box.innerHTML="";
@@ -1793,7 +1810,7 @@
       rCotCourante = cotisationDuType(rType);
       revDate=new Date(selDate);
     }
-    majRevDate(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
+    majRevDate(); rendreCotAffichage(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
@@ -2021,7 +2038,7 @@
     ddPay=initDD("dd-pay",()=>MOYENS,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
-    ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); calcNet();});
+    ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
     rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion();
     // Mode sombre
     const sw=$("theme-switch");
