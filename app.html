@@ -508,14 +508,13 @@
 
     <!-- ============ REVENU (ajout / édition) ============ -->
     <div id="rev-overlay" class="recu-overlay" style="display:none;">
-      <div class="recu">
+      <div class="recu" style="background:var(--papier-vert);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3 id="rev-modal-titre">Nouveau revenu</h3>
-          <div class="date" id="rev-date-aff"></div>
+          <button type="button" class="date recu-date-btn" id="rev-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:var(--papier); color:var(--papier-txt); border-color:var(--papier-border);">Choisir la date</button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
@@ -527,7 +526,7 @@
 
     <!-- ============ REMBOURSEMENT ============ -->
     <div id="remb-overlay" class="recu-overlay" style="display:none;">
-      <div class="recu">
+      <div class="recu" style="background:var(--papier-bleu);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3>Nouveau remboursement</h3>
@@ -541,7 +540,7 @@
           <div id="remb-selection" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
           <div id="remb-depenses" style="display:none; max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--papier-border); border-radius:10px; background:var(--papier);"></div>
         </div>
-        <button class="recu-valider" id="remb-valider">Valider ✓</button>
+        <button class="recu-valider" id="remb-valider" style="background:#2f6fb0;">Valider ✓</button>
         <button class="recu-annuler" id="remb-annuler">Annuler</button>
       </div>
     </div>
@@ -1875,7 +1874,7 @@
     });
   }
   let revDate=new Date(), revDeviseTicket="EUR";
-  function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); $("rev-date-btn").textContent=revDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}); }
+  function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRev(id){
     venantCatdet=false;
     editionRev=id||null;
@@ -1902,7 +1901,7 @@
   $("rev-annuler").onclick=()=>{ $("rev-overlay").style.display="none"; fermerTicketRetourCatdet(); };
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay")){$("rev-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-rev-devise", ()=>revDeviseTicket, code=>{ revDeviseTicket=code; $("rev-devise-sym").textContent=symboleDevise(code); calcNet(); });
-  $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
+  $("rev-date-aff").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
   $("rev-brut").addEventListener("input",calcNet);
   $("rev-valider").onclick=()=>{
     const brut=parseFloat(($("rev-brut").value||"").replace(",","."));
