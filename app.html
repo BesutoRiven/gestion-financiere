@@ -266,7 +266,8 @@
         <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
 
-      <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0;">
+      <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0; flex-wrap:wrap;">
+        <button id="btn-tout-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
         <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
         <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
         <button id="btn-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
@@ -551,7 +552,8 @@
       <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
         <div class="cal-tete"><span class="titre" id="catdet-titre">Détail</span><button id="catdet-fermer" aria-label="Fermer">×</button></div>
         <div id="catdet-filtre" class="perso" style="padding:0 0 6px;"></div>
-        <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:4px 0 10px;">
+        <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:4px 0 10px; flex-wrap:wrap;">
+          <button id="catdet-tout" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
           <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="catdet-compte">0</span>)</button>
           <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
           <button id="catdet-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
@@ -1000,10 +1002,20 @@
     const n=catdetSelection.size;
     $("catdet-compte").textContent=n;
     $("catdet-suppr-selection").style.display=n>0?"inline-block":"none";
+    const cases=[...document.querySelectorAll("#catdet-liste .gestion-case")];
+    const boutonTout=$("catdet-tout");
+    if(modeGestionCat && cases.length){ boutonTout.style.display="inline-block"; boutonTout.textContent=cases.every(cb=>cb.checked)?"Tout désélectionner":"Tout sélectionner"; }
+    else boutonTout.style.display="none";
   }
+  $("catdet-tout").onclick=()=>{
+    const cases=[...document.querySelectorAll("#catdet-liste .gestion-case")]; if(!cases.length) return;
+    const toutCoche=cases.every(cb=>cb.checked);
+    cases.forEach(cb=>{ cb.checked=!toutCoche; if(!toutCoche) catdetSelection.add(cb.dataset.cle); else catdetSelection.delete(cb.dataset.cle); });
+    majBarreCatdet();
+  };
   function catdetCase(cle, l){
     if(!modeGestionCat) return;
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case"; cb.dataset.cle=cle;
     cb.checked=catdetSelection.has(cle);
     cb.onclick=e=>e.stopPropagation();
     cb.onchange=()=>{ if(cb.checked) catdetSelection.add(cle); else catdetSelection.delete(cle); majBarreCatdet(); };
@@ -1356,10 +1368,20 @@
     const n=gestionSelection.size;
     $("gestion-compte").textContent=n;
     $("btn-suppr-selection").style.display=n>0?"inline-block":"none";
+    const cases=[...document.querySelectorAll("#liste .gestion-case")];
+    const boutonTout=$("btn-tout-selection");
+    if(modeGestion && cases.length){ boutonTout.style.display="inline-block"; boutonTout.textContent=cases.every(cb=>cb.checked)?"Tout désélectionner":"Tout sélectionner"; }
+    else boutonTout.style.display="none";
   }
+  $("btn-tout-selection").onclick=()=>{
+    const cases=[...document.querySelectorAll("#liste .gestion-case")]; if(!cases.length) return;
+    const toutCoche=cases.every(cb=>cb.checked);
+    cases.forEach(cb=>{ cb.checked=!toutCoche; if(!toutCoche) gestionSelection.add(cb.dataset.cle); else gestionSelection.delete(cb.dataset.cle); });
+    majBarreGestion();
+  };
   function ligneCase(cle, l){
     if(!modeGestion) return;
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case";
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case"; cb.dataset.cle=cle;
     cb.checked=gestionSelection.has(cle);
     cb.onclick=e=>e.stopPropagation();
     cb.onchange=()=>{ if(cb.checked) gestionSelection.add(cle); else gestionSelection.delete(cle); majBarreGestion(); };
