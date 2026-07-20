@@ -62,11 +62,20 @@
     .cat-ligne input{flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; background:var(--surface); color:var(--text);}
     .cat-ligne .pastille{width:18px; height:18px; border-radius:50%; flex:0 0 auto;}
     .cat-ligne button{border:none; background:transparent; color:var(--danger); font-size:18px; cursor:pointer;}
-    .impexp textarea{width:100%; min-height:190px; border:1.5px solid var(--border); border-radius:14px; padding:14px; font-family:'Courier New',monospace; font-size:13.5px; line-height:1.6; margin-top:10px; background:var(--bg); color:var(--text); resize:vertical; transition:border-color .15s;}
-    .impexp textarea:focus{outline:none; border-color:var(--accent);}
+    .impexp textarea{width:100%; min-height:190px; border:1.5px solid var(--border); border-radius:14px; padding:14px; font-family:'Courier New',monospace; font-size:13.5px; line-height:1.6; margin-top:10px; background:var(--bg); color:var(--text); resize:vertical; transition:border-color .15s,box-shadow .15s;}
+    .impexp textarea::placeholder{color:var(--muted);}
+    .impexp textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
     .impexp h2{display:flex; align-items:center; gap:8px;}
     .rangee{display:flex; gap:8px; margin-top:10px;}
     .rangee button{flex:1; height:40px; border:1px solid var(--border); background:var(--surface); border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
+
+    /* Puces de devise (Réglages) */
+    .dev-chip{display:flex; align-items:stretch; border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); transition:background .15s,border-color .15s;}
+    .dev-chip .dev-sel{border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; padding:8px 12px; cursor:pointer; font-family:inherit;}
+    .dev-chip.on{background:var(--accent); border-color:var(--accent);}
+    .dev-chip.on .dev-sel{color:#fff;}
+    .dev-chip .dev-del{border:none; border-left:1px solid var(--border); background:transparent; color:var(--danger); font-size:16px; line-height:1; padding:8px 10px 8px 6px; cursor:pointer;}
+    .dev-chip.on .dev-del{border-left-color:rgba(255,255,255,.4); color:#fff;}
 
     /* Menus déroulants personnalisés */
     .dd{position:relative; margin-top:10px;}
@@ -189,12 +198,12 @@
     .txn-remb{border-left:3px solid #2f6fb0;}
     .bud-ro{font-size:13px; color:var(--muted); margin-top:4px;}
     .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
-    .switch-sm{width:34px; height:20px;}
-    .switch-sm .knob{width:16px; height:16px; top:2px; left:2px;}
-    .switch-sm.on .knob{transform:translateX(14px);}
     .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
     .switch.on{background:var(--accent);}
     .switch.on .knob{transform:translateX(22px);}
+    .switch-sm{width:34px; height:20px;}
+    .switch-sm .knob{width:16px; height:16px; top:2px; left:2px;}
+    .switch-sm.on .knob{transform:translateX(14px);}
 
     .actions3{display:flex; gap:10px; margin:14px 12px 0; justify-content:space-around;}
     .actions3 button{background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text); font-size:12px; flex:1;}
@@ -279,9 +288,17 @@
         <span style="font-weight:600;">🌙 Mode sombre</span>
         <button id="theme-switch" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode sombre"><span class="knob"></span></button>
       </div>
-      <div class="bloc" style="display:flex; align-items:center; justify-content:space-between;">
-        <span style="font-weight:600;">💱 Devise</span>
-        <select id="devise-select" style="height:28px; border:1px solid var(--border); border-radius:8px; padding:0 8px; background:var(--surface); color:var(--text); font-family:inherit; font-size:13px;"></select>
+      <div class="bloc">
+        <h2 style="font-size:16px; margin:0 0 4px;">💱 Devise par défaut</h2>
+        <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
+        <div id="devise-liste" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;"></div>
+        <div class="cat-ligne" style="margin-top:14px;">
+          <input id="devise-nouv-code" type="text" placeholder="Code (ex. THB)" maxlength="4" />
+          <input id="devise-nouv-sym" type="text" placeholder="Symbole (ex. ฿)" maxlength="4" />
+          <button id="devise-nouv-ajouter" style="color:var(--accent); font-size:22px;">＋</button>
+        </div>
+        <div id="devise-msg"></div>
+        <small class="aide">Les devises intégrées (EUR, USD…) ne peuvent pas être supprimées. Une devise que tu as ajoutée peut l'être, sauf si elle est encore utilisée par une opération ou si c'est ta devise par défaut actuelle.</small>
       </div>
 
       <details class="bloc det" open>
@@ -333,7 +350,7 @@
 
       <details class="bloc det">
         <summary>Import / Export</summary>
-        <div class="det-corps">
+        <div class="det-corps impexp">
           <h2>📤 Dépenses — Excel</h2>
           <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant.</small>
           <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
@@ -631,11 +648,41 @@
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
-  function rendreDeviseSelectGlobal(){
-    const sel=$("devise-select"); if(!sel) return;
-    const val=sel.value||deviseDefaut;
-    sel.innerHTML=toutesDevises().map(d=>'<option value="'+d.code+'"'+(d.code===deviseDefaut?" selected":"")+'>'+d.code+" ("+d.sym+")</option>").join("");
+  function rendreDeviseListeReglages(){
+    const box=$("devise-liste"); if(!box) return;
+    box.innerHTML="";
+    toutesDevises().forEach(d=>{
+      const estPerso=devisesPerso.some(p=>p.code===d.code);
+      const chip=document.createElement("div"); chip.className="dev-chip"+(d.code===deviseDefaut?" on":"");
+      const sel=document.createElement("button"); sel.type="button"; sel.className="dev-sel"; sel.textContent=d.code+" ("+d.sym+")";
+      sel.onclick=()=>{ deviseDefaut=d.code; sauverCloud(); rendreDeviseListeReglages(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); };
+      chip.appendChild(sel);
+      if(estPerso){
+        const del=document.createElement("button"); del.type="button"; del.className="dev-del"; del.textContent="×"; del.setAttribute("aria-label","Supprimer la devise "+d.code);
+        del.onclick=e=>{ e.stopPropagation(); supprimerDevise(d.code); };
+        chip.appendChild(del);
+      }
+      box.appendChild(chip);
+    });
   }
+  function supprimerDevise(code){
+    if(code===deviseDefaut){ alert("C'est ta devise par défaut actuelle : choisis-en une autre avant de la supprimer."); return; }
+    const nb=depenses.filter(d=>d.devise===code).length + revenus.filter(r=>r.devise===code).length + remboursements.filter(r=>r.devise===code).length;
+    if(nb>0){ alert("Impossible : cette devise est utilisée par "+nb+" opération(s). Change leur devise avant de la supprimer."); return; }
+    if(!confirm("Supprimer la devise « "+code+" » ?")) return;
+    devisesPerso=devisesPerso.filter(d=>d.code!==code);
+    sauverCloud(); rendreDeviseListeReglages();
+  }
+  $("devise-nouv-ajouter").onclick=()=>{
+    const code=($("devise-nouv-code").value||"").trim().toUpperCase();
+    const sym=($("devise-nouv-sym").value||"").trim();
+    if(!code||!sym){ $("devise-msg").innerHTML='<div class="message err">Renseigne un code (ex. THB) et un symbole (ex. ฿).</div>'; return; }
+    if(toutesDevises().some(d=>d.code===code)){ $("devise-msg").innerHTML='<div class="message err">Cette devise existe déjà.</div>'; return; }
+    devisesPerso.push({code,sym}); sauverCloud();
+    $("devise-nouv-code").value=""; $("devise-nouv-sym").value="";
+    $("devise-msg").innerHTML='<div class="message ok">Devise « '+code+' » ajoutée.</div>';
+    rendreDeviseListeReglages();
+  };
   function ouvrirDevisePick(codeActuel, cb){
     const box=$("devise-pick-liste"); box.innerHTML="";
     toutesDevises().forEach(d=>{
@@ -653,7 +700,7 @@
     const sym=($("devise-pick-nouveau-sym").value||"").trim();
     if(!code||!sym){ $("devise-pick-msg").textContent="Renseigne un code (ex. THB) et un symbole (ex. ฿)."; return; }
     if(toutesDevises().some(d=>d.code===code)){ $("devise-pick-msg").textContent="Cette devise existe déjà."; return; }
-    devisesPerso.push({code,sym}); sauverCloud(); rendreDeviseSelectGlobal();
+    devisesPerso.push({code,sym}); sauverCloud(); rendreDeviseListeReglages();
     $("devise-pick-msg").textContent="Devise « "+code+" » ajoutée !";
     const box=$("devise-pick-liste"); const b=document.createElement("button"); b.className="pchip"; b.textContent=code+" ("+sym+")";
     b.onclick=()=>{ $("devise-pick-overlay").style.display="none"; };
@@ -707,7 +754,7 @@
     devisesPerso = c.devisesPerso || [];
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -1886,9 +1933,7 @@
     sw.onclick=()=>{ const nv=!sw.classList.contains("on"); sw.classList.toggle("on",nv); sw.setAttribute("aria-checked",nv); basculerTheme(nv); };
 
     // Devise
-    const selDev=$("devise-select");
-    rendreDeviseSelectGlobal();
-    selDev.onchange=()=>{ deviseDefaut=selDev.value; sauverCloud(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); };
+    rendreDeviseListeReglages();
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
