@@ -261,7 +261,7 @@
       </div>
 
       <div class="actions3">
-        <button id="ouvrir-rev"><span class="rond" id="icone-revenu-rond">＋</span>Revenu</button>
+        <button id="ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
         <button id="ouvrir-recu"><span class="rond">＋</span>Dépense</button>
         <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
@@ -297,6 +297,11 @@
         <button data-f="tout" class="on">Tout</button>
         <button data-f="depenses">Dépenses</button>
         <button data-f="revenus">Revenus</button>
+      </div>
+      <div class="actions3">
+        <button id="res-ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
+        <button id="res-ouvrir-recu"><span class="rond">＋</span>Dépense</button>
+        <button id="res-ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
       <div id="kpi-zone"></div>
       <div class="bloc">
@@ -589,6 +594,11 @@
         <div><div class="bud-mini-l">Réel</div><div class="bud-mini-v" id="bt-reel">0,00 €</div></div>
         <div><div class="bud-mini-l">Reste</div><div class="bud-mini-v" id="bt-reste">0,00 €</div></div>
       </div>
+      <div class="actions3">
+        <button id="bud-ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
+        <button id="bud-ouvrir-recu"><span class="rond">＋</span>Dépense</button>
+        <button id="bud-ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
+      </div>
       <div class="bloc"><div id="bud-liste"></div></div>
     </section>
 
@@ -661,7 +671,7 @@
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
   function majIconeRevenu(){
-    const rond=$("icone-revenu-rond"); if(rond) rond.textContent=iconeRevenu();
+    document.querySelectorAll(".icone-revenu-rond").forEach(rond=>rond.textContent=iconeRevenu());
     const impTitre=$("imp-titre-revenus"); if(impTitre) impTitre.textContent=iconeRevenu()+" Revenus — Excel";
   }
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
@@ -1534,6 +1544,8 @@
     setTimeout(()=>$("r-montant").focus(),50);
   }
   $("ouvrir-recu").onclick=()=>ouvrirRecu(null);
+  $("res-ouvrir-recu").onclick=()=>ouvrirRecu(null);
+  $("bud-ouvrir-recu").onclick=()=>ouvrirRecu(null);
   $("recu-annuler").onclick=()=>{ $("recu-overlay").style.display="none"; fermerTicketRetourCatdet(); };
   $("recu-overlay").onclick=e=>{if(e.target===$("recu-overlay")){$("recu-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
@@ -1879,6 +1891,8 @@
     majRevDate(); rendreCotAffichage(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
+  $("res-ouvrir-rev").onclick=()=>ouvrirRev(null);
+  $("bud-ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("rev-annuler").onclick=()=>{ $("rev-overlay").style.display="none"; fermerTicketRetourCatdet(); };
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay")){$("rev-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-rev-devise", ()=>revDeviseTicket, code=>{ revDeviseTicket=code; $("rev-devise-sym").textContent=symboleDevise(code); calcNet(); });
@@ -1972,6 +1986,8 @@
     setTimeout(()=>$("remb-montant").focus(),50);
   }
   $("ouvrir-remb").onclick=ouvrirRemb;
+  $("res-ouvrir-remb").onclick=ouvrirRemb;
+  $("bud-ouvrir-remb").onclick=ouvrirRemb;
   $("remb-annuler").onclick=()=>$("remb-overlay").style.display="none";
   $("remb-overlay").onclick=e=>{if(e.target===$("remb-overlay"))$("remb-overlay").style.display="none";};
   initDDDevise("dd-remb-devise", ()=>rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
