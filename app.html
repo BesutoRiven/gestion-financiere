@@ -1051,7 +1051,14 @@
     const b=bornesGen(budMode, budDate);
     const reel={};
     depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin) reel[d.categorie]=(reel[d.categorie]||0)+d.montant; });
-    const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
+    // Les remboursements réduisent le "Réel" de la ou des catégories des dépenses qu'ils concernent
+    // (répartis au prorata si un remboursement est lié à plusieurs dépenses de catégories différentes).
+    remboursementsPeriode(b).forEach(r=>{
+      const liees=(r.depenseIds||[]).map(id=>depenses.find(d=>d.id===id)).filter(Boolean);
+      const totalLiees=liees.reduce((s,d)=>s+d.montant,0);
+      if(!totalLiees) return;
+      liees.forEach(d=>{ const part=r.montant*(d.montant/totalLiees); reel[d.categorie]=(reel[d.categorie]||0)-part; });
+    });
     const box=$("bud-liste"); box.innerHTML="";
     let totPrevu=0, totReel=0;
     categories.forEach(cat=>{
@@ -1068,15 +1075,16 @@
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
       box.appendChild(row);
     });
+    // Ligne informative (le montant est déjà déduit ci-dessus, catégorie par catégorie)
+    const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
     if(totalRemb>0){
       const row=document.createElement("div"); row.className="bud-row";
-      row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">↩ Remboursements</span></div><div class="bud-det">Réduit le réel total de <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
+      row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">↩ Remboursements pris en compte</span></div><div class="bud-det">Déjà déduits du réel ci-dessus <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
       box.appendChild(row);
     }
-    const totReelNet = totReel - totalRemb;
     $("bt-prevu").textContent=fmt(totPrevu);
-    $("bt-reel").textContent=fmt(totReelNet);
-    const reste=totPrevu-totReelNet;
+    $("bt-reel").textContent=fmt(totReel);
+    const reste=totPrevu-totReel;
     $("bt-reste").textContent=fmt(reste);
     $("bt-reste").style.color = reste>=0 ? "var(--accent)" : "var(--danger)";
   }
