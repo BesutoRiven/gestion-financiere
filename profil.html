@@ -77,6 +77,37 @@
       <button id="btn-changer" class="btn btn-ligne">Changer de compte</button>
       <button id="btn-deconnexion" class="btn btn-danger">Se déconnecter</button>
     </div>
+
+    <!-- Zone dangereuse -->
+    <div class="carte" style="border-color:#e0b4b4;">
+      <h2 style="font-size:16px; margin:0 0 4px; color:var(--danger);">⚠️ Zone dangereuse</h2>
+      <small class="aide">Ces deux actions sont définitives et ne peuvent pas être annulées.</small>
+
+      <hr class="sep" />
+      <p style="font-weight:600; margin:0 0 4px;">Réinitialiser toutes mes données</p>
+      <small class="aide">Efface dépenses, revenus, catégories et réglages — ton compte reste actif, mais repart à zéro. Si tu fais partie d'un partage, ça efface les données de <strong>tout le monde dans ce partage</strong>, pas que les tiennes.</small>
+      <button id="btn-reset-ouvrir" class="btn btn-ligne" style="margin-top:10px; color:var(--danger); border-color:#e0b4b4;">Réinitialiser mes données</button>
+      <div id="zone-reset" style="display:none; margin-top:10px;">
+        <div id="reset-avertissement"></div>
+        <small class="aide">Pour confirmer, écris exactement : <strong>je souhaite tout écraser toutes mes données</strong></small>
+        <input id="reset-phrase" class="champ" type="text" placeholder="Recopie la phrase ci-dessus" />
+        <button id="btn-reset-confirmer" class="btn btn-danger" disabled style="opacity:.5;">Réinitialiser définitivement</button>
+        <button id="btn-reset-annuler" class="lien">Annuler</button>
+      </div>
+      <div id="msg-reset"></div>
+
+      <hr class="sep" />
+      <p style="font-weight:600; margin:0 0 4px;">Supprimer mon compte</p>
+      <small class="aide">Supprime définitivement ton compte et toutes tes données personnelles. Si tu es dans un partage, tu en sors automatiquement (les données partagées restent pour les autres membres).</small>
+      <button id="btn-suppr-ouvrir" class="btn btn-ligne" style="margin-top:10px; color:var(--danger); border-color:#e0b4b4;">Supprimer mon compte</button>
+      <div id="zone-suppr" style="display:none; margin-top:10px;">
+        <small class="aide">Pour confirmer, écris exactement : <strong>Je souhaite supprimer définitivement mon compte</strong></small>
+        <input id="suppr-phrase" class="champ" type="text" placeholder="Recopie la phrase ci-dessus" />
+        <button id="btn-suppr-confirmer" class="btn btn-danger" disabled style="opacity:.5;">Supprimer définitivement mon compte</button>
+        <button id="btn-suppr-annuler" class="lien">Annuler</button>
+      </div>
+      <div id="msg-suppr"></div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -184,6 +215,62 @@
   // ---- Compte ----
   $("btn-changer").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
   $("btn-deconnexion").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
+
+  // ---- Zone dangereuse ----
+  const PHRASE_RESET = "je souhaite tout écraser toutes mes données";
+  const PHRASE_SUPPR = "Je souhaite supprimer définitivement mon compte";
+
+  $("btn-reset-ouvrir").onclick = async () => {
+    $("zone-reset").style.display = "block";
+    $("reset-avertissement").innerHTML = '<div class="message ok" style="margin:0 0 10px;">Vérification en cours…</div>';
+    try{
+      const { data } = await sb.from("foyer_membres").select("foyer_id").eq("user_id", utilisateur.id).maybeSingle();
+      if (data && data.foyer_id){
+        const { count } = await sb.from("foyer_membres").select("user_id", {count:"exact", head:true}).eq("foyer_id", data.foyer_id);
+        $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ Tu fais partie d\'un partage à '+(count||1)+' personne(s). Réinitialiser va effacer les données de TOUT LE MONDE dans ce partage, pas seulement les tiennes.</div>';
+      } else {
+        $("reset-avertissement").innerHTML = '<div class="message ok" style="margin:0 0 10px;">Tu n\'es dans aucun partage : seules tes données personnelles seront effacées.</div>';
+      }
+    }catch(e){ $("reset-avertissement").innerHTML = ""; }
+  };
+  $("btn-reset-annuler").onclick = () => { $("zone-reset").style.display = "none"; $("reset-phrase").value = ""; majBoutonReset(); };
+  function majBoutonReset(){
+    const ok = $("reset-phrase").value.trim().toLowerCase() === PHRASE_RESET.toLowerCase();
+    $("btn-reset-confirmer").disabled = !ok;
+    $("btn-reset-confirmer").style.opacity = ok ? "1" : ".5";
+  }
+  $("reset-phrase").addEventListener("input", majBoutonReset);
+  $("btn-reset-confirmer").onclick = async () => {
+    if (!confirm("Dernière confirmation : réinitialiser va effacer toutes ces données définitivement. Continuer ?")) return;
+    msg("msg-reset", "Réinitialisation en cours…", "ok");
+    try{
+      const { data } = await sb.from("foyer_membres").select("foyer_id").eq("user_id", utilisateur.id).maybeSingle();
+      if (data && data.foyer_id){
+        await sb.from("foyers").upsert({ id: data.foyer_id, contenu: {}, updated_at: new Date().toISOString() });
+      } else {
+        await sb.from("donnees").upsert({ user_id: utilisateur.id, contenu: {}, updated_at: new Date().toISOString() });
+      }
+      msg("msg-reset", "Données réinitialisées. Redirection…", "ok");
+      setTimeout(() => { window.location.href = "app.html"; }, 1200);
+    }catch(e){ msg("msg-reset", "Échec : "+(e.message||e), "err"); }
+  };
+
+  $("btn-suppr-ouvrir").onclick = () => { $("zone-suppr").style.display = "block"; };
+  $("btn-suppr-annuler").onclick = () => { $("zone-suppr").style.display = "none"; $("suppr-phrase").value = ""; majBoutonSuppr(); };
+  function majBoutonSuppr(){
+    const ok = $("suppr-phrase").value.trim() === PHRASE_SUPPR;
+    $("btn-suppr-confirmer").disabled = !ok;
+    $("btn-suppr-confirmer").style.opacity = ok ? "1" : ".5";
+  }
+  $("suppr-phrase").addEventListener("input", majBoutonSuppr);
+  $("btn-suppr-confirmer").onclick = async () => {
+    if (!confirm("Dernière confirmation : ton compte et tes données personnelles seront supprimés définitivement. Continuer ?")) return;
+    msg("msg-suppr", "Suppression en cours…", "ok");
+    const { error } = await sb.rpc("supprimer_mon_compte");
+    if (error){ msg("msg-suppr", "Échec : "+messageErreur(error), "err"); return; }
+    await sb.auth.signOut();
+    window.location.href = "index.html";
+  };
 
   // ---- Démarrage ----
   (async () => {
