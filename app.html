@@ -117,7 +117,9 @@
     .recu-tete .marque{font-size:13px; letter-spacing:3px; color:var(--papier-muted); text-transform:uppercase;}
     .recu-tete h3{margin:6px 0 2px; font-size:20px; font-family:'Courier New',monospace; color:var(--papier-txt);}
     .recu-tete .date{font-size:12px; color:var(--papier-muted);}
-    .recu-montant{display:flex; align-items:baseline; justify-content:center; gap:6px; padding:16px 0 6px; border-bottom:2px dashed var(--papier-border);}
+    .recu-date-btn{font:inherit; background:none; border:none; cursor:pointer; padding:2px 0; text-decoration:underline dotted; text-underline-offset:3px;}
+    .recu-date-btn:active{opacity:.65;}
+    .recu-montant{display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 0 6px; border-bottom:2px dashed var(--papier-border);}
     .recu-montant input{border:none; outline:none; background:transparent; width:60%; text-align:right; font-size:38px; font-weight:700; font-family:'Courier New',monospace; color:var(--papier-txt);}
     .recu-montant span{font-size:30px; color:var(--papier-muted);}
     .recu-champ{margin-top:12px;}
@@ -131,7 +133,25 @@
     .recu-valider{width:100%; margin-top:18px; height:50px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
     .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--papier-muted); border:none; font-size:14px; cursor:pointer;}
     .devise-btn{font-size:28px; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 0 0 4px; font-family:inherit;}
-    .gestion-case{width:20px; height:20px; flex:0 0 auto; accent-color:var(--accent); cursor:pointer;}
+    .dd-devise{position:relative; margin-top:0;}
+    .dd-devise .devise-btn{padding:0 18px 0 2px; position:relative;}
+    .dd-devise .devise-btn::after{content:"▾"; font-size:12px; position:absolute; right:0; top:50%; transform:translateY(-50%); color:var(--papier-muted);}
+    .dd-devise .dd-panel{left:auto; right:0; top:calc(100% + 8px); width:210px; background:var(--papier); border-color:var(--papier-border);}
+    .dd-devise .dd-opt{color:var(--papier-txt); font-size:14px;}
+    .dd-devise .dd-opt:hover{background:var(--papier-vert);}
+    .dd-devise .dd-opt.on{color:var(--accent); font-weight:700;}
+    .dd-devise .dd-opt-ajout{border-top:1px solid var(--papier-border); color:var(--accent); font-weight:600;}
+    .dd-devise-form{padding:10px 12px;}
+    .dd-devise-form input{width:100%; height:36px; border:1px solid var(--papier-border); border-radius:8px; padding:0 10px; font-size:13px; font-family:inherit; background:var(--papier); color:var(--papier-txt); margin-top:8px;}
+    .dd-devise-form input:first-child{margin-top:0;}
+    .dd-devise-form button{width:100%; height:34px; margin-top:8px; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; font-size:13px;}
+    .dd-devise-msg{font-size:12px; margin-top:6px;}
+    .dd-devise-msg.err{color:var(--danger);}
+    .dd-devise-msg.ok{color:var(--accent);}
+    .dd-devise-retour{font-size:12px; color:var(--papier-muted); cursor:pointer; text-align:center; margin-top:8px; text-decoration:underline;}
+    .gestion-case{-webkit-appearance:none; appearance:none; width:22px; height:22px; flex:0 0 auto; border:2px solid var(--border); border-radius:7px; background:var(--surface); cursor:pointer; position:relative; transition:background .15s,border-color .15s; margin:0;}
+    .gestion-case:checked{background:var(--accent); border-color:var(--accent);}
+    .gestion-case:checked::after{content:""; position:absolute; left:6px; top:2px; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);}
 
     /* Visionneuse photo */
     .lb-overlay img{max-width:100%; max-height:85vh; border-radius:12px;}
@@ -390,9 +410,9 @@
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3 id="recu-titre">Nouvelle dépense</h3>
-          <div class="date" id="recu-date"></div>
+          <button type="button" class="date recu-date-btn" id="recu-date"></button>
         </div>
-        <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><button type="button" id="r-devise-sym" class="devise-btn">€</button></div>
+        <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-r-devise"><button type="button" id="r-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
 
         <div class="recu-champ"><label>Catégorie</label><div class="dd" id="dd-cat"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
@@ -418,22 +438,6 @@
     <!-- ============ VISIONNEUSE PHOTO ============ -->
     <div id="lb-overlay" class="lb-overlay" style="display:none;"><img id="lb-img" alt="Photo de la dépense" /></div>
 
-    <!-- ============ CHOIX DE DEVISE (pour un cas particulier) ============ -->
-    <div id="devise-pick-overlay" class="cal-overlay" style="display:none;">
-      <div class="cal-box" style="max-width:320px;">
-        <div class="cal-tete"><span class="titre">Devise pour cette opération</span><button id="devise-pick-fermer" aria-label="Fermer">×</button></div>
-        <div id="devise-pick-liste" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
-        <small class="aide" style="display:block; margin-top:10px;">Ne change que cette opération. La devise par défaut de l'app reste réglable dans Réglages.</small>
-        <hr class="sep" />
-        <small class="aide" style="display:block; margin-bottom:6px;">Devise absente de la liste ? Ajoute-la ici, elle sera disponible partout ensuite.</small>
-        <div style="display:flex; gap:8px;">
-          <input id="devise-pick-nouveau-code" class="champ" style="margin-top:0;" type="text" placeholder="Code (ex. THB)" maxlength="4" />
-          <input id="devise-pick-nouveau-sym" class="champ" style="margin-top:0;" type="text" placeholder="Symbole (ex. ฿)" maxlength="4" />
-        </div>
-        <button id="devise-pick-ajouter" class="btn-ligne" style="height:40px; margin-top:8px;">＋ Ajouter cette devise</button>
-        <div id="devise-pick-msg" style="font-size:13px; color:var(--muted); margin-top:6px;"></div>
-      </div>
-    </div>
 
     <!-- ============ HISTORIQUE DES VERSIONS (admin) ============ -->
     <div id="version-overlay" class="cal-overlay" style="display:none;">
@@ -494,7 +498,7 @@
           <h3 id="rev-modal-titre">Nouveau revenu</h3>
           <div class="date" id="rev-date-aff"></div>
         </div>
-        <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><button type="button" id="rev-devise-sym" class="devise-btn">€</button></div>
+        <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Date</label><button type="button" id="rev-date-btn" class="dd-btn" style="background:var(--papier); color:var(--papier-txt); border-color:var(--papier-border);">Choisir la date</button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <p id="rev-cot-info" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0;">Cotisation : 0 %</p>
@@ -513,7 +517,7 @@
           <h3>Nouveau remboursement</h3>
           <div class="date" id="remb-date-aff"></div>
         </div>
-        <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><button type="button" id="remb-devise-sym" class="devise-btn">€</button></div>
+        <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
@@ -683,29 +687,47 @@
     $("devise-msg").innerHTML='<div class="message ok">Devise « '+code+' » ajoutée.</div>';
     rendreDeviseListeReglages();
   };
-  function ouvrirDevisePick(codeActuel, cb){
-    const box=$("devise-pick-liste"); box.innerHTML="";
-    toutesDevises().forEach(d=>{
-      const b=document.createElement("button"); b.className="pchip"+(d.code===codeActuel?" on":""); b.textContent=d.code+" ("+d.sym+")";
-      b.onclick=()=>{ $("devise-pick-overlay").style.display="none"; cb(d.code); };
-      box.appendChild(b);
-    });
-    $("devise-pick-nouveau-code").value=""; $("devise-pick-nouveau-sym").value=""; $("devise-pick-msg").textContent="";
-    $("devise-pick-overlay").style.display="flex";
+  function initDDDevise(idWrap, obtenirCode, choisir){
+    const wrap=$(idWrap); const btn=wrap.querySelector(".devise-btn"); const panel=wrap.querySelector(".dd-panel");
+    function fermer(){ panel.style.display="none"; }
+    function rendreListe(){
+      panel.innerHTML="";
+      const actuel=obtenirCode();
+      toutesDevises().forEach(d=>{
+        const opt=document.createElement("div"); opt.className="dd-opt"+(d.code===actuel?" on":""); opt.textContent=d.code+" ("+d.sym+")";
+        opt.onclick=e=>{ e.stopPropagation(); choisir(d.code); fermer(); };
+        panel.appendChild(opt);
+      });
+      const ajout=document.createElement("div"); ajout.className="dd-opt dd-opt-ajout"; ajout.textContent="＋ Ajouter une devise";
+      ajout.onclick=e=>{ e.stopPropagation(); rendreFormAjout(); };
+      panel.appendChild(ajout);
+    }
+    function rendreFormAjout(){
+      panel.innerHTML='<div class="dd-devise-form">'+
+        '<input type="text" placeholder="Code (ex. THB)" maxlength="4" data-r="code" />'+
+        '<input type="text" placeholder="Symbole (ex. ฿)" maxlength="4" data-r="sym" />'+
+        '<button type="button">＋ Ajouter</button>'+
+        '<div class="dd-devise-msg"></div>'+
+        '<div class="dd-devise-retour">← Retour à la liste</div>'+
+      '</div>';
+      const inCode=panel.querySelector('[data-r="code"]'), inSym=panel.querySelector('[data-r="sym"]'), msg=panel.querySelector(".dd-devise-msg");
+      panel.querySelector("button").onclick=e=>{
+        e.stopPropagation();
+        const code=(inCode.value||"").trim().toUpperCase(), sym=(inSym.value||"").trim();
+        if(!code||!sym){ msg.textContent="Renseigne un code et un symbole."; msg.className="dd-devise-msg err"; return; }
+        if(toutesDevises().some(d=>d.code===code)){ msg.textContent="Cette devise existe déjà."; msg.className="dd-devise-msg err"; return; }
+        devisesPerso.push({code,sym}); sauverCloud();
+        choisir(code); fermer();
+      };
+      panel.querySelector(".dd-devise-retour").onclick=e=>{ e.stopPropagation(); rendreListe(); };
+    }
+    btn.onclick=e=>{
+      e.stopPropagation();
+      document.querySelectorAll(".dd-panel").forEach(p=>{ if(p!==panel) p.style.display="none"; });
+      if(panel.style.display==="block"){ fermer(); return; }
+      rendreListe(); panel.style.display="block";
+    };
   }
-  $("devise-pick-fermer").onclick=()=>$("devise-pick-overlay").style.display="none";
-  $("devise-pick-overlay").onclick=e=>{if(e.target===$("devise-pick-overlay"))$("devise-pick-overlay").style.display="none";};
-  $("devise-pick-ajouter").onclick=()=>{
-    const code=($("devise-pick-nouveau-code").value||"").trim().toUpperCase();
-    const sym=($("devise-pick-nouveau-sym").value||"").trim();
-    if(!code||!sym){ $("devise-pick-msg").textContent="Renseigne un code (ex. THB) et un symbole (ex. ฿)."; return; }
-    if(toutesDevises().some(d=>d.code===code)){ $("devise-pick-msg").textContent="Cette devise existe déjà."; return; }
-    devisesPerso.push({code,sym}); sauverCloud(); rendreDeviseListeReglages();
-    $("devise-pick-msg").textContent="Devise « "+code+" » ajoutée !";
-    const box=$("devise-pick-liste"); const b=document.createElement("button"); b.className="pchip"; b.textContent=code+" ("+sym+")";
-    b.onclick=()=>{ $("devise-pick-overlay").style.display="none"; };
-    box.appendChild(b);
-  };
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
@@ -1399,33 +1421,37 @@
 
   // ================= Fenêtre reçu =================
   let ddCat, ddSous, ddPay, ddPart;
-  let rDeviseTicket="EUR";
+  let rDeviseTicket="EUR", rDateTicket=new Date();
+  function majRDateAff(){ $("recu-date").textContent=rDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRecu(id){
     editionId=id||null; photoEtat="aucune"; photoBlob=null;
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
-    $("recu-date").textContent = selDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
     $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").style.display="inline-block";
     if(id){
       const d=depenses.find(x=>x.id===id);
       $("r-montant").value=String(d.montant).replace(".",","); $("r-desc").value=d.commentaire||"";
       rCat=d.categorie||null; rSous=d.sousCat||null; rPay=d.paiement||null; rPart=d.participant||participants[0]||"Moi";
       rDeviseTicket = d.devise || deviseDefaut; $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
+      rDateTicket = d.date ? new Date(d.date+"T12:00:00") : new Date(selDate);
       ddCat.set(rCat); ddSous.set(rSous); ddPay.set(rPay); ddPart.set(rPart);
       if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("r-photo-suppr").style.display="inline-block"; $("r-photo-btn").textContent="Changer"; } }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
       rCat=categories[0]?categories[0].nom:null; rSous=null; rPay=null; rPart=participants[0]||"Moi";
+      rDateTicket = new Date(selDate);
       ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart); $("r-photo-btn").textContent="Ajouter une photo";
     }
+    majRDateAff();
     $("recu-overlay").style.display="flex";
     setTimeout(()=>$("r-montant").focus(),50);
   }
   $("ouvrir-recu").onclick=()=>ouvrirRecu(null);
   $("recu-annuler").onclick=()=>$("recu-overlay").style.display="none";
   $("recu-overlay").onclick=e=>{if(e.target===$("recu-overlay"))$("recu-overlay").style.display="none";};
-  $("r-devise-sym").onclick=()=>ouvrirDevisePick(rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
+  initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
+  $("recu-date").onclick=()=>ouvrirCal(rDateTicket, d=>{ rDateTicket=d; majRDateAff(); });
 
   $("r-photo-btn").onclick=()=>$("r-photo-file").click();
   $("r-photo-file").onchange=async e=>{
@@ -1440,7 +1466,7 @@
   $("recu-valider").onclick=async()=>{
     const v=parseFloat(($("r-montant").value||"").replace(",",".")); if(!v||v<=0){$("r-montant").focus();return;}
     if(!rCat){alert("Choisis une catégorie.");return;}
-    const isoJour=iso(selDate); const com=$("r-desc").value.trim();
+    const isoJour=iso(rDateTicket); const com=$("r-desc").value.trim();
     let d;
     if(editionId){ d=depenses.find(x=>x.id===editionId);
       Object.assign(d,{montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
@@ -1450,6 +1476,7 @@
     }
     if(photoEtat==="nouvelle" && photoBlob){ await photoSet(d.id,photoBlob); d.photo=true; }
     else if(photoEtat==="supprimee"){ await photoDel(d.id); d.photo=false; }
+    selDate=new Date(rDateTicket);
     sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses();
   };
 
@@ -1726,7 +1753,7 @@
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
   $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay"))$("rev-overlay").style.display="none";};
-  $("rev-devise-sym").onclick=()=>ouvrirDevisePick(revDeviseTicket, code=>{ revDeviseTicket=code; $("rev-devise-sym").textContent=symboleDevise(code); calcNet(); });
+  initDDDevise("dd-rev-devise", ()=>revDeviseTicket, code=>{ revDeviseTicket=code; $("rev-devise-sym").textContent=symboleDevise(code); calcNet(); });
   $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
   $("rev-brut").addEventListener("input",calcNet);
   $("rev-valider").onclick=()=>{
@@ -1817,7 +1844,7 @@
   $("ouvrir-remb").onclick=ouvrirRemb;
   $("remb-annuler").onclick=()=>$("remb-overlay").style.display="none";
   $("remb-overlay").onclick=e=>{if(e.target===$("remb-overlay"))$("remb-overlay").style.display="none";};
-  $("remb-devise-sym").onclick=()=>ouvrirDevisePick(rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
+  initDDDevise("dd-remb-devise", ()=>rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
   $("remb-valider").onclick=()=>{
     const v=parseFloat(($("remb-montant").value||"").replace(",",".")); if(!v||v<=0){$("remb-montant").focus();return;}
     if(!rembSelection.length){ alert("Recherche et sélectionne au moins une dépense concernée."); return; }
