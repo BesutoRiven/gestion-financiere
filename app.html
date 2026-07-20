@@ -570,11 +570,20 @@
     <!-- ============ DEMANDE DE DEPART (consentement entre proprietaires) ============ -->
     <div id="depart-overlay" class="cal-overlay" style="display:none;">
       <div class="cal-box" style="max-width:340px;">
-        <div class="cal-tete"><span class="titre">Demande de départ</span></div>
+        <div class="cal-tete"><span class="titre" id="depart-titre">Demande de départ</span></div>
         <p id="depart-texte" style="font-size:15px; line-height:1.5;"></p>
         <small class="aide">En acceptant, tu quittes le partage et repasses sur tes données personnelles. En refusant, rien ne change.</small>
         <button id="depart-refuser" class="btn-ligne" style="height:44px; margin-top:14px;">Refuser</button>
         <button id="depart-accepter" class="btn-ligne" style="height:44px; margin-top:8px; color:var(--danger); border-color:#e0b4b4;">Accepter et quitter</button>
+      </div>
+    </div>
+
+    <!-- ============ MODALE OUI / NON (confirmation avec libellés personnalisés) ============ -->
+    <div id="ouinon-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:320px; text-align:center;">
+        <p id="ouinon-texte" style="font-size:15px; line-height:1.5; white-space:pre-line;"></p>
+        <button id="ouinon-oui" class="btn-plein" style="margin-top:10px;">Oui</button>
+        <button id="ouinon-non" class="btn-ligne" style="margin-top:8px;">Non</button>
       </div>
     </div>
 
@@ -752,6 +761,14 @@
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
+  function confirmerOuiNon(texte){
+    return new Promise(resolve=>{
+      $("ouinon-texte").textContent=texte;
+      $("ouinon-overlay").style.display="flex";
+      $("ouinon-oui").onclick=()=>{ $("ouinon-overlay").style.display="none"; resolve(true); };
+      $("ouinon-non").onclick=()=>{ $("ouinon-overlay").style.display="none"; resolve(false); };
+    });
+  }
   let deviseReglagesCtrl=null;
   function initDeviseReglages(){
     const wrap=$("dd-devise-reglages"); const btn=wrap.querySelector(".dd-btn"); const panel=wrap.querySelector(".dd-panel");
@@ -1042,15 +1059,36 @@
     if(!pourMoi) return;
     let nomDemandeur="Un(e) propriétaire";
     try{ const r=await sb.from("profils").select("pseudo").eq("id",pourMoi.demandeur_user_id).maybeSingle(); if(r.data && r.data.pseudo) nomDemandeur=r.data.pseudo; }catch(e){}
-    $("depart-texte").textContent=nomDemandeur+" souhaite que tu quittes le partage commun.";
-    $("depart-refuser").onclick=async()=>{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("id",pourMoi.id); $("depart-overlay").style.display="none"; };
-    $("depart-accepter").onclick=async()=>{
-      await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("id",pourMoi.id);
-      const garder=confirm("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?\n\nOK = je garde une copie.\nAnnuler = je repars de zéro.");
-      const r=await quitterPartage(garder);
-      $("depart-overlay").style.display="none";
-      if(r.ok){ location.reload(); }
-    };
+    if(pourMoi.type==="reset"){
+      $("depart-titre").textContent="Demande de réinitialisation";
+      $("depart-texte").textContent=nomDemandeur+" souhaite réinitialiser complètement les données de ce partage commun (tout effacer). Es-tu d'accord ?";
+      $("depart-refuser").onclick=async()=>{
+        await sb.from("foyer_demandes").update({statut:"refusee"}).eq("groupe_id",pourMoi.groupe_id).eq("statut","en_attente");
+        $("depart-overlay").style.display="none";
+      };
+      $("depart-accepter").onclick=async()=>{
+        await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("id",pourMoi.id);
+        const { data:restantes } = await sb.from("foyer_demandes").select("id").eq("groupe_id",pourMoi.groupe_id).eq("statut","en_attente");
+        $("depart-overlay").style.display="none";
+        if(!restantes || !restantes.length){
+          await sb.from("foyers").upsert({ id:foyerId, contenu:{}, updated_at:new Date().toISOString() });
+          location.reload();
+        } else {
+          alert("Accord enregistré. En attente de l'accord des autres propriétaires avant que la réinitialisation ait lieu.");
+        }
+      };
+    } else {
+      $("depart-titre").textContent="Demande de départ";
+      $("depart-texte").textContent=nomDemandeur+" souhaite que tu quittes le partage commun.";
+      $("depart-refuser").onclick=async()=>{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("id",pourMoi.id); $("depart-overlay").style.display="none"; };
+      $("depart-accepter").onclick=async()=>{
+        await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("id",pourMoi.id);
+        const garder=await confirmerOuiNon("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?");
+        const r=await quitterPartage(garder);
+        $("depart-overlay").style.display="none";
+        if(r.ok){ location.reload(); }
+      };
+    }
     $("depart-overlay").style.display="flex";
   }
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
@@ -2527,7 +2565,7 @@
     let garder=false;
     if(monRole==="proprietaire"){
       if(!confirm("Quitter le partage ?")) return;
-      garder=confirm("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?\n\nOK = je garde une copie.\nAnnuler = je repars de zéro, sans rien garder.");
+      garder=await confirmerOuiNon("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?");
     } else {
       if(!confirm("Quitter le partage ? Tu ne garderas aucune donnée de ce partage — tu repasseras sur ton propre compte, tel qu'il était avant.")) return;
     }

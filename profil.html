@@ -13,6 +13,10 @@
     .qr-box{text-align:center; margin-top:14px;}
     .qr-box img{width:180px; height:180px;}
     .secret{font-family:monospace; background:var(--bg); padding:8px 10px; border-radius:8px; font-size:13px; word-break:break-all; margin-top:8px;}
+    summary{list-style:none; cursor:pointer;}
+    summary::-webkit-details-marker{display:none;}
+    summary::after{content:"▾"; float:right; color:var(--muted); font-size:14px;}
+    details[open] summary::after{content:"▴";}
   </style>
 </head>
 <body>
@@ -79,19 +83,24 @@
     </div>
 
     <!-- Zone dangereuse -->
-    <div class="carte" style="border-color:#e0b4b4;">
-      <h2 style="font-size:16px; margin:0 0 4px; color:var(--danger);">⚠️ Zone dangereuse</h2>
-      <small class="aide">Ces deux actions sont définitives et ne peuvent pas être annulées.</small>
+    <details class="carte" style="border-color:#e0b4b4;">
+      <summary style="cursor:pointer; font-size:16px; font-weight:600; color:var(--danger);">⚠️ Zone dangereuse</summary>
+      <small class="aide" style="display:block; margin-top:8px;">Ces deux actions sont définitives et ne peuvent pas être annulées.</small>
 
       <hr class="sep" />
       <p style="font-weight:600; margin:0 0 4px;">Réinitialiser toutes mes données</p>
-      <small class="aide">Efface dépenses, revenus, catégories et réglages — ton compte reste actif, mais repart à zéro. Si tu fais partie d'un partage, ça efface les données de <strong>tout le monde dans ce partage</strong>, pas que les tiennes.</small>
+      <small class="aide">Efface dépenses, revenus, catégories et réglages — ton compte reste actif, mais repart à zéro. Si tu fais partie d'un partage, ça efface les données de <strong>tout le monde dans ce partage</strong>, pas que les tiennes. Seul un propriétaire peut le faire, et si un autre propriétaire est présent, son accord est requis avant que ça ait lieu.</small>
       <button id="btn-reset-ouvrir" class="btn btn-ligne" style="margin-top:10px; color:var(--danger); border-color:#e0b4b4;">Réinitialiser mes données</button>
       <div id="zone-reset" style="display:none; margin-top:10px;">
         <div id="reset-avertissement"></div>
-        <small class="aide">Pour confirmer, écris exactement : <strong>je souhaite tout écraser toutes mes données</strong></small>
-        <input id="reset-phrase" class="champ" type="text" placeholder="Recopie la phrase ci-dessus" />
-        <button id="btn-reset-confirmer" class="btn btn-danger" disabled style="opacity:.5;">Réinitialiser définitivement</button>
+        <div id="reset-bloc-phrase" style="display:none;">
+          <small class="aide">Pour confirmer, écris exactement : <strong>je souhaite réinitialiser toutes mes données</strong></small>
+          <input id="reset-phrase" class="champ" type="text" placeholder="Recopie la phrase ci-dessus" />
+          <button id="btn-reset-confirmer" class="btn btn-danger" disabled style="opacity:.5;">Réinitialiser définitivement</button>
+        </div>
+        <div id="reset-bloc-demande" style="display:none;">
+          <button id="btn-reset-demander" class="btn btn-danger">Envoyer la demande de réinitialisation</button>
+        </div>
         <button id="btn-reset-annuler" class="lien">Annuler</button>
       </div>
       <div id="msg-reset"></div>
@@ -107,7 +116,7 @@
         <button id="btn-suppr-annuler" class="lien">Annuler</button>
       </div>
       <div id="msg-suppr"></div>
-    </div>
+    </details>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -217,21 +226,40 @@
   $("btn-deconnexion").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
 
   // ---- Zone dangereuse ----
-  const PHRASE_RESET = "je souhaite tout écraser toutes mes données";
+  const PHRASE_RESET = "je souhaite réinitialiser toutes mes données";
   const PHRASE_SUPPR = "Je souhaite supprimer définitivement mon compte";
+  let resetFoyerId=null, resetAutresProprios=[];
 
   $("btn-reset-ouvrir").onclick = async () => {
     $("zone-reset").style.display = "block";
+    $("reset-bloc-phrase").style.display = "none";
+    $("reset-bloc-demande").style.display = "none";
     $("reset-avertissement").innerHTML = '<div class="message ok" style="margin:0 0 10px;">Vérification en cours…</div>';
     try{
-      const { data } = await sb.from("foyer_membres").select("foyer_id").eq("user_id", utilisateur.id).maybeSingle();
+      const { data } = await sb.from("foyer_membres").select("foyer_id,role").eq("user_id", utilisateur.id).maybeSingle();
       if (data && data.foyer_id){
-        const { count } = await sb.from("foyer_membres").select("user_id", {count:"exact", head:true}).eq("foyer_id", data.foyer_id);
-        $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ Tu fais partie d\'un partage à '+(count||1)+' personne(s). Réinitialiser va effacer les données de TOUT LE MONDE dans ce partage, pas seulement les tiennes.</div>';
+        resetFoyerId = data.foyer_id;
+        if (data.role !== "proprietaire"){
+          $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">Tu fais partie d\'un partage, mais seul un propriétaire peut réinitialiser les données partagées. Demande à un propriétaire du partage de le faire.</div>';
+          return; // ni phrase, ni demande : bloqué
+        }
+        const { data:autres } = await sb.from("foyer_membres").select("user_id").eq("foyer_id", data.foyer_id).eq("role","proprietaire").neq("user_id", utilisateur.id);
+        resetAutresProprios = autres || [];
+        if (resetAutresProprios.length){
+          let noms = [];
+          try{ const { data:profs } = await sb.from("profils").select("pseudo").in("id", resetAutresProprios.map(m=>m.user_id)); noms = (profs||[]).map(p=>p.pseudo); }catch(e){}
+          $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ '+(noms.length?noms.join(", "):"Un(e) autre propriétaire")+' est aussi propriétaire de ce partage. Son accord est requis avant que la réinitialisation ait lieu — rien ne sera effacé tant qu\'il/elle n\'a pas accepté.</div>';
+          $("reset-bloc-demande").style.display = "block";
+        } else {
+          $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ Tu es seul(e) propriétaire de ce partage. Réinitialiser va effacer les données de tous les membres.</div>';
+          $("reset-bloc-phrase").style.display = "block";
+        }
       } else {
+        resetFoyerId = null;
         $("reset-avertissement").innerHTML = '<div class="message ok" style="margin:0 0 10px;">Tu n\'es dans aucun partage : seules tes données personnelles seront effacées.</div>';
+        $("reset-bloc-phrase").style.display = "block";
       }
-    }catch(e){ $("reset-avertissement").innerHTML = ""; }
+    }catch(e){ $("reset-avertissement").innerHTML = ""; $("reset-bloc-phrase").style.display = "block"; }
   };
   $("btn-reset-annuler").onclick = () => { $("zone-reset").style.display = "none"; $("reset-phrase").value = ""; majBoutonReset(); };
   function majBoutonReset(){
@@ -244,14 +272,24 @@
     if (!confirm("Dernière confirmation : réinitialiser va effacer toutes ces données définitivement. Continuer ?")) return;
     msg("msg-reset", "Réinitialisation en cours…", "ok");
     try{
-      const { data } = await sb.from("foyer_membres").select("foyer_id").eq("user_id", utilisateur.id).maybeSingle();
-      if (data && data.foyer_id){
-        await sb.from("foyers").upsert({ id: data.foyer_id, contenu: {}, updated_at: new Date().toISOString() });
+      if (resetFoyerId){
+        await sb.from("foyers").upsert({ id: resetFoyerId, contenu: {}, updated_at: new Date().toISOString() });
       } else {
         await sb.from("donnees").upsert({ user_id: utilisateur.id, contenu: {}, updated_at: new Date().toISOString() });
       }
       msg("msg-reset", "Données réinitialisées. Redirection…", "ok");
       setTimeout(() => { window.location.href = "app.html"; }, 1200);
+    }catch(e){ msg("msg-reset", "Échec : "+(e.message||e), "err"); }
+  };
+  $("btn-reset-demander").onclick = async () => {
+    if (!resetAutresProprios.length || !resetFoyerId) return;
+    const groupeId = (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)));
+    try{
+      const lignes = resetAutresProprios.map(m => ({ foyer_id: resetFoyerId, cible_user_id: m.user_id, demandeur_user_id: utilisateur.id, type: "reset", groupe_id: groupeId }));
+      const { error } = await sb.from("foyer_demandes").insert(lignes);
+      if (error){ msg("msg-reset", "Échec : "+messageErreur(error), "err"); return; }
+      msg("msg-reset", "Demande envoyée. La réinitialisation aura lieu automatiquement dès que "+(resetAutresProprios.length>1?"tous les autres propriétaires auront":"l'autre propriétaire aura")+" accepté.", "ok");
+      $("btn-reset-demander").disabled = true; $("btn-reset-demander").textContent = "Demande envoyée ✓";
     }catch(e){ msg("msg-reset", "Échec : "+(e.message||e), "err"); }
   };
 
