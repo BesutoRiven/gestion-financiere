@@ -326,7 +326,7 @@
       <details class="bloc det">
         <summary>Gestion</summary>
         <div class="det-corps" style="padding:0;">
-          <details class="det-nested" open>
+          <details class="det-nested">
             <summary>Catégories</summary>
             <div class="det-corps">
               <div id="cats-liste"></div>
@@ -1739,6 +1739,8 @@
   };
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
+  const cleTypeRevenu=nom=>normaliser(nom).replace(/s$/,"");
+  const trouverTypeExistant=nom=>{ const cible=cleTypeRevenu(nom); return revtypes.find(t=>cleTypeRevenu(t.nom)===cible)||null; };
   // ---- Import des revenus (format simplifié : type en 1re ligne, puis mois + montant) ----
   $("btn-importer-rev").onclick=()=>{
     const lignes=($("zone-import-rev").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
@@ -1750,8 +1752,11 @@
       if(cells.length===1 && /^(19|20)\d{2}$/.test(cells[0])){ anneeCourante=parseInt(cells[0],10); return; }
       if(cells.length===1){
         const mAn=cells[0].match(/^(.*\S)\s+((?:19|20)\d{2})$/);
-        if(mAn){ typeCourant=mAn[1].trim(); anneeCourante=parseInt(mAn[2],10); }
-        else { typeCourant=cells[0]; }
+        const brut=mAn?mAn[1].trim():cells[0];
+        if(mAn) anneeCourante=parseInt(mAn[2],10);
+        const existant=trouverTypeExistant(brut);
+        const dejaVu=nouveauxTypes.find(t=>cleTypeRevenu(t)===cleTypeRevenu(brut));
+        typeCourant=existant?existant.nom:(dejaVu||brut); // réutilise l'orthographe déjà connue (accents/majuscules/pluriel tolérés)
         return;
       }
       if(/^total/i.test(cells[0])) return; // ligne total éventuelle, ignorée
