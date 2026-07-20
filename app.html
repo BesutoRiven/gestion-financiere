@@ -1533,7 +1533,7 @@
     if(photoEtat==="nouvelle" && photoBlob){ await photoSet(d.id,photoBlob); d.photo=true; }
     else if(photoEtat==="supprimee"){ await photoDel(d.id); d.photo=false; }
     selDate=new Date(rDateTicket);
-    sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses();
+    sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget();
   };
 
   async function voirPhoto(id){ const b=await photoGet(id); if(!b)return; $("lb-img").src=URL.createObjectURL(b); $("lb-overlay").style.display="flex"; }
@@ -1824,7 +1824,7 @@
     const net=brut*(1-rCotCourante/100); const isoJour=iso(revDate); const desc=$("rev-desc").value.trim();
     if(editionRev){ const r=revenus.find(x=>x.id===editionRev); Object.assign(r,{montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
     else { revenus.push({id:Date.now(),montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
-    sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus(); rendreDepenses();
+    sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus(); rendreDepenses(); rendreAccueil(); rendreBudget();
   };
 
   // ---- Remboursement ----
@@ -1916,7 +1916,7 @@
     const isoJour=iso(rembDateTicket); const desc=$("remb-desc").value.trim();
     remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
     selDate=new Date(rembDateTicket);
-    sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses();
+    sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget();
   };
 
   // Types de revenu (Réglages)
