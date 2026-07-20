@@ -9,7 +9,8 @@
   <link rel="stylesheet" href="styles.css" />
   <title>Mon profil</title>
   <style>
-    .avatar-grand{width:96px; height:96px; border-radius:50%; object-fit:cover; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:600; margin:0 auto;}
+    .avatar-grand{width:96px; height:96px; border-radius:50%; object-fit:cover; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:600;}
+    .avatar-badge{position:absolute; bottom:-2px; right:-2px; width:28px; height:28px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:13px; border:2px solid var(--surface);}
     .qr-box{text-align:center; margin-top:14px;}
     .qr-box img{width:180px; height:180px;}
     .secret{font-family:monospace; background:var(--bg); padding:8px 10px; border-radius:8px; font-size:13px; word-break:break-all; margin-top:8px;}
@@ -29,12 +30,13 @@
 
     <!-- Photo + identité -->
     <div class="carte" style="text-align:center;">
-      <div id="avatar" class="avatar-grand">…</div>
+      <div id="avatar-wrap" style="position:relative; width:96px; margin:0 auto; cursor:pointer;">
+        <div id="avatar" class="avatar-grand">…</div>
+        <span class="avatar-badge">📷</span>
+      </div>
       <p id="pseudo" style="margin:14px 0 0; font-weight:600; font-size:17px;"></p>
       <p id="email" style="margin:2px 0 0; color:var(--muted); font-size:14px;"></p>
       <input id="fichier-photo" type="file" accept="image/*" style="display:none;" />
-      <button id="btn-photo" class="btn btn-ligne">Changer la photo de profil</button>
-      <small class="aide">Image (JPG, PNG…) — 2 Mo maximum.</small>
       <div id="msg-photo"></div>
     </div>
 
@@ -43,8 +45,10 @@
       <h2 style="font-size:16px; margin:0 0 4px;">Pseudo</h2>
       <small class="aide">Ton identifiant public. Le nom n'a pas besoin d'être unique : les 4 chiffres après le # le rendent unique.</small>
       <p id="pseudo-actuel" style="font-size:22px; font-weight:700; margin:10px 0 12px;">…</p>
-      <input id="pseudo-input" class="champ" type="text" placeholder="Nouveau pseudo" />
-      <button id="pseudo-save" class="btn btn-plein">Enregistrer le pseudo</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input id="pseudo-input" class="champ" type="text" placeholder="Nouveau pseudo" style="margin-top:0; flex:1;" />
+        <button id="pseudo-save" aria-label="Enregistrer le pseudo" style="flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:18px; font-weight:700; cursor:pointer;">✓</button>
+      </div>
       <div id="msg-pseudo"></div>
     </div>
 
@@ -52,8 +56,10 @@
     <div class="carte">
       <h2 style="font-size:16px; margin:0 0 4px;">Numéro de téléphone</h2>
       <small class="aide">Enregistré comme information de contact (non vérifié par SMS).</small>
-      <input id="tel" class="champ" type="tel" inputmode="tel" placeholder="+33 6 12 34 56 78" />
-      <button id="btn-tel" class="btn btn-ligne">Enregistrer le numéro</button>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input id="tel" class="champ" type="tel" inputmode="tel" placeholder="+33 6 12 34 56 78" style="margin-top:0; flex:1;" />
+        <button id="btn-tel" aria-label="Enregistrer le numéro" style="flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:18px; font-weight:700; cursor:pointer;">✓</button>
+      </div>
       <div id="msg-tel"></div>
     </div>
 
@@ -131,7 +137,7 @@
   let utilisateur = null;
 
   // ---- Photo de profil ----
-  $("btn-photo").onclick = () => $("fichier-photo").click();
+  $("avatar-wrap").onclick = () => $("fichier-photo").click();
   $("fichier-photo").onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
     if (!f.type.startsWith("image/")){ msg("msg-photo", "Choisis un fichier image.", "err"); return; }
@@ -144,7 +150,7 @@
     const url = data.publicUrl + "?t=" + Date.now();
     const maj = await sb.auth.updateUser({ data: { avatar_url: url } });
     if (maj.error){ msg("msg-photo", messageErreur(maj.error), "err"); return; }
-    $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
+    $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" id="avatar" alt="Photo de profil" />';
     msg("msg-photo", "Photo mise à jour.", "ok");
   };
 
@@ -330,7 +336,7 @@
     $("pseudo-actuel").innerHTML = pseudoNom + '<span style="color:var(--muted); font-weight:600;">#' + tag + '</span>';
 
     const url = meta.avatar_url;
-    if (url) $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" alt="Photo de profil" />';
+    if (url) $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" id="avatar" alt="Photo de profil" />';
     else $("avatar").textContent = (meta.username || utilisateur.email || "?").charAt(0).toUpperCase();
 
     // Comptes Google : pas de mot de passe à gérer ici
