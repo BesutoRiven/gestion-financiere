@@ -438,15 +438,17 @@
         </div>
       </details>
 
-      <div class="bloc">
-        <h2 style="font-size:16px; margin:0 0 4px;">💾 Sauvegarde</h2>
-        <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
-        <button id="exp-sauvegarde" class="btn-plein" style="margin-top:12px;">⬇️ Télécharger la sauvegarde</button>
-        <input id="imp-sauvegarde-fichier" type="file" accept="application/json" style="display:none;" />
-        <button id="imp-sauvegarde-btn" class="btn-ligne" style="margin-top:10px; color:var(--danger); border-color:var(--danger);">⚠️ Restaurer une sauvegarde</button>
-        <small class="aide" style="display:block; margin-top:8px;">Restaurer <strong>remplace toutes les données actuelles</strong> par celles du fichier — pense à faire une sauvegarde d'abord si tu n'es pas sûr.</small>
-        <div id="msg-sauvegarde"></div>
-      </div>
+      <details class="bloc det">
+        <summary>💾 Sauvegarde</summary>
+        <div class="det-corps">
+          <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
+          <button id="exp-sauvegarde" class="btn-plein" style="margin-top:12px;">⬇️ Télécharger la sauvegarde</button>
+          <input id="imp-sauvegarde-fichier" type="file" accept="application/json" style="display:none;" />
+          <button id="imp-sauvegarde-btn" class="btn-ligne" style="margin-top:10px; color:var(--danger); border-color:var(--danger);">⚠️ Restaurer une sauvegarde</button>
+          <small class="aide" style="display:block; margin-top:8px;">Restaurer <strong>remplace toutes les données actuelles</strong> par celles du fichier — pense à faire une sauvegarde d'abord si tu n'es pas sûr.</small>
+          <div id="msg-sauvegarde"></div>
+        </div>
+      </details>
 
       <div class="bloc" id="bloc-admin" style="display:none;">
         <h2>Administration</h2>
@@ -548,10 +550,14 @@
         </div>
         <div id="partage-actif" style="display:none;">
           <p style="font-weight:600; color:var(--accent); margin:0 0 8px;">✓ Budget partagé</p>
-          <small class="aide">Transmets ce code à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage », avec le rôle « Ami » par défaut — tu pourras le changer ensuite.</small>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <input id="mon-code" class="champ" type="text" readonly style="flex:1; font-size:12px;" />
-            <button id="btn-copier-code" class="btn-ligne" style="width:auto; padding:0 16px;">Copier</button>
+          <small class="aide">Génère un code temporaire (valable 5 minutes) à transmettre à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage », avec le rôle « Ami » par défaut — tu pourras le changer ensuite.</small>
+          <button id="btn-generer-code" class="btn-ligne" style="height:42px; margin-top:8px;">🔑 Générer un code d'invitation</button>
+          <div id="zone-code" style="display:none; margin-top:8px;">
+            <div style="display:flex; gap:8px;">
+              <input id="mon-code" class="champ" type="text" readonly style="flex:1; font-size:16px; font-weight:700; letter-spacing:2px; text-align:center; margin-top:0;" />
+              <button id="btn-copier-code" class="btn-ligne" style="width:auto; padding:0 16px; margin-top:0;">Copier</button>
+            </div>
+            <small class="aide" id="code-compte-rebours" style="display:block; margin-top:6px; text-align:center;"></small>
           </div>
           <p class="amis-lbl" style="margin-top:16px;">Membres</p>
           <div id="membres-liste"></div>
@@ -938,13 +944,18 @@
     return {ok:true};
   }
   async function rejoindrePartage(code){
-    code=(code||"").trim(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
-    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:code, role:"ami" });
+    code=(code||"").trim().toUpperCase(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
+    const { data:invite, error } = await sb.from("foyer_invites").select("foyer_id,expires_at").eq("code",code).maybeSingle();
+    if(error || !invite) return {ok:false, msg:"Code invalide ou expiré."};
+    if(new Date(invite.expires_at) <= new Date()) return {ok:false, msg:"Ce code a expiré. Demande-en un nouveau à la personne."};
+    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:invite.foyer_id, role:"ami" });
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     return {ok:true};
   }
-  async function quitterPartage(){
-    await sb.from("donnees").upsert({ user_id:uid, contenu:contenuActuel(), updated_at:new Date().toISOString() }); // on garde une copie perso
+  async function quitterPartage(garderCopie){
+    if(garderCopie){
+      await sb.from("donnees").upsert({ user_id:uid, contenu:contenuActuel(), updated_at:new Date().toISOString() });
+    }
     const r=await sb.from("foyer_membres").delete().eq("user_id",uid);
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     foyerId=null; return {ok:true};
@@ -1035,7 +1046,8 @@
     $("depart-refuser").onclick=async()=>{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("id",pourMoi.id); $("depart-overlay").style.display="none"; };
     $("depart-accepter").onclick=async()=>{
       await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("id",pourMoi.id);
-      const r=await quitterPartage();
+      const garder=confirm("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?\n\nOK = je garde une copie.\nAnnuler = je repars de zéro.");
+      const r=await quitterPartage(garder);
       $("depart-overlay").style.display="none";
       if(r.ok){ location.reload(); }
     };
@@ -1737,6 +1749,7 @@
     $("jour-grand").textContent=labelJour(selDate);
     $("jour-sous").textContent=selDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
     $("jour-auj").style.display = (iso(selDate)===iso(new Date())) ? "none" : "inline-flex";
+    $("jour-plus").style.visibility = (iso(selDate)===iso(new Date())) ? "hidden" : "visible";
     const items=duJour(), rev=revDuJour(), remb=rembDuJour();
     if(filtreTxn==="revenus") $("jt-val").textContent=fmt(rev.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0));
     else $("jt-val").textContent=fmt(items.reduce((s,d)=>s+d.montant,0) - remb.reduce((s,r)=>s+r.montant,0));
@@ -2451,8 +2464,40 @@
     const actif=!!foyerId;
     $("partage-actif").style.display=actif?"block":"none";
     $("partage-inactif").style.display=actif?"none":"block";
-    if(actif) $("mon-code").value=foyerId;
+    $("zone-code").style.display="none";
+    if(codeMinuteur){ clearInterval(codeMinuteur); codeMinuteur=null; }
   }
+  let codeMinuteur=null;
+  function genererCodeAleatoire(){
+    const car="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans caractères ambigus (0/O, 1/I/L)
+    const rnd=new Uint32Array(8); crypto.getRandomValues(rnd);
+    let out=""; for(let i=0;i<8;i++) out+=car[rnd[i]%car.length];
+    return out;
+  }
+  function demarrerCompteRebours(expiresAt){
+    if(codeMinuteur) clearInterval(codeMinuteur);
+    function maj(){
+      const restant=Math.max(0, Math.floor((expiresAt-new Date())/1000));
+      if(restant<=0){
+        clearInterval(codeMinuteur); codeMinuteur=null;
+        $("code-compte-rebours").textContent="Code expiré — génère-en un nouveau si besoin.";
+        $("mon-code").value="Expiré";
+        return;
+      }
+      const m=Math.floor(restant/60), s=restant%60;
+      $("code-compte-rebours").textContent="Expire dans "+m+":"+String(s).padStart(2,"0");
+    }
+    maj(); codeMinuteur=setInterval(maj,1000);
+  }
+  $("btn-generer-code").onclick=async()=>{
+    const code=genererCodeAleatoire();
+    const expiresAt=new Date(Date.now()+5*60*1000);
+    const r=await sb.from("foyer_invites").insert({ code, foyer_id:foyerId, cree_par:uid, expires_at:expiresAt.toISOString() });
+    if(r.error){ msgAmis("Échec : "+messageErreur(r.error),"err"); return; }
+    $("mon-code").value=code;
+    $("zone-code").style.display="block";
+    demarrerCompteRebours(expiresAt);
+  };
   function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; if(foyerId) rendreMembres(); }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
@@ -2477,8 +2522,16 @@
     setTimeout(()=>location.reload(),1200);
   };
   $("btn-quitter-partage").onclick=async()=>{
-    if(!confirm("Quitter le partage ? Tu repasseras sur tes données personnelles (une copie des données actuelles est gardée pour toi).")) return;
-    const r=await quitterPartage();
+    let monRole="proprietaire";
+    try{ const r=await sb.from("foyer_membres").select("role").eq("foyer_id",foyerId).eq("user_id",uid).maybeSingle(); if(r.data && r.data.role) monRole=r.data.role; }catch(e){}
+    let garder=false;
+    if(monRole==="proprietaire"){
+      if(!confirm("Quitter le partage ?")) return;
+      garder=confirm("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?\n\nOK = je garde une copie.\nAnnuler = je repars de zéro, sans rien garder.");
+    } else {
+      if(!confirm("Quitter le partage ? Tu ne garderas aucune donnée de ce partage — tu repasseras sur ton propre compte, tel qu'il était avant.")) return;
+    }
+    const r=await quitterPartage(garder);
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
     msgAmis("Partage quitté. L'app va se recharger.","ok");
     setTimeout(()=>location.reload(),1000);
