@@ -367,6 +367,17 @@
             </div>
           </details>
           <details class="det-nested">
+            <summary>Moyens de paiement</summary>
+            <div class="det-corps">
+              <div id="moyens-liste"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouveau-moyen" type="text" placeholder="Nouveau moyen de paiement" />
+                <button id="ajouter-moyen" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+              <small class="aide">L'ordre choisi ici est celui proposé dans le ticket de dépense.</small>
+            </div>
+          </details>
+          <details class="det-nested">
             <summary>Budget personnalisé</summary>
             <div class="det-corps">
               <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
@@ -434,7 +445,7 @@
         <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Moyen de paiement</label><div class="dd" id="dd-pay"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Participant</label><div class="dd" id="dd-part"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" placeholder="Ex. Kebab avec Louise" /></div>
+        <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" placeholder="Ex. Bowl protéiné avec Louise" /></div>
 
         <div class="recu-photo">
           <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
@@ -518,7 +529,7 @@
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
-        <div class="recu-champ"><label>Description</label><input id="rev-desc" class="recu-desc" type="text" placeholder="Ex. Cedric — prestation" /></div>
+        <div class="recu-champ"><label>Description</label><input id="rev-desc" class="recu-desc" type="text" placeholder="Ex. Dropshipping" /></div>
         <button class="recu-valider" id="rev-valider">Valider ✓</button>
         <button class="recu-annuler" id="rev-annuler">Annuler</button>
       </div>
@@ -529,7 +540,7 @@
       <div class="recu" style="background:var(--papier-bleu);">
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
-          <h3>Nouveau remboursement</h3>
+          <h3 id="remb-modal-titre">Nouveau remboursement</h3>
           <button type="button" class="date recu-date-btn" id="remb-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
@@ -636,7 +647,7 @@
     "Voyages":["Billets","Hébergements","Assur. voyage","Restaurants","Activités","Transports","Bagages","Visa"],
     "Divers":["Virement banque","Administration","Bouquet de fleur","Remboursement","Urssaf","Investissement"],
   };
-  const MOYENS = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
+  const MOYENS_DEFAUT = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
   // Catégorie spéciale "Dépense" : toujours disponible, invisible dans les réglages
   const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"💳"};
   const REVTYPES_DEFAUT = [{nom:"Auto-entrep.",cotisation:0},{nom:"Salaire",cotisation:0},{nom:"Freelance",cotisation:0},{nom:"Prime",cotisation:0},{nom:"Autre",cotisation:0}];
@@ -667,7 +678,7 @@
 
   // ================= Utilitaires =================
   const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"CN¥"}];
-  let deviseDefaut="EUR", devisesPerso=[];
+  let deviseDefaut="EUR", devisesPerso=[], moyensPaiement=MOYENS_DEFAUT.slice();
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
@@ -784,7 +795,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -825,9 +836,10 @@
     remboursements = c.remboursements || [];
     deviseDefaut = c.devise || "EUR";
     devisesPerso = c.devisesPerso || [];
+    moyensPaiement = c.moyensPaiement || MOYENS_DEFAUT.slice();
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -1114,9 +1126,11 @@
       const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
       l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(r.description||"Remboursement")+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--remb-fg);">-'+fmtDev(r.montant,r.devise)+'</span></div>'+
         '<div style="font-size:12px;color:var(--muted);">'+(dateAff(r.date)||"")+(nbLies?(' · '+nbLies+' dépense(s) liée(s)'):'')+'</div></div>';
+      const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--accent);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier ce remboursement");
+      be.onclick=()=>{ $("catdet-overlay").style.display="none"; ouvrirRemb(r.id); venantCatdet=true; };
       const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer ce remboursement");
       bx.onclick=()=>{ if(!confirmDouble("Supprimer ce remboursement ("+fmt(r.montant)+") ?"))return; remboursements=remboursements.filter(x=>x.id!==r.id); sauverCloud(); rendreDetailRemb(); rendreAccueil(); rendreBudget(); rendreDepenses(); };
-      l.appendChild(bx);
+      l.appendChild(be); l.appendChild(bx);
       box.appendChild(l);
       catdetCase("remb:"+r.id, l);
     });
@@ -1691,9 +1705,13 @@
     arr.forEach((s,i)=>{
       const l=document.createElement("div"); l.className="cat-ligne";
       const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
+      const monter=document.createElement("button"); monter.textContent="▲"; monter.className="cat-move"; monter.setAttribute("aria-label","Monter"); monter.disabled=i===0;
+      monter.onclick=()=>{ if(i===0)return; [arr[i-1],arr[i]]=[arr[i],arr[i-1]]; sauverSous(); rendreSousListe(); };
+      const descendre=document.createElement("button"); descendre.textContent="▼"; descendre.className="cat-move"; descendre.setAttribute("aria-label","Descendre"); descendre.disabled=i===arr.length-1;
+      descendre.onclick=()=>{ if(i===arr.length-1)return; [arr[i+1],arr[i]]=[arr[i],arr[i+1]]; sauverSous(); rendreSousListe(); };
       const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
       del.onclick=()=>{ souscats[souscatSel].splice(i,1); sauverSous(); rendreSousListe(); };
-      l.appendChild(span); l.appendChild(del); box.appendChild(l);
+      l.appendChild(span); l.appendChild(monter); l.appendChild(descendre); l.appendChild(del); box.appendChild(l);
     });
   }
   $("ajouter-sous").onclick=()=>{
@@ -1861,7 +1879,7 @@
     if(nouveauxTypes.length) msg+=" — nouveau(x) type(s) créé(s) : "+nouveauxTypes.join(", ");
     if(problemes.length) msg+=" ("+problemes.length+" ligne(s) ignorée(s), mois non reconnu)";
     msgIrev(msg, problemes.length?"warn":"ok");
-    rendreRevenus(); rendreRevTypes();
+    rendreRevTypes();
   };
   function msgIrev(t,ty){$("msg-imprev").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
@@ -1886,27 +1904,6 @@
       inp.addEventListener("blur",valider);
       inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); inp.blur(); } });
     };
-  }
-  function rendreRevenus(){
-    const box=$("rev-liste"); if(!box) return; box.innerHTML="";
-    $("rev-vide").style.display=revenus.length?"none":"block";
-    const groupes={};
-    revenus.forEach(r=>{ const m=(r.date||"").slice(0,7)||"?"; (groupes[m]=groupes[m]||[]).push(r); });
-    Object.keys(groupes).sort().reverse().forEach(m=>{
-      const arr=groupes[m]; const net=arr.reduce((s,r)=>s+(r.net||0),0);
-      const mo=m.split("-"); const label=(MOIS_L[parseInt(mo[1],10)-1]||m)+" "+mo[0];
-      const e=document.createElement("div"); e.className="cat-entete"; e.style.background="var(--accent-soft)"; e.style.color="var(--accent)";
-      e.innerHTML="<span>"+label+"</span><span>"+fmt(net)+" net</span>"; box.appendChild(e);
-      arr.sort((x,y)=>(y.date||"").localeCompare(x.date||"")).forEach(r=>{
-        const l=document.createElement("div"); l.className="dep";
-        const infos=[r.type, r.cotisation?("cotis. "+String(r.cotisation).replace(".",",")+"%"):null, r.montant?("brut "+fmtDev(r.montant,r.devise)):null].filter(Boolean).join(" · ");
-        l.innerHTML='<div class="info"><div class="titre">'+(r.description||r.type||"Revenu")+'</div><div class="sous">'+infos+'</div></div><div class="mnt">'+fmtDev(r.net||0,r.devise)+'</div>';
-        const be=document.createElement("button"); be.className="act"; be.textContent="✎"; be.setAttribute("aria-label","Modifier"); be.onclick=()=>ouvrirRev(r.id);
-        const bx=document.createElement("button"); bx.className="act"; bx.style.color="var(--danger)"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer");
-        bx.onclick=()=>{ revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreRevenus(); };
-        l.appendChild(be); l.appendChild(bx); box.appendChild(l);
-      });
-    });
   }
   let revDate=new Date(), revDeviseTicket="EUR";
   function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
@@ -1944,7 +1941,7 @@
     const net=brut*(1-rCotCourante/100); const isoJour=iso(revDate); const desc=$("rev-desc").value.trim();
     if(editionRev){ const r=revenus.find(x=>x.id===editionRev); Object.assign(r,{montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
     else { revenus.push({id:Date.now(),montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
-    sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus(); rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
+    sauverRev(); $("rev-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
   };
 
   // ---- Remboursement ----
@@ -2015,30 +2012,48 @@
 
   let rembDeviseTicket="EUR", rembDateTicket=new Date();
   function majRembDateAff(){ $("remb-date-aff").textContent=rembDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
-  function ouvrirRemb(){
-    $("remb-montant").value=""; $("remb-desc").value=""; $("remb-recherche").value="";
-    rembSelection=[]; rendreRembSelection(); rendreRembResultats("");
-    rembDeviseTicket = deviseDefaut;
-    $("remb-devise-sym").textContent=symboleDevise(rembDeviseTicket);
-    rembDateTicket = new Date(selDate);
+  let editionRemb=null;
+  function ouvrirRemb(id){
+    venantCatdet=false;
+    editionRemb=id||null;
+    $("remb-modal-titre").textContent = id ? "Modifier le remboursement" : "Nouveau remboursement";
+    if(id){
+      const r=remboursements.find(x=>x.id===id);
+      $("remb-montant").value=String(r.montant).replace(".",","); $("remb-desc").value=r.description||""; $("remb-recherche").value="";
+      rembSelection=(r.depenseIds||[]).slice(); rendreRembSelection(); rendreRembResultats("");
+      rembDeviseTicket = r.devise || deviseDefaut;
+      $("remb-devise-sym").textContent=symboleDevise(rembDeviseTicket);
+      rembDateTicket = r.date ? new Date(r.date+"T12:00:00") : new Date(selDate);
+    } else {
+      $("remb-montant").value=""; $("remb-desc").value=""; $("remb-recherche").value="";
+      rembSelection=[]; rendreRembSelection(); rendreRembResultats("");
+      rembDeviseTicket = deviseDefaut;
+      $("remb-devise-sym").textContent=symboleDevise(rembDeviseTicket);
+      rembDateTicket = new Date(selDate);
+    }
     majRembDateAff();
     $("remb-overlay").style.display="flex";
     setTimeout(()=>$("remb-montant").focus(),50);
   }
-  $("ouvrir-remb").onclick=ouvrirRemb;
-  $("res-ouvrir-remb").onclick=ouvrirRemb;
-  $("bud-ouvrir-remb").onclick=ouvrirRemb;
-  $("remb-annuler").onclick=()=>$("remb-overlay").style.display="none";
-  $("remb-overlay").onclick=e=>{if(e.target===$("remb-overlay"))$("remb-overlay").style.display="none";};
+  $("ouvrir-remb").onclick=()=>ouvrirRemb(null);
+  $("res-ouvrir-remb").onclick=()=>ouvrirRemb(null);
+  $("bud-ouvrir-remb").onclick=()=>ouvrirRemb(null);
+  $("remb-annuler").onclick=()=>{ $("remb-overlay").style.display="none"; fermerTicketRetourCatdet(); };
+  $("remb-overlay").onclick=e=>{if(e.target===$("remb-overlay")){$("remb-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-remb-devise", ()=>rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
   $("remb-date-aff").onclick=()=>ouvrirCal(rembDateTicket, d=>{ rembDateTicket=d; majRembDateAff(); });
   $("remb-valider").onclick=()=>{
     const v=parseFloat(($("remb-montant").value||"").replace(",",".")); if(!v||v<=0){$("remb-montant").focus();return;}
     if(!rembSelection.length){ alert("Recherche et sélectionne au moins une dépense concernée."); return; }
     const isoJour=iso(rembDateTicket); const desc=$("remb-desc").value.trim();
-    remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
+    if(editionRemb){
+      const r=remboursements.find(x=>x.id===editionRemb);
+      Object.assign(r,{montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
+    } else {
+      remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
+    }
     selDate=new Date(rembDateTicket);
-    sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget();
+    sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
   };
 
   // Types de revenu (Réglages)
@@ -2047,7 +2062,7 @@
     revtypes.forEach((t,idx)=>{
       const l=document.createElement("div"); l.className="cat-ligne";
       const inp=document.createElement("input"); inp.type="text"; inp.value=t.nom;
-      inp.onchange=()=>{ const v=inp.value.trim(); if(!v){rendreRevTypes();return;} const anc=t.nom; revenus.forEach(r=>{if(r.type===anc)r.type=v;}); t.nom=v; sauverRevType(); rendreRevenus(); };
+      inp.onchange=()=>{ const v=inp.value.trim(); if(!v){rendreRevTypes();return;} const anc=t.nom; revenus.forEach(r=>{if(r.type===anc)r.type=v;}); t.nom=v; sauverRevType(); };
       const cot=document.createElement("input"); cot.type="text"; cot.inputMode="decimal"; cot.placeholder="0";
       cot.value=t.cotisation?String(t.cotisation).replace(".",","):"";
       cot.style.cssText="width:56px; flex:0 0 auto; text-align:right; border:1px solid var(--border); border-radius:8px; padding:8px 6px; font-family:inherit; background:var(--surface); color:var(--text);";
@@ -2065,6 +2080,27 @@
     const v=$("nouveau-revtype").value.trim(); if(!v)return;
     if(revtypes.some(t=>t.nom.toLowerCase()===v.toLowerCase())){alert("Ce type existe déjà.");return;}
     revtypes.push({nom:v, cotisation:0}); $("nouveau-revtype").value=""; sauverRevType(); rendreRevTypes();
+  };
+
+  // Moyens de paiement (Réglages)
+  function rendreMoyens(){
+    const box=$("moyens-liste"); if(!box) return; box.innerHTML="";
+    moyensPaiement.forEach((m,idx)=>{
+      const l=document.createElement("div"); l.className="cat-ligne";
+      const inp=document.createElement("input"); inp.type="text"; inp.value=m;
+      inp.onchange=()=>{ const v=inp.value.trim(); if(!v){rendreMoyens();return;} const anc=moyensPaiement[idx]; depenses.forEach(d=>{if(d.paiement===anc)d.paiement=v;}); moyensPaiement[idx]=v; sauverCloud(); };
+      const monter=document.createElement("button"); monter.textContent="▲"; monter.className="cat-move"; monter.setAttribute("aria-label","Monter"); monter.disabled=idx===0;
+      monter.onclick=()=>{ if(idx===0)return; [moyensPaiement[idx-1],moyensPaiement[idx]]=[moyensPaiement[idx],moyensPaiement[idx-1]]; sauverCloud(); rendreMoyens(); };
+      const descendre=document.createElement("button"); descendre.textContent="▼"; descendre.className="cat-move"; descendre.setAttribute("aria-label","Descendre"); descendre.disabled=idx===moyensPaiement.length-1;
+      descendre.onclick=()=>{ if(idx===moyensPaiement.length-1)return; [moyensPaiement[idx+1],moyensPaiement[idx]]=[moyensPaiement[idx],moyensPaiement[idx+1]]; sauverCloud(); rendreMoyens(); };
+      const del=document.createElement("button"); del.textContent="×"; del.onclick=()=>{ if(moyensPaiement.length<=1)return; moyensPaiement.splice(idx,1); sauverCloud(); rendreMoyens(); };
+      l.appendChild(inp); l.appendChild(monter); l.appendChild(descendre); l.appendChild(del); box.appendChild(l);
+    });
+  }
+  $("ajouter-moyen").onclick=()=>{
+    const v=$("nouveau-moyen").value.trim(); if(!v)return;
+    if(moyensPaiement.some(m=>m.toLowerCase()===v.toLowerCase())){alert("Ce moyen de paiement existe déjà.");return;}
+    moyensPaiement.push(v); $("nouveau-moyen").value=""; sauverCloud(); rendreMoyens();
   };
 
   // ================= Historique des versions (admin, en direct depuis GitHub) =================
@@ -2161,11 +2197,11 @@
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
     ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null);});
     ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v;});
-    ddPay=initDD("dd-pay",()=>MOYENS,v=>{rPay=v;});
+    ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion();
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens();
     // Mode sombre
     const sw=$("theme-switch");
     sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
