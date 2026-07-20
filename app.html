@@ -189,6 +189,9 @@
     .txn-remb{border-left:3px solid #2f6fb0;}
     .bud-ro{font-size:13px; color:var(--muted); margin-top:4px;}
     .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
+    .switch-sm{width:34px; height:20px;}
+    .switch-sm .knob{width:16px; height:16px; top:2px; left:2px;}
+    .switch-sm.on .knob{transform:translateX(14px);}
     .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
     .switch.on{background:var(--accent);}
     .switch.on .knob{transform:translateX(22px);}
@@ -229,12 +232,10 @@
         <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
 
-      <div style="display:flex; align-items:center; justify-content:space-between; margin:14px 12px 0;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <button id="btn-gestion-toggle" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
-          <span style="font-size:13px; color:var(--muted); font-weight:600;">Gérer</span>
-        </div>
-        <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:32px; padding:0 14px; border-radius:16px; color:var(--danger); border-color:var(--danger); font-size:13px;">Supprimer (<span id="gestion-compte">0</span>)</button>
+      <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0;">
+        <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
+        <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
+        <button id="btn-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
       </div>
 
       <div class="liste-zone">
@@ -406,6 +407,14 @@
         <div class="cal-tete"><span class="titre">Devise pour cette opération</span><button id="devise-pick-fermer" aria-label="Fermer">×</button></div>
         <div id="devise-pick-liste" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
         <small class="aide" style="display:block; margin-top:10px;">Ne change que cette opération. La devise par défaut de l'app reste réglable dans Réglages.</small>
+        <hr class="sep" />
+        <small class="aide" style="display:block; margin-bottom:6px;">Devise absente de la liste ? Ajoute-la ici, elle sera disponible partout ensuite.</small>
+        <div style="display:flex; gap:8px;">
+          <input id="devise-pick-nouveau-code" class="champ" style="margin-top:0;" type="text" placeholder="Code (ex. THB)" maxlength="4" />
+          <input id="devise-pick-nouveau-sym" class="champ" style="margin-top:0;" type="text" placeholder="Symbole (ex. ฿)" maxlength="4" />
+        </div>
+        <button id="devise-pick-ajouter" class="btn-ligne" style="height:40px; margin-top:8px;">＋ Ajouter cette devise</button>
+        <div id="devise-pick-msg" style="font-size:13px; color:var(--muted); margin-top:6px;"></div>
       </div>
     </div>
 
@@ -513,12 +522,10 @@
       <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
         <div class="cal-tete"><span class="titre" id="catdet-titre">Détail</span><button id="catdet-fermer" aria-label="Fermer">×</button></div>
         <div id="catdet-filtre" class="perso" style="padding:0 0 6px;"></div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0 10px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <button id="catdet-gestion-toggle" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
-            <span style="font-size:13px; color:var(--muted); font-weight:600;">Gérer</span>
-          </div>
-          <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; height:32px; padding:0 14px; border-radius:16px; color:var(--danger); border-color:var(--danger); font-size:13px;">Supprimer (<span id="catdet-compte">0</span>)</button>
+        <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:4px 0 10px;">
+          <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="catdet-compte">0</span>)</button>
+          <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
+          <button id="catdet-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
         </div>
         <div id="catdet-liste"></div>
       </div>
@@ -617,29 +624,47 @@
   let rCat=null, rSous=null, rPay=null, rPart=null, photoEtat="aucune", photoBlob=null;
 
   // ================= Utilitaires =================
-  const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"}];
-  let deviseDefaut="EUR";
-  const symboleDevise=(code)=> (DEVISES.find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
+  const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"CN¥"}];
+  let deviseDefaut="EUR", devisesPerso=[];
+  const toutesDevises=()=> DEVISES.concat(devisesPerso);
+  const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
+  function rendreDeviseSelectGlobal(){
+    const sel=$("devise-select"); if(!sel) return;
+    const val=sel.value||deviseDefaut;
+    sel.innerHTML=toutesDevises().map(d=>'<option value="'+d.code+'"'+(d.code===deviseDefaut?" selected":"")+'>'+d.code+" ("+d.sym+")</option>").join("");
+  }
   function ouvrirDevisePick(codeActuel, cb){
     const box=$("devise-pick-liste"); box.innerHTML="";
-    DEVISES.forEach(d=>{
+    toutesDevises().forEach(d=>{
       const b=document.createElement("button"); b.className="pchip"+(d.code===codeActuel?" on":""); b.textContent=d.code+" ("+d.sym+")";
       b.onclick=()=>{ $("devise-pick-overlay").style.display="none"; cb(d.code); };
       box.appendChild(b);
     });
+    $("devise-pick-nouveau-code").value=""; $("devise-pick-nouveau-sym").value=""; $("devise-pick-msg").textContent="";
     $("devise-pick-overlay").style.display="flex";
   }
   $("devise-pick-fermer").onclick=()=>$("devise-pick-overlay").style.display="none";
   $("devise-pick-overlay").onclick=e=>{if(e.target===$("devise-pick-overlay"))$("devise-pick-overlay").style.display="none";};
+  $("devise-pick-ajouter").onclick=()=>{
+    const code=($("devise-pick-nouveau-code").value||"").trim().toUpperCase();
+    const sym=($("devise-pick-nouveau-sym").value||"").trim();
+    if(!code||!sym){ $("devise-pick-msg").textContent="Renseigne un code (ex. THB) et un symbole (ex. ฿)."; return; }
+    if(toutesDevises().some(d=>d.code===code)){ $("devise-pick-msg").textContent="Cette devise existe déjà."; return; }
+    devisesPerso.push({code,sym}); sauverCloud(); rendreDeviseSelectGlobal();
+    $("devise-pick-msg").textContent="Devise « "+code+" » ajoutée !";
+    const box=$("devise-pick-liste"); const b=document.createElement("button"); b.className="pchip"; b.textContent=code+" ("+sym+")";
+    b.onclick=()=>{ $("devise-pick-overlay").style.display="none"; };
+    box.appendChild(b);
+  };
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -679,6 +704,7 @@
     participants = c.participants || PARTICIPANTS_DEFAUT.slice();
     remboursements = c.remboursements || [];
     deviseDefaut = c.devise || "EUR";
+    devisesPerso = c.devisesPerso || [];
   }
   function rafraichirVueCourante(){
     rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion();
@@ -808,6 +834,7 @@
   document.querySelectorAll("#res-filtre button").forEach(b=>{
     b.onclick=()=>{ filtreRes=b.dataset.f; document.querySelectorAll("#res-filtre button").forEach(x=>x.classList.toggle("on",x===b)); rendreAccueil(); };
   });
+  function remboursementsPeriode(b){ return remboursements.filter(r=>r.date>=b.debut && r.date<=b.fin); }
   function rendreAccueil(){
     if(dashMode==="tout"||!dashMode) dashMode="jour";
     rendrePersoChips();
@@ -820,18 +847,22 @@
     const b=bornesResume();
     let totalDep=0; const parCat={};
     depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin){ totalDep+=d.montant; parCat[d.categorie]=(parCat[d.categorie]||0)+d.montant; } });
+    const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
+    const totalDepNet = totalDep - totalRemb;
     let totalRev=0; const parType={};
     revenus.forEach(r=>{ if(r.date>=b.debut && r.date<=b.fin){ const net=r.net!=null?r.net:r.montant; totalRev+=net; parType[r.type||"Autre"]=(parType[r.type||"Autre"]||0)+net; } });
 
     const box=$("repartition"); box.innerHTML="";
     if(filtreRes==="depenses"){
-      $("kpi-zone").innerHTML='<div class="kpi-grand"><p class="lbl">Dépenses de la période</p><p class="val">'+fmt(totalDep)+'</p></div>';
+      $("kpi-zone").innerHTML='<div class="kpi-grand"><p class="lbl">Dépenses de la période</p><p class="val">'+fmt(totalDepNet)+'</p></div>';
       $("rep-titre").textContent="Par catégorie";
       const noms=Object.keys(parCat).sort((a,c)=>parCat[c]-parCat[a]);
-      $("rep-vide").style.display=noms.length?"none":"block";
+      $("rep-vide").style.display=(noms.length||totalRemb)?"none":"block";
       noms.forEach(n=>{ const col=couleursDe(n), catObj=categories.find(c=>c.nom===n)||DEP_SIMPLE; const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
         l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj.emoji?catObj.emoji+" ":"")+n+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
         l.onclick=()=>ouvrirDetailCat(n); box.appendChild(l); });
+      if(totalRemb>0){ const l=document.createElement("div"); l.className="rep-ligne";
+        l.innerHTML='<span class="pt" style="background:var(--remb-fg)"></span><span class="nom">↩ Remboursements</span><span class="mt">-'+fmt(totalRemb)+'</span>'; box.appendChild(l); }
     } else if(filtreRes==="revenus"){
       $("kpi-zone").innerHTML='<div class="kpi-grand"><p class="lbl">Revenus de la période</p><p class="val">'+fmt(totalRev)+'</p></div>';
       $("rep-titre").textContent="Par type de revenu";
@@ -841,17 +872,18 @@
         l.innerHTML='<span class="pt" style="background:var(--accent)"></span><span class="nom">💰 '+n+'</span><span class="mt">'+fmt(parType[n])+'</span>';
         l.onclick=()=>ouvrirDetailRevType(n); box.appendChild(l); });
     } else {
-      const solde=totalRev-totalDep;
-      $("kpi-zone").innerHTML='<div class="kpis"><div class="kpi"><p class="lbl">Revenus</p><p class="val" style="color:var(--accent);">'+fmt(totalRev)+'</p></div><div class="kpi"><p class="lbl">Dépenses</p><p class="val">'+fmt(totalDep)+'</p></div></div><div class="kpi-grand"><p class="lbl">Solde net</p><p class="val" style="color:'+(solde>=0?'var(--accent)':'var(--danger)')+';">'+fmt(solde)+'</p></div>';
+      const solde=totalRev-totalDepNet;
+      $("kpi-zone").innerHTML='<div class="kpis"><div class="kpi"><p class="lbl">Revenus</p><p class="val" style="color:var(--accent);">'+fmt(totalRev)+'</p></div><div class="kpi"><p class="lbl">Dépenses</p><p class="val">'+fmt(totalDepNet)+'</p></div></div><div class="kpi-grand"><p class="lbl">Solde net</p><p class="val" style="color:'+(solde>=0?'var(--accent)':'var(--danger)')+';">'+fmt(solde)+'</p></div>';
       $("rep-titre").textContent="Par catégorie et type";
       const lignes=[];
       Object.keys(parCat).forEach(n=>lignes.push({n, v:parCat[n], dep:true}));
       Object.keys(parType).forEach(n=>lignes.push({n:"💰 "+n, typeBrut:n, v:parType[n], dep:false}));
-      lignes.sort((a,c)=>c.v-a.v);
+      if(totalRemb>0) lignes.push({n:"↩ Remboursements", v:-totalRemb, remb:true});
+      lignes.sort((a,c)=>Math.abs(c.v)-Math.abs(a.v));
       $("rep-vide").style.display=lignes.length?"none":"block";
-      lignes.forEach(x=>{ const col=x.dep?couleursDe(x.n):{fg:"var(--accent)"}; const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
-        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+x.n+'</span><span class="mt">'+fmt(x.v)+'</span>';
-        l.onclick=()=>{ x.dep?ouvrirDetailCat(x.n):ouvrirDetailRevType(x.typeBrut); }; box.appendChild(l); });
+      lignes.forEach(x=>{ const col=x.remb?{fg:"var(--remb-fg)"}:(x.dep?couleursDe(x.n):{fg:"var(--accent)"}); const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; if(x.dep) l.style.cursor="pointer";
+        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+x.n+'</span><span class="mt">'+(x.v<0?'-':'')+fmt(Math.abs(x.v))+'</span>';
+        if(x.dep) l.onclick=()=>ouvrirDetailCat(x.n); else if(x.typeBrut) l.onclick=()=>ouvrirDetailRevType(x.typeBrut); box.appendChild(l); });
     }
   }
 
@@ -1019,6 +1051,7 @@
     const b=bornesGen(budMode, budDate);
     const reel={};
     depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin) reel[d.categorie]=(reel[d.categorie]||0)+d.montant; });
+    const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
     const box=$("bud-liste"); box.innerHTML="";
     let totPrevu=0, totReel=0;
     categories.forEach(cat=>{
@@ -1035,9 +1068,15 @@
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
       box.appendChild(row);
     });
+    if(totalRemb>0){
+      const row=document.createElement("div"); row.className="bud-row";
+      row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">↩ Remboursements</span></div><div class="bud-det">Réduit le réel total de <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
+      box.appendChild(row);
+    }
+    const totReelNet = totReel - totalRemb;
     $("bt-prevu").textContent=fmt(totPrevu);
-    $("bt-reel").textContent=fmt(totReel);
-    const reste=totPrevu-totReel;
+    $("bt-reel").textContent=fmt(totReelNet);
+    const reste=totPrevu-totReelNet;
     $("bt-reste").textContent=fmt(reste);
     $("bt-reste").style.color = reste>=0 ? "var(--accent)" : "var(--danger)";
   }
@@ -1840,7 +1879,7 @@
 
     // Devise
     const selDev=$("devise-select");
-    selDev.innerHTML=DEVISES.map(d=>'<option value="'+d.code+'"'+(d.code===deviseDefaut?" selected":"")+'>'+d.code+" ("+d.sym+")</option>").join("");
+    rendreDeviseSelectGlobal();
     selDev.onchange=()=>{ deviseDefaut=selDev.value; sauverCloud(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); };
 
     const meta=session.user.user_metadata||{};
