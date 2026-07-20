@@ -50,3 +50,10 @@ label.lbl{font-size:13px; color:var(--muted); display:block; margin-top:14px;}
 .titre-page{font-size:22px; font-weight:600; margin:20px 20px 0;}
 .sep{height:1px; background:var(--border); margin:16px 0; border:none;}
 small.aide{display:block; color:var(--muted); font-size:12px; margin-top:6px; line-height:1.5;}
+
+/* Filet de sécurité : tout champ ou menu déroulant hérite des couleurs du thème,
+   même s'il est ajouté plus tard sans style explicite (évite les blocs blancs en mode sombre). */
+select, input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="search"], input[type="tel"], textarea {
+  background: var(--surface);
+  color: var(--text);
+}
