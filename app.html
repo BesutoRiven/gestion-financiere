@@ -1001,18 +1001,19 @@
       if(totalRemb>0) lignes.push({n:"↩ Remboursements", v:-totalRemb, remb:true});
       lignes.sort((a,c)=>Math.abs(c.v)-Math.abs(a.v));
       $("rep-vide").style.display=lignes.length?"none":"block";
-      lignes.forEach(x=>{ const col=x.remb?{fg:"var(--remb-fg)"}:(x.dep?couleursDe(x.n):{fg:"var(--accent)"}); const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; if(x.dep) l.style.cursor="pointer";
+      lignes.forEach(x=>{ const col=x.remb?{fg:"var(--remb-fg)"}:(x.dep?couleursDe(x.n):{fg:"var(--accent)"}); const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; if(x.dep||x.remb||x.typeBrut) l.style.cursor="pointer";
         l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+x.n+'</span><span class="mt">'+(x.v<0?'-':'')+fmt(Math.abs(x.v))+'</span>';
-        if(x.dep) l.onclick=()=>ouvrirDetailCat(x.n); else if(x.typeBrut) l.onclick=()=>ouvrirDetailRevType(x.typeBrut); box.appendChild(l); });
+        if(x.dep) l.onclick=()=>ouvrirDetailCat(x.n); else if(x.typeBrut) l.onclick=()=>ouvrirDetailRevType(x.typeBrut); else if(x.remb) l.onclick=()=>ouvrirDetailRemb(false); box.appendChild(l); });
     }
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
-  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set(), venantCatdet=false, detCatDepuisBudget=false;
+  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set(), venantCatdet=false, detCatDepuisBudget=false, detRembMode=false;
+  function rafraichirCatdet(){ if(detRembMode) rendreDetailRemb(); else if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat(); }
   function fermerTicketRetourCatdet(){
     if(!venantCatdet) return;
     venantCatdet=false;
-    if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat();
+    rafraichirCatdet();
     $("catdet-overlay").style.display="flex";
   }
   function majBarreCatdet(){
@@ -1045,24 +1046,26 @@
       const [type,idStr]=cle.split(":"); const id=parseInt(idStr,10);
       if(type==="dep"){ const d=depenses.find(x=>x.id===id); if(d && d.photo) await photoDel(id); depenses=depenses.filter(x=>x.id!==id); remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(i=>i!==id);}); }
       else if(type==="rev"){ revenus=revenus.filter(x=>x.id!==id); }
+      else if(type==="remb"){ remboursements=remboursements.filter(x=>x.id!==id); }
     }
     catdetSelection.clear(); sauverCloud(); majBarreCatdet();
-    if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat();
-    rendreDepenses(); rendreAccueil();
+    rafraichirCatdet();
+    rendreDepenses(); rendreAccueil(); rendreBudget();
   };
-  function ouvrirDetailCat(cat, depuisBudget){ detCat=cat; detCatDepuisBudget=!!depuisBudget; detFiltre=null; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
+  function ouvrirDetailCat(cat, depuisBudget){ detCat=cat; detRembMode=false; detTypeRevActuel=null; detCatDepuisBudget=!!depuisBudget; detFiltre=null; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
   function majToggleCatdet(){ $("catdet-gestion-toggle").classList.toggle("on",modeGestionCat); $("catdet-gestion-toggle").setAttribute("aria-checked",modeGestionCat); }
-  $("catdet-gestion-toggle").onclick=()=>{ modeGestionCat=!modeGestionCat; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat(); };
+  $("catdet-gestion-toggle").onclick=()=>{ modeGestionCat=!modeGestionCat; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rafraichirCatdet(); };
   let detTypeRevActuel=null;
 
   // ---- Détail d'un type de revenu (clic depuis le résumé, même période) ----
   function ouvrirDetailRevType(type){
-    detTypeRevActuel=type; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet();
+    detTypeRevActuel=type; detRembMode=false; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet();
     $("catdet-filtre").innerHTML="";
     rendreDetailRevTypeInterne(type);
     $("catdet-overlay").style.display="flex";
   }
   function rendreDetailRevTypeInterne(type){
+    detRembMode=false;
     const b=bornesResume();
     const items=revenus.filter(r=>(r.type||"Autre")===type && r.date>=b.debut && r.date<=b.fin).sort((x,y)=>(y.date||"").localeCompare(x.date||""));
     $("catdet-titre").textContent=iconeRevenu()+" "+type+" — "+labelResume();
@@ -1089,8 +1092,39 @@
     if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucun revenu.</p>';
     majBarreCatdet();
   }
+
+  // ---- Détail des remboursements (clic depuis Résumé ou Budget, même période) ----
+  function ouvrirDetailRemb(depuisBudget){
+    detRembMode=true; detTypeRevActuel=null; detCat=null; detCatDepuisBudget=!!depuisBudget;
+    modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet();
+    $("catdet-filtre").innerHTML="";
+    rendreDetailRemb();
+    $("catdet-overlay").style.display="flex";
+  }
+  function rendreDetailRemb(){
+    const b=detCatDepuisBudget?bornesGen(budMode,budDate):bornesResume();
+    const items=remboursementsPeriode(b).sort((x,y)=>(y.date||"").localeCompare(x.date||""));
+    $("catdet-titre").textContent="↩ Remboursements — "+(detCatDepuisBudget?labelBudget():labelResume());
+    const box=$("catdet-liste"); box.innerHTML="";
+    const total=items.reduce((s,r)=>s+r.montant,0);
+    const th=document.createElement("div"); th.style.cssText="display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 10px;border-bottom:1px solid var(--border);margin-bottom:8px;";
+    th.innerHTML="<span>Total</span><span>-"+fmt(total)+"</span>"; box.appendChild(th);
+    items.forEach(r=>{
+      const nbLies=(r.depenseIds||[]).length;
+      const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
+      l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(r.description||"Remboursement")+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;color:var(--remb-fg);">-'+fmtDev(r.montant,r.devise)+'</span></div>'+
+        '<div style="font-size:12px;color:var(--muted);">'+(dateAff(r.date)||"")+(nbLies?(' · '+nbLies+' dépense(s) liée(s)'):'')+'</div></div>';
+      const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer ce remboursement");
+      bx.onclick=()=>{ if(!confirmDouble("Supprimer ce remboursement ("+fmt(r.montant)+") ?"))return; remboursements=remboursements.filter(x=>x.id!==r.id); sauverCloud(); rendreDetailRemb(); rendreAccueil(); rendreBudget(); rendreDepenses(); };
+      l.appendChild(bx);
+      box.appendChild(l);
+      catdetCase("remb:"+r.id, l);
+    });
+    if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucun remboursement.</p>';
+    majBarreCatdet();
+  }
   function rendreDetailCat(){
-    detTypeRevActuel=null;
+    detTypeRevActuel=null; detRembMode=false;
     const cat=detCat, b=detCatDepuisBudget?bornesGen(budMode,budDate):bornesResume();
     let items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
     $("catdet-titre").textContent=cat+" — "+(detCatDepuisBudget?labelBudget():labelResume());
@@ -1215,8 +1249,9 @@
     // Ligne informative (le montant est déjà déduit ci-dessus, catégorie par catégorie)
     const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
     if(totalRemb>0){
-      const row=document.createElement("div"); row.className="bud-row";
+      const row=document.createElement("div"); row.className="bud-row"; row.style.cursor="pointer";
       row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">↩ Remboursements pris en compte</span></div><div class="bud-det">Déjà déduits du réel ci-dessus <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
+      row.onclick=()=>ouvrirDetailRemb(true);
       box.appendChild(row);
     }
     $("bt-prevu").textContent=fmt(totPrevu);
