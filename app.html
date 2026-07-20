@@ -997,7 +997,13 @@
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
-  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set();
+  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set(), venantCatdet=false;
+  function fermerTicketRetourCatdet(){
+    if(!venantCatdet) return;
+    venantCatdet=false;
+    if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat();
+    $("catdet-overlay").style.display="flex";
+  }
   function majBarreCatdet(){
     const n=catdetSelection.size;
     $("catdet-compte").textContent=n;
@@ -1059,7 +1065,7 @@
       l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(r.description||type)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</span></div>'+
         '<div style="font-size:12px;color:var(--muted);">'+(dateAff(r.date)||"")+(infos?' · '+infos:'')+'</div></div>';
       const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--accent);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier ce revenu");
-      be.onclick=()=>{ $("catdet-overlay").style.display="none"; ouvrirRev(r.id); };
+      be.onclick=()=>{ $("catdet-overlay").style.display="none"; ouvrirRev(r.id); venantCatdet=true; };
       l.appendChild(be);
       if(modeGestionCat){
         const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer ce revenu");
@@ -1097,7 +1103,7 @@
         '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div></div>';
       if(rembLiees(d.id).length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.style.cssText="border:none;background:transparent;font-size:15px;cursor:pointer;padding:0 2px;"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
       const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier cette dépense");
-      be.onclick=()=>{ $("catdet-overlay").style.display="none"; selDate=new Date(d.date+"T12:00:00"); ouvrirRecu(d.id); };
+      be.onclick=()=>{ $("catdet-overlay").style.display="none"; selDate=new Date(d.date+"T12:00:00"); ouvrirRecu(d.id); venantCatdet=true; };
       l.appendChild(be);
       if(modeGestionCat){
         const bx=document.createElement("button"); bx.className="act"; bx.style.cssText="border:none;background:transparent;color:var(--danger);font-size:18px;cursor:pointer;padding:0 2px;"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer cette dépense");
@@ -1502,6 +1508,7 @@
   let rDeviseTicket="EUR", rDateTicket=new Date();
   function majRDateAff(){ $("recu-date").textContent=rDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRecu(id){
+    venantCatdet=false;
     editionId=id||null; photoEtat="aucune"; photoBlob=null;
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
@@ -1526,8 +1533,8 @@
     setTimeout(()=>$("r-montant").focus(),50);
   }
   $("ouvrir-recu").onclick=()=>ouvrirRecu(null);
-  $("recu-annuler").onclick=()=>$("recu-overlay").style.display="none";
-  $("recu-overlay").onclick=e=>{if(e.target===$("recu-overlay"))$("recu-overlay").style.display="none";};
+  $("recu-annuler").onclick=()=>{ $("recu-overlay").style.display="none"; fermerTicketRetourCatdet(); };
+  $("recu-overlay").onclick=e=>{if(e.target===$("recu-overlay")){$("recu-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
   $("recu-date").onclick=()=>ouvrirCal(rDateTicket, d=>{ rDateTicket=d; majRDateAff(); });
 
@@ -1555,7 +1562,7 @@
     if(photoEtat==="nouvelle" && photoBlob){ await photoSet(d.id,photoBlob); d.photo=true; }
     else if(photoEtat==="supprimee"){ await photoDel(d.id); d.photo=false; }
     selDate=new Date(rDateTicket);
-    sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget();
+    sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
   };
 
   async function voirPhoto(id){ const b=await photoGet(id); if(!b)return; $("lb-img").src=URL.createObjectURL(b); $("lb-overlay").style.display="flex"; }
@@ -1821,6 +1828,7 @@
   let revDate=new Date(), revDeviseTicket="EUR";
   function majRevDate(){ $("rev-date-aff").textContent=revDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); $("rev-date-btn").textContent=revDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRev(id){
+    venantCatdet=false;
     editionRev=id||null;
     revDeviseTicket = deviseDefaut;
     $("rev-devise-sym").textContent=symboleDevise(revDeviseTicket);
@@ -1840,8 +1848,8 @@
     majRevDate(); rendreCotAffichage(); calcNet(); $("rev-overlay").style.display="flex"; setTimeout(()=>$("rev-brut").focus(),50);
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
-  $("rev-annuler").onclick=()=>$("rev-overlay").style.display="none";
-  $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay"))$("rev-overlay").style.display="none";};
+  $("rev-annuler").onclick=()=>{ $("rev-overlay").style.display="none"; fermerTicketRetourCatdet(); };
+  $("rev-overlay").onclick=e=>{if(e.target===$("rev-overlay")){$("rev-overlay").style.display="none"; fermerTicketRetourCatdet();}};
   initDDDevise("dd-rev-devise", ()=>revDeviseTicket, code=>{ revDeviseTicket=code; $("rev-devise-sym").textContent=symboleDevise(code); calcNet(); });
   $("rev-date-btn").onclick=()=>ouvrirCal(revDate, d=>{ revDate=d; majRevDate(); });
   $("rev-brut").addEventListener("input",calcNet);
@@ -1851,7 +1859,7 @@
     const net=brut*(1-rCotCourante/100); const isoJour=iso(revDate); const desc=$("rev-desc").value.trim();
     if(editionRev){ const r=revenus.find(x=>x.id===editionRev); Object.assign(r,{montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
     else { revenus.push({id:Date.now(),montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
-    sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus(); rendreDepenses(); rendreAccueil(); rendreBudget();
+    sauverRev(); $("rev-overlay").style.display="none"; rendreRevenus(); rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
   };
 
   // ---- Remboursement ----
