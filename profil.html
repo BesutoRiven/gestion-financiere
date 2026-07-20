@@ -89,7 +89,10 @@
 
       <hr class="sep" />
       <p style="font-weight:600; margin:0 0 4px;">Réinitialiser toutes mes données</p>
-      <small class="aide">Efface dépenses, revenus, catégories et réglages — ton compte reste actif, mais repart à zéro. Si tu fais partie d'un partage, ça efface les données de <strong>tout le monde dans ce partage</strong>, pas que les tiennes. Seul un propriétaire peut le faire, et si un autre propriétaire est présent, son accord est requis avant que ça ait lieu.</small>
+      <small class="aide">
+        <strong>Si tu n'es dans aucun partage :</strong> efface tes dépenses, revenus, catégories et réglages personnels. Ton compte reste actif, mais repart à zéro.<br /><br />
+        <strong>Si tu es dans un partage :</strong> seules les données <u>du partage</u> sont effacées (celles que tout le monde y voit) — d'éventuelles données personnelles que tu aurais à côté, elles, ne sont jamais touchées par cette action. Seul un propriétaire du partage peut le déclencher, et s'il y a un(e) autre propriétaire, son accord est obligatoire avant que quoi que ce soit ne s'efface.
+      </small>
       <button id="btn-reset-ouvrir" class="btn btn-ligne" style="margin-top:10px; color:var(--danger); border-color:#e0b4b4;">Réinitialiser mes données</button>
       <div id="zone-reset" style="display:none; margin-top:10px;">
         <div id="reset-avertissement"></div>
@@ -251,7 +254,7 @@
           $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ '+(noms.length?noms.join(", "):"Un(e) autre propriétaire")+' est aussi propriétaire de ce partage. Son accord est requis avant que la réinitialisation ait lieu — rien ne sera effacé tant qu\'il/elle n\'a pas accepté.</div>';
           $("reset-bloc-demande").style.display = "block";
         } else {
-          $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ Tu es seul(e) propriétaire de ce partage. Réinitialiser va effacer les données de tous les membres.</div>';
+          $("reset-avertissement").innerHTML = '<div class="message err" style="margin:0 0 10px;">⚠️ Tu es seul(e) propriétaire de ce partage. Réinitialiser va effacer les données <u>du partage</u> pour tous les membres (tes éventuelles données personnelles à part ne sont pas concernées).</div>';
           $("reset-bloc-phrase").style.display = "block";
         }
       } else {
