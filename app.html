@@ -70,12 +70,10 @@
     .rangee button{flex:1; height:40px; border:1px solid var(--border); background:var(--surface); border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
 
     /* Puces de devise (Réglages) */
-    .dev-chip{display:flex; align-items:stretch; border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--surface); transition:background .15s,border-color .15s;}
-    .dev-chip .dev-sel{border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; padding:8px 12px; cursor:pointer; font-family:inherit;}
-    .dev-chip.on{background:var(--accent); border-color:var(--accent);}
-    .dev-chip.on .dev-sel{color:#fff;}
-    .dev-chip .dev-del{border:none; border-left:1px solid var(--border); background:transparent; color:var(--danger); font-size:16px; line-height:1; padding:8px 10px 8px 6px; cursor:pointer;}
-    .dev-chip.on .dev-del{border-left-color:rgba(255,255,255,.4); color:#fff;}
+    /* Menu déroulant de devise (Réglages) */
+    .dd-opt-devise{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+    .dd-opt-del{border:none; background:transparent; color:var(--danger); font-size:16px; line-height:1; padding:4px 6px; cursor:pointer; border-radius:6px;}
+    .dd-opt-del:hover{background:rgba(163,45,45,.12);}
 
     /* Menus déroulants personnalisés */
     .dd{position:relative; margin-top:10px;}
@@ -90,13 +88,18 @@
     /* Calendrier */
     .recu-overlay,.lb-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:70; padding:16px;}
     .cal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:95; padding:16px;}
-    .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px;}
+    .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px; position:relative;}
     .cal-tete{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
     .cal-tete button{border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); width:34px; height:34px; border-radius:8px;}
     .cal-tete .titre{font-size:16px; font-weight:600; text-transform:capitalize;}
+    .cal-titre-wrap{display:flex; align-items:center; justify-content:center; gap:6px; flex:1;}
+    .cal-annee-dd{position:relative; margin-top:0;}
+    .cal-annee-btn{font-size:16px; font-weight:600; font-family:inherit; background:none; border:none; cursor:pointer; color:var(--text); padding:0; text-decoration:underline dotted; text-underline-offset:3px;}
+    .cal-annee-dd .dd-panel{left:50%; right:auto; top:calc(100% + 8px); transform:translateX(-50%); width:130px; text-align:center;}
     .cal-grille{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
     .cal-jsem{text-align:center; font-size:11px; color:var(--muted); padding:4px 0;}
     .cal-jour{aspect-ratio:1; border:none; background:transparent; border-radius:10px; font-size:14px; cursor:pointer; color:var(--text);}
+    .cal-vide{aspect-ratio:1; visibility:hidden; pointer-events:none;}
     .cal-jour:hover{background:var(--accent-soft);}
     .cal-jour.auj{border:1px solid var(--accent); color:var(--accent); font-weight:600;}
     .cal-jour.sel{background:var(--accent); color:#fff; font-weight:600;}
@@ -256,8 +259,8 @@
       </div>
 
       <div class="actions3">
-        <button id="ouvrir-rev"><span class="rond">＋</span>Revenu</button>
-        <button id="ouvrir-recu"><span class="rond">－</span>Dépense</button>
+        <button id="ouvrir-rev"><span class="rond" id="icone-revenu-rond">＋</span>Revenu</button>
+        <button id="ouvrir-recu"><span class="rond">＋</span>Dépense</button>
         <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
 
@@ -311,13 +314,7 @@
       <div class="bloc">
         <h2 style="font-size:16px; margin:0 0 4px;">💱 Devise par défaut</h2>
         <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
-        <div id="devise-liste" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;"></div>
-        <div class="cat-ligne" style="margin-top:14px;">
-          <input id="devise-nouv-code" type="text" placeholder="Code (ex. THB)" maxlength="4" />
-          <input id="devise-nouv-sym" type="text" placeholder="Symbole (ex. ฿)" maxlength="4" />
-          <button id="devise-nouv-ajouter" style="color:var(--accent); font-size:22px;">＋</button>
-        </div>
-        <div id="devise-msg"></div>
+        <div class="dd" id="dd-devise-reglages" style="margin-top:12px;"><button type="button" class="dd-btn" id="devise-reglages-btn"></button><div class="dd-panel" id="devise-reglages-panel" style="display:none;"></div></div>
         <small class="aide">Les devises intégrées (EUR, USD…) ne peuvent pas être supprimées. Une devise que tu as ajoutée peut l'être, sauf si elle est encore utilisée par une opération ou si c'est ta devise par défaut actuelle.</small>
       </div>
 
@@ -378,7 +375,7 @@
           <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
           <div id="msg-impexp"></div>
           <hr class="sep" />
-          <h2>💰 Revenus — Excel</h2>
+          <h2 id="imp-titre-revenus">💰 Revenus — Excel</h2>
           <small class="aide">Colle ton tableau de revenus (avec les lignes d'année « 2023 », « 2024 » et les mois). Les colonnes de sources (Cedric, Auto-entrep.…), Cotisation et Montant net sont détectées automatiquement d'après la 1re ligne.</small>
           <textarea id="zone-import-rev" placeholder="&#9;Cedric&#9;Auto-entrep.&#9;Cotisation&#9;Montant net&#10;&#9;2024&#10;Mars&#9;2 000,00 €&#9;&#9;492,00 €&#9;1 508,00 €"></textarea>
           <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
@@ -396,7 +393,14 @@
     <!-- ============ CALENDRIER ============ -->
     <div id="cal-overlay" class="cal-overlay" style="display:none;">
       <div class="cal-box">
-        <div class="cal-tete"><button id="cal-moins">‹</button><span class="titre" id="cal-titre"></span><button id="cal-plus">›</button></div>
+        <div class="cal-tete">
+          <button id="cal-moins">‹</button>
+          <div class="cal-titre-wrap">
+            <span class="titre" id="cal-titre-mois"></span>
+            <div class="dd cal-annee-dd" id="cal-annee-dd"><button type="button" class="cal-annee-btn" id="cal-titre-annee"></button><div class="dd-panel" id="cal-annee-panel" style="display:none;"></div></div>
+          </div>
+          <button id="cal-plus">›</button>
+        </div>
         <div class="cal-grille" id="cal-jsem"></div>
         <div class="cal-grille" id="cal-grille" style="margin-top:4px;"></div>
         <button class="cal-confirmer" id="cal-confirmer">Confirmer</button>
@@ -515,7 +519,7 @@
         <div class="recu-tete">
           <div class="marque">Gestion financière</div>
           <h3>Nouveau remboursement</h3>
-          <div class="date" id="remb-date-aff"></div>
+          <button type="button" class="date recu-date-btn" id="remb-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
@@ -649,44 +653,74 @@
   let deviseDefaut="EUR", devisesPerso=[];
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
+  const iconeRevenu=()=> symboleDevise(deviseDefaut);
+  function majIconeRevenu(){
+    const rond=$("icone-revenu-rond"); if(rond) rond.textContent=iconeRevenu();
+    const impTitre=$("imp-titre-revenus"); if(impTitre) impTitre.textContent=iconeRevenu()+" Revenus — Excel";
+  }
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
-  function rendreDeviseListeReglages(){
-    const box=$("devise-liste"); if(!box) return;
-    box.innerHTML="";
-    toutesDevises().forEach(d=>{
-      const estPerso=devisesPerso.some(p=>p.code===d.code);
-      const chip=document.createElement("div"); chip.className="dev-chip"+(d.code===deviseDefaut?" on":"");
-      const sel=document.createElement("button"); sel.type="button"; sel.className="dev-sel"; sel.textContent=d.code+" ("+d.sym+")";
-      sel.onclick=()=>{ deviseDefaut=d.code; sauverCloud(); rendreDeviseListeReglages(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); };
-      chip.appendChild(sel);
-      if(estPerso){
-        const del=document.createElement("button"); del.type="button"; del.className="dev-del"; del.textContent="×"; del.setAttribute("aria-label","Supprimer la devise "+d.code);
-        del.onclick=e=>{ e.stopPropagation(); supprimerDevise(d.code); };
-        chip.appendChild(del);
-      }
-      box.appendChild(chip);
-    });
+  let deviseReglagesCtrl=null;
+  function initDeviseReglages(){
+    const wrap=$("dd-devise-reglages"); const btn=wrap.querySelector(".dd-btn"); const panel=wrap.querySelector(".dd-panel");
+    function majBtn(){ const d=toutesDevises().find(x=>x.code===deviseDefaut); btn.textContent=d?d.code+" ("+d.sym+")":deviseDefaut; }
+    function fermer(){ panel.style.display="none"; }
+    function rendreListe(){
+      panel.innerHTML="";
+      toutesDevises().forEach(d=>{
+        const estPerso=devisesPerso.some(p=>p.code===d.code);
+        const opt=document.createElement("div"); opt.className="dd-opt dd-opt-devise"+(d.code===deviseDefaut?" on":"");
+        const lbl=document.createElement("span"); lbl.textContent=d.code+" ("+d.sym+")"; opt.appendChild(lbl);
+        opt.onclick=()=>{ deviseDefaut=d.code; sauverCloud(); majBtn(); majIconeRevenu(); rendreDepenses(); rendreAccueil(); rendreBudget(); rendreBudGestion(); fermer(); };
+        if(estPerso){
+          const del=document.createElement("button"); del.type="button"; del.className="dd-opt-del"; del.textContent="×"; del.setAttribute("aria-label","Supprimer la devise "+d.code);
+          del.onclick=e=>{ e.stopPropagation(); supprimerDevise(d.code); rendreListe(); };
+          opt.appendChild(del);
+        }
+        panel.appendChild(opt);
+      });
+      const ajout=document.createElement("div"); ajout.className="dd-opt dd-opt-ajout"; ajout.textContent="＋ Ajouter une devise";
+      ajout.onclick=e=>{ e.stopPropagation(); rendreFormAjout(); };
+      panel.appendChild(ajout);
+    }
+    function rendreFormAjout(){
+      panel.innerHTML='<div class="dd-devise-form">'+
+        '<input type="text" placeholder="Code (ex. THB)" maxlength="4" data-r="code" />'+
+        '<input type="text" placeholder="Symbole (ex. ฿)" maxlength="4" data-r="sym" />'+
+        '<button type="button">＋ Ajouter</button>'+
+        '<div class="dd-devise-msg"></div>'+
+        '<div class="dd-devise-retour">← Retour à la liste</div>'+
+      '</div>';
+      const inCode=panel.querySelector('[data-r="code"]'), inSym=panel.querySelector('[data-r="sym"]'), msg=panel.querySelector(".dd-devise-msg");
+      panel.querySelector("button").onclick=e=>{
+        e.stopPropagation();
+        const code=(inCode.value||"").trim().toUpperCase(), sym=(inSym.value||"").trim();
+        if(!code||!sym){ msg.textContent="Renseigne un code et un symbole."; msg.className="dd-devise-msg err"; return; }
+        if(toutesDevises().some(d=>d.code===code)){ msg.textContent="Cette devise existe déjà."; msg.className="dd-devise-msg err"; return; }
+        devisesPerso.push({code,sym}); sauverCloud();
+        rendreListe();
+      };
+      panel.querySelector(".dd-devise-retour").onclick=e=>{ e.stopPropagation(); rendreListe(); };
+    }
+    btn.onclick=e=>{
+      e.stopPropagation();
+      document.querySelectorAll(".dd-panel").forEach(p=>{ if(p!==panel) p.style.display="none"; });
+      if(panel.style.display==="block"){ fermer(); return; }
+      rendreListe(); panel.style.display="block";
+    };
+    majBtn();
+    return { majBtn };
   }
+  function rendreDeviseListeReglages(){ if(!deviseReglagesCtrl) deviseReglagesCtrl=initDeviseReglages(); else deviseReglagesCtrl.majBtn(); }
   function supprimerDevise(code){
     if(code===deviseDefaut){ alert("C'est ta devise par défaut actuelle : choisis-en une autre avant de la supprimer."); return; }
     const nb=depenses.filter(d=>d.devise===code).length + revenus.filter(r=>r.devise===code).length + remboursements.filter(r=>r.devise===code).length;
     if(nb>0){ alert("Impossible : cette devise est utilisée par "+nb+" opération(s). Change leur devise avant de la supprimer."); return; }
     if(!confirm("Supprimer la devise « "+code+" » ?")) return;
     devisesPerso=devisesPerso.filter(d=>d.code!==code);
-    sauverCloud(); rendreDeviseListeReglages();
+    sauverCloud();
   }
-  $("devise-nouv-ajouter").onclick=()=>{
-    const code=($("devise-nouv-code").value||"").trim().toUpperCase();
-    const sym=($("devise-nouv-sym").value||"").trim();
-    if(!code||!sym){ $("devise-msg").innerHTML='<div class="message err">Renseigne un code (ex. THB) et un symbole (ex. ฿).</div>'; return; }
-    if(toutesDevises().some(d=>d.code===code)){ $("devise-msg").innerHTML='<div class="message err">Cette devise existe déjà.</div>'; return; }
-    devisesPerso.push({code,sym}); sauverCloud();
-    $("devise-nouv-code").value=""; $("devise-nouv-sym").value="";
-    $("devise-msg").innerHTML='<div class="message ok">Devise « '+code+' » ajoutée.</div>';
-    rendreDeviseListeReglages();
-  };
   function initDDDevise(idWrap, obtenirCode, choisir){
     const wrap=$(idWrap); const btn=wrap.querySelector(".devise-btn"); const panel=wrap.querySelector(".dd-panel");
     function fermer(){ panel.style.display="none"; }
@@ -776,7 +810,7 @@
     devisesPerso = c.devisesPerso || [];
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreRevenus(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -938,7 +972,7 @@
       const noms=Object.keys(parType).sort((a,c)=>parType[c]-parType[a]);
       $("rep-vide").style.display=noms.length?"none":"block";
       noms.forEach(n=>{ const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
-        l.innerHTML='<span class="pt" style="background:var(--accent)"></span><span class="nom">💰 '+n+'</span><span class="mt">'+fmt(parType[n])+'</span>';
+        l.innerHTML='<span class="pt" style="background:var(--accent)"></span><span class="nom">'+iconeRevenu()+' '+n+'</span><span class="mt">'+fmt(parType[n])+'</span>';
         l.onclick=()=>ouvrirDetailRevType(n); box.appendChild(l); });
     } else {
       const solde=totalRev-totalDepNet;
@@ -946,7 +980,7 @@
       $("rep-titre").textContent="Par catégorie et type";
       const lignes=[];
       Object.keys(parCat).forEach(n=>lignes.push({n, v:parCat[n], dep:true}));
-      Object.keys(parType).forEach(n=>lignes.push({n:"💰 "+n, typeBrut:n, v:parType[n], dep:false}));
+      Object.keys(parType).forEach(n=>lignes.push({n:iconeRevenu()+" "+n, typeBrut:n, v:parType[n], dep:false}));
       if(totalRemb>0) lignes.push({n:"↩ Remboursements", v:-totalRemb, remb:true});
       lignes.sort((a,c)=>Math.abs(c.v)-Math.abs(a.v));
       $("rep-vide").style.display=lignes.length?"none":"block";
@@ -998,7 +1032,7 @@
   function rendreDetailRevTypeInterne(type){
     const b=bornesResume();
     const items=revenus.filter(r=>(r.type||"Autre")===type && r.date>=b.debut && r.date<=b.fin).sort((x,y)=>(y.date||"").localeCompare(x.date||""));
-    $("catdet-titre").textContent="💰 "+type+" — "+labelResume();
+    $("catdet-titre").textContent=iconeRevenu()+" "+type+" — "+labelResume();
     const box=$("catdet-liste"); box.innerHTML="";
     const total=items.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0);
     const th=document.createElement("div"); th.style.cssText="display:flex;justify-content:space-between;font-weight:700;padding:6px 4px 10px;border-bottom:1px solid var(--border);margin-bottom:8px;";
@@ -1273,17 +1307,35 @@
   $("cal-moins").onclick=()=>{calM--;if(calM<0){calM=11;calY--;}rendreCal();};
   $("cal-plus").onclick =()=>{calM++;if(calM>11){calM=0;calY++;}rendreCal();};
   $("cal-confirmer").onclick=()=>{ $("cal-overlay").style.display="none"; if(calCb) calCb(new Date(calSel)); };
+  function toggleAnneePanel(){
+    const panel=$("cal-annee-panel");
+    document.querySelectorAll(".dd-panel").forEach(p=>{ if(p!==panel) p.style.display="none"; });
+    if(panel.style.display==="block"){ panel.style.display="none"; return; }
+    panel.innerHTML="";
+    const ref=new Date().getFullYear();
+    for(let y=ref-60;y<=ref+10;y++){
+      const opt=document.createElement("div"); opt.className="dd-opt"+(y===calY?" on":""); opt.textContent=y;
+      opt.onclick=e=>{ e.stopPropagation(); calY=y; panel.style.display="none"; rendreCal(); };
+      panel.appendChild(opt);
+    }
+    panel.style.display="block";
+    const sel=panel.querySelector(".dd-opt.on"); if(sel) sel.scrollIntoView({block:"center"});
+  }
+  $("cal-titre-annee").onclick=e=>{ e.stopPropagation(); toggleAnneePanel(); };
   function rendreCal(){
-    $("cal-titre").textContent=MOIS_L[calM]+" "+calY;
+    $("cal-titre-mois").textContent=MOIS_L[calM];
+    $("cal-titre-annee").textContent=calY;
     const js=$("cal-jsem");js.innerHTML="";JSEM.forEach(j=>{const s=document.createElement("div");s.className="cal-jsem";s.textContent=j;js.appendChild(s);});
     const g=$("cal-grille");g.innerHTML="";
     const decalage=(new Date(calY,calM,1).getDay()+6)%7, nb=new Date(calY,calM+1,0).getDate();
-    for(let i=0;i<decalage;i++)g.appendChild(document.createElement("div"));
+    for(let i=0;i<decalage;i++){const v=document.createElement("div");v.className="cal-vide";g.appendChild(v);}
     const isoAuj=iso(new Date()), isoSel=iso(calSel);
     for(let j=1;j<=nb;j++){const b=document.createElement("button");b.className="cal-jour";b.textContent=j;
       const isoJ=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(j).padStart(2,"0");
       if(isoJ===isoAuj)b.classList.add("auj"); if(isoJ===isoSel)b.classList.add("sel");
       b.onclick=()=>{calSel=new Date(calY,calM,j);rendreCal();};g.appendChild(b);}
+    // Complète jusqu'à 6 rangées (42 cases) : seul le bas de la grille varie, jamais le haut où sont les flèches.
+    for(let i=decalage+nb;i<42;i++){const v=document.createElement("div");v.className="cal-vide";g.appendChild(v);}
     $("cal-confirmer").textContent="Confirmer le "+calSel.toLocaleDateString("fr-FR",{day:"numeric",month:"long"});
   }
 
@@ -1350,7 +1402,7 @@
     }
     if(filtreTxn!=="depenses" && rev.length){
       const e=document.createElement("div");e.className="cat-entete";e.style.background="var(--accent-soft)";e.style.color="var(--accent)";
-      e.innerHTML="<span>💰 Revenus</span><span>"+fmt(rev.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0))+"</span>";liste.appendChild(e);
+      e.innerHTML="<span>"+iconeRevenu()+" Revenus</span><span>"+fmt(rev.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0))+"</span>";liste.appendChild(e);
       rev.forEach(r=>{
         const l=document.createElement("div");l.className="dep txn-revenu";
         const titre=r.description||r.type||"Revenu";
@@ -1825,19 +1877,21 @@
       const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--papier-border);font-size:14px;cursor:pointer;color:var(--papier-txt);";
       l.innerHTML='<span style="flex:1;">'+(d.commentaire||d.sousCat||d.categorie)+'<span style="color:var(--papier-muted);font-size:12px;display:block;">'+(d.dateAffichee||"")+' · '+d.categorie+(d.sousCat?(' · '+d.sousCat):'')+(d.paiement?(' · '+d.paiement):'')+'</span></span>'+
         '<span style="font-weight:600;">'+fmtDev(d.montant,d.devise)+'</span>';
-      l.onclick=()=>{ rembSelection.push(d.id); $("remb-recherche").value=""; rendreRembSelection(); rendreRembResultats(""); };
+      l.onclick=()=>{ rembSelection.push(d.id); $("remb-recherche").value=""; rendreRembSelection(); rendreRembResultats(""); if(d.date){ rembDateTicket=new Date(d.date+"T12:00:00"); majRembDateAff(); } };
       box.appendChild(l);
     });
   }
   $("remb-recherche").addEventListener("input", ()=>rendreRembResultats($("remb-recherche").value));
 
-  let rembDeviseTicket="EUR";
+  let rembDeviseTicket="EUR", rembDateTicket=new Date();
+  function majRembDateAff(){ $("remb-date-aff").textContent=rembDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
   function ouvrirRemb(){
     $("remb-montant").value=""; $("remb-desc").value=""; $("remb-recherche").value="";
     rembSelection=[]; rendreRembSelection(); rendreRembResultats("");
     rembDeviseTicket = deviseDefaut;
     $("remb-devise-sym").textContent=symboleDevise(rembDeviseTicket);
-    $("remb-date-aff").textContent = selDate.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    rembDateTicket = new Date(selDate);
+    majRembDateAff();
     $("remb-overlay").style.display="flex";
     setTimeout(()=>$("remb-montant").focus(),50);
   }
@@ -1845,11 +1899,13 @@
   $("remb-annuler").onclick=()=>$("remb-overlay").style.display="none";
   $("remb-overlay").onclick=e=>{if(e.target===$("remb-overlay"))$("remb-overlay").style.display="none";};
   initDDDevise("dd-remb-devise", ()=>rembDeviseTicket, code=>{ rembDeviseTicket=code; $("remb-devise-sym").textContent=symboleDevise(code); });
+  $("remb-date-aff").onclick=()=>ouvrirCal(rembDateTicket, d=>{ rembDateTicket=d; majRembDateAff(); });
   $("remb-valider").onclick=()=>{
     const v=parseFloat(($("remb-montant").value||"").replace(",",".")); if(!v||v<=0){$("remb-montant").focus();return;}
     if(!rembSelection.length){ alert("Recherche et sélectionne au moins une dépense concernée."); return; }
-    const isoJour=iso(selDate); const desc=$("remb-desc").value.trim();
+    const isoJour=iso(rembDateTicket); const desc=$("remb-desc").value.trim();
     remboursements.push({id:Date.now(), montant:v, devise:rembDeviseTicket, description:desc, depenseIds:rembSelection.slice(), date:isoJour, dateAffichee:dateAff(isoJour)});
+    selDate=new Date(rembDateTicket);
     sauverCloud(); $("remb-overlay").style.display="none"; rendreDepenses();
   };
 
@@ -1981,6 +2037,7 @@
 
     // Devise
     rendreDeviseListeReglages();
+    majIconeRevenu();
 
     const meta=session.user.user_metadata||{};
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
