@@ -62,6 +62,8 @@
     .cat-ligne input{flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; background:var(--surface); color:var(--text);}
     .cat-ligne .pastille{width:18px; height:18px; border-radius:50%; flex:0 0 auto;}
     .cat-ligne button{border:none; background:transparent; color:var(--danger); font-size:18px; cursor:pointer;}
+    .cat-move{color:var(--muted) !important; font-size:14px !important; padding:2px 4px; flex:0 0 auto; line-height:1;}
+    .cat-move:disabled{opacity:.25; cursor:default;}
     .impexp textarea{width:100%; min-height:190px; border:1.5px solid var(--border); border-radius:14px; padding:14px; font-family:'Courier New',monospace; font-size:13.5px; line-height:1.6; margin-top:10px; background:var(--bg); color:var(--text); resize:vertical; transition:border-color .15s,box-shadow .15s;}
     .impexp textarea::placeholder{color:var(--muted);}
     .impexp textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
@@ -1598,8 +1600,12 @@
       const coul=document.createElement("input");coul.type="color";coul.className="color-in";coul.value=cat.fg||"#888888";
       coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
       const inp=document.createElement("input");inp.type="text";inp.value=cat.nom;inp.onchange=()=>renommerCat(idx,inp.value.trim());
+      const monter=document.createElement("button");monter.textContent="▲";monter.className="cat-move";monter.setAttribute("aria-label","Monter");monter.disabled=idx===0;
+      monter.onclick=()=>{ if(idx===0)return; [categories[idx-1],categories[idx]]=[categories[idx],categories[idx-1]]; sauverCat(); rendreCategories(); rendreBudGestion(); };
+      const descendre=document.createElement("button");descendre.textContent="▼";descendre.className="cat-move";descendre.setAttribute("aria-label","Descendre");descendre.disabled=idx===categories.length-1;
+      descendre.onclick=()=>{ if(idx===categories.length-1)return; [categories[idx+1],categories[idx]]=[categories[idx],categories[idx+1]]; sauverCat(); rendreCategories(); rendreBudGestion(); };
       const del=document.createElement("button");del.textContent="×";del.onclick=()=>supprimerCat(idx);
-      ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);ligne.appendChild(del);box.appendChild(ligne);});
+      ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);ligne.appendChild(monter);ligne.appendChild(descendre);ligne.appendChild(del);box.appendChild(ligne);});
   }
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
     categories[idx].nom=nv;depenses.forEach(d=>{if(d.categorie===anc)d.categorie=nv;});
@@ -2013,8 +2019,12 @@
       cot.style.cssText="width:56px; flex:0 0 auto; text-align:right; border:1px solid var(--border); border-radius:8px; padding:8px 6px; font-family:inherit; background:var(--surface); color:var(--text);";
       cot.onchange=()=>{ t.cotisation=parseFloat((cot.value||"").replace(",","."))||0; sauverRevType(); };
       const pct=document.createElement("span"); pct.textContent="%"; pct.style.cssText="color:var(--muted); font-size:13px; flex:0 0 auto;";
+      const monter=document.createElement("button"); monter.textContent="▲"; monter.className="cat-move"; monter.setAttribute("aria-label","Monter"); monter.disabled=idx===0;
+      monter.onclick=()=>{ if(idx===0)return; [revtypes[idx-1],revtypes[idx]]=[revtypes[idx],revtypes[idx-1]]; sauverRevType(); rendreRevTypes(); };
+      const descendre=document.createElement("button"); descendre.textContent="▼"; descendre.className="cat-move"; descendre.setAttribute("aria-label","Descendre"); descendre.disabled=idx===revtypes.length-1;
+      descendre.onclick=()=>{ if(idx===revtypes.length-1)return; [revtypes[idx+1],revtypes[idx]]=[revtypes[idx],revtypes[idx+1]]; sauverRevType(); rendreRevTypes(); };
       const del=document.createElement("button"); del.textContent="×"; del.onclick=()=>{ if(revtypes.length<=1)return; revtypes.splice(idx,1); sauverRevType(); rendreRevTypes(); };
-      l.appendChild(inp); l.appendChild(cot); l.appendChild(pct); l.appendChild(del); box.appendChild(l);
+      l.appendChild(inp); l.appendChild(cot); l.appendChild(pct); l.appendChild(monter); l.appendChild(descendre); l.appendChild(del); box.appendChild(l);
     });
   }
   $("ajouter-revtype").onclick=()=>{
