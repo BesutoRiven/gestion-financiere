@@ -323,7 +323,7 @@
         </div>
       </details>
 
-      <details class="bloc det" open>
+      <details class="bloc det">
         <summary>Gestion</summary>
         <div class="det-corps" style="padding:0;">
           <details class="det-nested" open>
@@ -1741,7 +1741,12 @@
       const cells=(l.includes("\t")?l.split("\t"):l.split(/ {2,}/)).map(c=>c.trim()).filter(Boolean);
       if(!cells.length) return;
       if(cells.length===1 && /^(19|20)\d{2}$/.test(cells[0])){ anneeCourante=parseInt(cells[0],10); return; }
-      if(cells.length===1){ typeCourant=cells[0]; return; }
+      if(cells.length===1){
+        const mAn=cells[0].match(/^(.*\S)\s+((?:19|20)\d{2})$/);
+        if(mAn){ typeCourant=mAn[1].trim(); anneeCourante=parseInt(mAn[2],10); }
+        else { typeCourant=cells[0]; }
+        return;
+      }
       if(/^total/i.test(cells[0])) return; // ligne total éventuelle, ignorée
       const mo=MOIS_PARSE[cells[0].toLowerCase()];
       if(!mo){ problemes.push(l); return; }
