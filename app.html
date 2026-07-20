@@ -213,6 +213,7 @@
         </div>
         <button class="fleche" id="jour-plus" aria-label="Jour suivant">›</button>
       </div>
+      <div style="text-align:center; margin-top:8px;"><button id="jour-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button></div>
 
       <div class="jour-total"><p class="val" id="jt-val">0,00 €</p></div>
 
@@ -512,9 +513,12 @@
       <div class="cal-box" style="max-width:400px; max-height:82vh; overflow-y:auto;">
         <div class="cal-tete"><span class="titre" id="catdet-titre">Détail</span><button id="catdet-fermer" aria-label="Fermer">×</button></div>
         <div id="catdet-filtre" class="perso" style="padding:0 0 6px;"></div>
-        <div style="display:flex; align-items:center; gap:8px; margin:4px 0 10px;">
-          <button id="catdet-gestion-toggle" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
-          <span style="font-size:13px; color:var(--muted); font-weight:600;">Gérer</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0 10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button id="catdet-gestion-toggle" class="switch" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
+            <span style="font-size:13px; color:var(--muted); font-weight:600;">Gérer</span>
+          </div>
+          <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; height:32px; padding:0 14px; border-radius:16px; color:var(--danger); border-color:var(--danger); font-size:13px;">Supprimer (<span id="catdet-compte">0</span>)</button>
         </div>
         <div id="catdet-liste"></div>
       </div>
@@ -852,15 +856,40 @@
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
-  let detCat=null, detFiltre=null, modeGestionCat=false;
-  function ouvrirDetailCat(cat){ detCat=cat; detFiltre=null; modeGestionCat=false; majToggleCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
+  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set();
+  function majBarreCatdet(){
+    const n=catdetSelection.size;
+    $("catdet-compte").textContent=n;
+    $("catdet-suppr-selection").style.display=n>0?"inline-block":"none";
+  }
+  function catdetCase(cle, l){
+    if(!modeGestionCat) return;
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case";
+    cb.checked=catdetSelection.has(cle);
+    cb.onclick=e=>e.stopPropagation();
+    cb.onchange=()=>{ if(cb.checked) catdetSelection.add(cle); else catdetSelection.delete(cle); majBarreCatdet(); };
+    l.insertBefore(cb, l.firstChild);
+  }
+  $("catdet-suppr-selection").onclick=async()=>{
+    const n=catdetSelection.size; if(!n) return;
+    if(!confirm("Supprimer les "+n+" opération(s) sélectionnée(s) ? Cette action est définitive.")) return;
+    for(const cle of catdetSelection){
+      const [type,idStr]=cle.split(":"); const id=parseInt(idStr,10);
+      if(type==="dep"){ const d=depenses.find(x=>x.id===id); if(d && d.photo) await photoDel(id); depenses=depenses.filter(x=>x.id!==id); remboursements.forEach(r=>{if(r.depenseIds)r.depenseIds=r.depenseIds.filter(i=>i!==id);}); }
+      else if(type==="rev"){ revenus=revenus.filter(x=>x.id!==id); }
+    }
+    catdetSelection.clear(); sauverCloud(); majBarreCatdet();
+    if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat();
+    rendreDepenses(); rendreAccueil();
+  };
+  function ouvrirDetailCat(cat){ detCat=cat; detFiltre=null; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
   function majToggleCatdet(){ $("catdet-gestion-toggle").classList.toggle("on",modeGestionCat); $("catdet-gestion-toggle").setAttribute("aria-checked",modeGestionCat); }
-  $("catdet-gestion-toggle").onclick=()=>{ modeGestionCat=!modeGestionCat; majToggleCatdet(); if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat(); };
+  $("catdet-gestion-toggle").onclick=()=>{ modeGestionCat=!modeGestionCat; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat(); };
   let detTypeRevActuel=null;
 
   // ---- Détail d'un type de revenu (clic depuis le résumé, même période) ----
   function ouvrirDetailRevType(type){
-    detTypeRevActuel=type; modeGestionCat=false; majToggleCatdet();
+    detTypeRevActuel=type; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet();
     $("catdet-filtre").innerHTML="";
     rendreDetailRevTypeInterne(type);
     $("catdet-overlay").style.display="flex";
@@ -887,8 +916,10 @@
         l.appendChild(bx);
       }
       box.appendChild(l);
+      catdetCase("rev:"+r.id, l);
     });
     if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucun revenu.</p>';
+    majBarreCatdet();
   }
   function rendreDetailCat(){
     detTypeRevActuel=null;
@@ -923,8 +954,10 @@
         l.appendChild(bx);
       }
       box.appendChild(l);
+      catdetCase("dep:"+d.id, l);
     });
     if(!items.length) box.innerHTML+='<p class="vide" style="padding:12px 0;">Aucune dépense.</p>';
+    majBarreCatdet();
   }
   $("catdet-fermer").onclick=()=>$("catdet-overlay").style.display="none";
   $("catdet-overlay").onclick=e=>{if(e.target===$("catdet-overlay"))$("catdet-overlay").style.display="none";};
@@ -1113,6 +1146,7 @@
     return d.toLocaleDateString("fr-FR",{weekday:"long"});}
   $("jour-moins").onclick=()=>{selDate.setDate(selDate.getDate()-1);selDate=new Date(selDate);rendreDepenses();};
   $("jour-plus").onclick =()=>{selDate.setDate(selDate.getDate()+1);selDate=new Date(selDate);rendreDepenses();};
+  $("jour-auj").onclick=()=>{ selDate=new Date(); rendreDepenses(); };
 
   // ================= Calendrier (réutilisable via callback) =================
   let calCb=null;
@@ -1162,6 +1196,7 @@
   function rendreDepenses(){
     $("jour-grand").textContent=labelJour(selDate);
     $("jour-sous").textContent=selDate.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+    $("jour-auj").style.display = (iso(selDate)===iso(new Date())) ? "none" : "inline-flex";
     const items=duJour(), rev=revDuJour(), remb=rembDuJour();
     if(filtreTxn==="revenus") $("jt-val").textContent=fmt(rev.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0));
     else $("jt-val").textContent=fmt(items.reduce((s,d)=>s+d.montant,0) - remb.reduce((s,r)=>s+r.montant,0));
