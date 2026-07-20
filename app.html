@@ -409,14 +409,6 @@
       <details class="bloc det">
         <summary>Import / Export</summary>
         <div class="det-corps impexp">
-          <h2>💾 Sauvegarde complète</h2>
-          <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
-          <div class="rangee"><button id="exp-sauvegarde" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">⬇️ Télécharger la sauvegarde</button></div>
-          <input id="imp-sauvegarde-fichier" type="file" accept="application/json" style="display:none;" />
-          <div class="rangee" style="margin-top:8px;"><button id="imp-sauvegarde-btn" style="color:var(--danger); border-color:var(--danger);">⚠️ Restaurer une sauvegarde</button></div>
-          <small class="aide">Restaurer <strong>remplace toutes les données actuelles</strong> par celles du fichier — pense à faire une sauvegarde d'abord si tu n'es pas sûr.</small>
-          <div id="msg-sauvegarde"></div>
-          <hr class="sep" />
           <h2>📤 Dépenses — Excel</h2>
           <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant. Tu peux aussi mettre une ligne « Nom de la catégorie » seule (ou suivie de tirets) au-dessus d'un bloc : elle s'appliquera à toutes les lignes suivantes qui n'ont pas de catégorie propre.</small>
           <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
@@ -431,6 +423,16 @@
           <div id="msg-imprev"></div>
         </div>
       </details>
+
+      <div class="bloc">
+        <h2 style="font-size:16px; margin:0 0 4px;">💾 Sauvegarde</h2>
+        <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
+        <button id="exp-sauvegarde" class="btn-plein" style="margin-top:12px;">⬇️ Télécharger la sauvegarde</button>
+        <input id="imp-sauvegarde-fichier" type="file" accept="application/json" style="display:none;" />
+        <button id="imp-sauvegarde-btn" class="btn-ligne" style="margin-top:10px; color:var(--danger); border-color:var(--danger);">⚠️ Restaurer une sauvegarde</button>
+        <small class="aide" style="display:block; margin-top:8px;">Restaurer <strong>remplace toutes les données actuelles</strong> par celles du fichier — pense à faire une sauvegarde d'abord si tu n'es pas sûr.</small>
+        <div id="msg-sauvegarde"></div>
+      </div>
 
       <div class="bloc" id="bloc-admin" style="display:none;">
         <h2>Administration</h2>
@@ -532,14 +534,27 @@
         </div>
         <div id="partage-actif" style="display:none;">
           <p style="font-weight:600; color:var(--accent); margin:0 0 8px;">✓ Budget partagé</p>
-          <small class="aide">Transmets ce code à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage ».</small>
+          <small class="aide">Transmets ce code à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage », avec le rôle « Ami » par défaut — tu pourras le changer ensuite.</small>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <input id="mon-code" class="champ" type="text" readonly style="flex:1; font-size:12px;" />
             <button id="btn-copier-code" class="btn-ligne" style="width:auto; padding:0 16px;">Copier</button>
           </div>
+          <p class="amis-lbl" style="margin-top:16px;">Membres</p>
+          <div id="membres-liste"></div>
           <button id="btn-quitter-partage" class="btn-ligne" style="height:42px; margin-top:12px; color:var(--danger); border-color:#e0b4b4;">Quitter le partage</button>
         </div>
         <div id="amis-msg"></div>
+      </div>
+    </div>
+
+    <!-- ============ DEMANDE DE DEPART (consentement entre proprietaires) ============ -->
+    <div id="depart-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:340px;">
+        <div class="cal-tete"><span class="titre">Demande de départ</span></div>
+        <p id="depart-texte" style="font-size:15px; line-height:1.5;"></p>
+        <small class="aide">En acceptant, tu quittes le partage et repasses sur tes données personnelles. En refusant, rien ne change.</small>
+        <button id="depart-refuser" class="btn-ligne" style="height:44px; margin-top:14px;">Refuser</button>
+        <button id="depart-accepter" class="btn-ligne" style="height:44px; margin-top:8px; color:var(--danger); border-color:#e0b4b4;">Accepter et quitter</button>
       </div>
     </div>
 
@@ -902,15 +917,15 @@
   // ---- Partage du budget (foyer) ----
   async function creerPartage(){
     foyerId = (crypto.randomUUID? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)));
-    let r=await sb.from("foyers").insert({ id:foyerId, contenu:contenuActuel(), updated_at:new Date().toISOString() });
+    let r=await sb.from("foyers").insert({ id:foyerId, contenu:contenuActuel(), cree_par:uid, updated_at:new Date().toISOString() });
     if(r.error){ foyerId=null; return {ok:false, msg:messageErreur(r.error)}; }
-    r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:foyerId });
+    r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:foyerId, role:"proprietaire" });
     if(r.error){ return {ok:false, msg:messageErreur(r.error)}; }
     return {ok:true};
   }
   async function rejoindrePartage(code){
     code=(code||"").trim(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
-    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:code });
+    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:code, role:"ami" });
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     return {ok:true};
   }
@@ -919,6 +934,98 @@
     const r=await sb.from("foyer_membres").delete().eq("user_id",uid);
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     foyerId=null; return {ok:true};
+  }
+
+  // ---- Rôles et co-propriété du foyer partagé ----
+  const ROLES_LBL = {proprietaire:"Propriétaire", ami:"Ami", enfant:"Enfant", lecteur:"Lecteur"};
+  let foyerCreePar=null;
+  async function syncProfil(){
+    try{ await sb.from("profils").upsert({ id:uid, pseudo:monPseudo, tag:monTag, avatar_url:(document.querySelector(".avatar-slot img")||{}).src||null, updated_at:new Date().toISOString() }); }catch(e){}
+  }
+  async function chargerMembres(){
+    if(!foyerId) return [];
+    const { data:membres, error } = await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",foyerId);
+    if(error || !membres) return [];
+    const ids=membres.map(m=>m.user_id);
+    let profils=[];
+    try{ const r=await sb.from("profils").select("id,pseudo,tag").in("id",ids); profils=r.data||[]; }catch(e){}
+    try{ const r=await sb.from("foyers").select("cree_par").eq("id",foyerId).maybeSingle(); foyerCreePar=r.data?r.data.cree_par:null; }catch(e){}
+    return membres.map(m=>{ const p=profils.find(x=>x.id===m.user_id)||{}; return { user_id:m.user_id, role:m.role||"proprietaire", pseudo:p.pseudo||"Membre", tag:p.tag||"0000" }; })
+      .sort((a,b)=> (a.user_id===uid?-1:b.user_id===uid?1:0) || (a.role==="proprietaire"?-1:1));
+  }
+  async function chargerDemandesEnCours(){
+    if(!foyerId) return [];
+    try{ const r=await sb.from("foyer_demandes").select("*").eq("foyer_id",foyerId).eq("statut","en_attente"); return r.data||[]; }catch(e){ return []; }
+  }
+  async function rendreMembres(){
+    const box=$("membres-liste"); if(!box) return; box.innerHTML='<small class="aide">Chargement…</small>';
+    const [membres, demandes] = await Promise.all([chargerMembres(), chargerDemandesEnCours()]);
+    box.innerHTML="";
+    const moi=membres.find(m=>m.user_id===uid);
+    const jeSuisProprio = moi && moi.role==="proprietaire";
+    membres.forEach(m=>{
+      const l=document.createElement("div"); l.className="cat-ligne"; l.style.flexWrap="wrap";
+      const admin = foyerCreePar && m.user_id===foyerCreePar;
+      const span=document.createElement("span"); span.style.cssText="flex:1; font-size:14px; min-width:140px;";
+      span.innerHTML='<b>'+m.pseudo+'</b><span style="color:var(--muted);">#'+m.tag+'</span>'+(admin?' <span style="color:var(--muted);">(admin)</span>':'')+(m.user_id===uid?' <span style="color:var(--accent);">(toi)</span>':'')+'<br><small style="color:var(--muted);">'+ROLES_LBL[m.role]+'</small>';
+      l.appendChild(span);
+      if(jeSuisProprio && m.user_id!==uid){
+        if(m.role==="proprietaire"){
+          const demandeExistante=demandes.find(d=>d.cible_user_id===m.user_id && d.demandeur_user_id===uid);
+          if(demandeExistante){
+            const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent="Demande de départ envoyée, en attente de sa réponse.";
+            l.appendChild(info);
+          } else {
+            const btn=document.createElement("button"); btn.className="btn-ligne"; btn.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--danger); border-color:#e0b4b4;"; btn.textContent="Demander le départ";
+            btn.onclick=async()=>{
+              if(!confirm("Demander à "+m.pseudo+" de quitter le partage ? Il/elle devra confirmer lui/elle-même — tu ne peux pas retirer un(e) autre propriétaire directement.")) return;
+              const r=await sb.from("foyer_demandes").insert({ foyer_id:foyerId, cible_user_id:m.user_id, demandeur_user_id:uid });
+              if(r.error){ msgAmis("Échec : "+messageErreur(r.error),"err"); return; }
+              msgAmis("Demande envoyée à "+m.pseudo+".","ok"); rendreMembres();
+            };
+            l.appendChild(btn);
+          }
+        } else {
+          const sel=document.createElement("select"); sel.style.cssText="border:1px solid var(--border); border-radius:8px; padding:6px; font-family:inherit; background:var(--surface); color:var(--text); font-size:12px;";
+          ["ami","enfant","lecteur","proprietaire"].forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r==="proprietaire"?"Promouvoir propriétaire":ROLES_LBL[r]; if(r===m.role) o.selected=true; sel.appendChild(o); });
+          sel.onchange=async()=>{
+            const nv=sel.value;
+            if(nv==="proprietaire" && !confirm("Faire de "+m.pseudo+" un(e) propriétaire à part entière ? Tu ne pourras plus le/la retirer sans son accord ensuite.")) { sel.value=m.role; return; }
+            const r=await sb.from("foyer_membres").update({role:nv}).eq("foyer_id",foyerId).eq("user_id",m.user_id);
+            if(r.error){ msgAmis("Échec : "+messageErreur(r.error),"err"); return; }
+            msgAmis("Rôle de "+m.pseudo+" mis à jour.","ok"); rendreMembres();
+          };
+          l.appendChild(sel);
+          const retirer=document.createElement("button"); retirer.className="btn-ligne"; retirer.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--danger); border-color:#e0b4b4;"; retirer.textContent="Retirer";
+          retirer.onclick=async()=>{
+            if(!confirmDouble("Retirer "+m.pseudo+" du partage ?")) return;
+            const r=await sb.from("foyer_membres").delete().eq("foyer_id",foyerId).eq("user_id",m.user_id);
+            if(r.error){ msgAmis("Échec : "+messageErreur(r.error),"err"); return; }
+            msgAmis(m.pseudo+" a été retiré(e).","ok"); rendreMembres();
+          };
+          l.appendChild(retirer);
+        }
+      }
+      box.appendChild(l);
+    });
+  }
+  // Vérifie au démarrage si quelqu'un a demandé mon départ, et me le montre avant tout le reste
+  async function verifierDemandesPourMoi(){
+    if(!foyerId) return;
+    const demandes=await chargerDemandesEnCours();
+    const pourMoi=demandes.find(d=>d.cible_user_id===uid);
+    if(!pourMoi) return;
+    let nomDemandeur="Un(e) propriétaire";
+    try{ const r=await sb.from("profils").select("pseudo").eq("id",pourMoi.demandeur_user_id).maybeSingle(); if(r.data && r.data.pseudo) nomDemandeur=r.data.pseudo; }catch(e){}
+    $("depart-texte").textContent=nomDemandeur+" souhaite que tu quittes le partage commun.";
+    $("depart-refuser").onclick=async()=>{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("id",pourMoi.id); $("depart-overlay").style.display="none"; };
+    $("depart-accepter").onclick=async()=>{
+      await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("id",pourMoi.id);
+      const r=await quitterPartage();
+      $("depart-overlay").style.display="none";
+      if(r.ok){ location.reload(); }
+    };
+    $("depart-overlay").style.display="flex";
   }
   function jourZero(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
   function dateAff(isoStr){const p=isoStr.split("-");return parseInt(p[2],10)+" "+MOIS_C[parseInt(p[1],10)-1];}
@@ -2294,7 +2401,7 @@
     $("partage-inactif").style.display=actif?"none":"block";
     if(actif) $("mon-code").value=foyerId;
   }
-  function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; }
+  function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; if(foyerId) rendreMembres(); }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
   $("amis-overlay").onclick=e=>{if(e.target===$("amis-overlay"))$("amis-overlay").style.display="none";};
@@ -2371,6 +2478,8 @@
     document.querySelectorAll(".avatar-slot").forEach(el=>{
       if(meta.avatar_url){const img=document.createElement("img");img.src=meta.avatar_url;img.className="avatar-mini";img.alt="Profil";el.replaceWith(img);}
       else el.textContent=(meta.username||session.user.email||"?").charAt(0).toUpperCase();});
+    syncProfil();
+    if(foyerId) verifierDemandesPourMoi();
 
     rendreDepenses();rendreCategories();
     changerVue("depenses");
