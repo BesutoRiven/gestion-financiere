@@ -376,8 +376,8 @@
           <div id="msg-impexp"></div>
           <hr class="sep" />
           <h2 id="imp-titre-revenus">💰 Revenus — Excel</h2>
-          <small class="aide">Colle ton tableau de revenus (avec les lignes d'année « 2023 », « 2024 » et les mois). Les colonnes de sources (Cedric, Auto-entrep.…), Cotisation et Montant net sont détectées automatiquement d'après la 1re ligne.</small>
-          <textarea id="zone-import-rev" placeholder="&#9;Cedric&#9;Auto-entrep.&#9;Cotisation&#9;Montant net&#10;&#9;2024&#10;Mars&#9;2 000,00 €&#9;&#9;492,00 €&#9;1 508,00 €"></textarea>
+          <small class="aide">Colle un tableau par type de revenu : la 1re ligne donne le nom du type (ex. « Prestations informatiques »), puis une ligne par mois avec juste le montant reçu (« - » ou vide si aucun revenu ce mois-là). La cotisation est calculée automatiquement d'après le pourcentage réglé pour ce type dans Réglages. Une ligne « 2025 » seule change l'année des mois suivants (année en cours par défaut). Tu peux coller plusieurs types à la suite.</small>
+          <textarea id="zone-import-rev" placeholder="Prestations informatiques&#10;Janvier&#9;-&#10;Février&#9;-&#10;Mars&#9;2 000,00 €&#10;Avril&#9;-&#10;Mai&#9;1 500,00 €"></textarea>
           <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
           <div id="msg-imprev"></div>
         </div>
@@ -1706,47 +1706,40 @@
   };
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
-  // ---- Import des revenus (tableau annuel : années + mois + colonnes sources/cotisation/net) ----
+  // ---- Import des revenus (format simplifié : type en 1re ligne, puis mois + montant) ----
   $("btn-importer-rev").onclick=()=>{
-    const lignes=($("zone-import-rev").value).split(/\r?\n/);
-    // 1) trouver la ligne d'en-tête (celle qui contient "cotisation" ou "net")
-    let entete=null;
-    for(const l of lignes){ const cs=l.split("\t"); if(cs.some(c=>/cotisation/i.test(c)) || cs.some(c=>/montant net|^net$/i.test(c.trim()))){ entete=cs.map(c=>c.trim()); break; } }
-    if(!entete){ msgIrev("En-tête introuvable. Assure-toi d'inclure la 1re ligne avec « Cotisation » et « Montant net ».","warn"); return; }
-    const cotiIdx=entete.findIndex(c=>/cotisation/i.test(c));
-    const netIdx =entete.findIndex(c=>/montant net|^net$/i.test(c));
-    const sourceIdx=[]; entete.forEach((c,i)=>{ if(i>0 && c && i!==cotiIdx && i!==netIdx) sourceIdx.push(i); });
-    if(!sourceIdx.length){ msgIrev("Aucune colonne de source trouvée (ex. Cedric, Auto-entrep.).","warn"); return; }
-
-    let annee=null, n=0; const nouveauxTypes=[];
+    const lignes=($("zone-import-rev").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    let typeCourant=null, anneeCourante=new Date().getFullYear();
+    const aImporter=[]; const problemes=[]; const nouveauxTypes=[];
     lignes.forEach(l=>{
-      const cs=l.split("\t").map(c=>c.trim());
-      if(cs.every(c=>!c)) return;                         // ligne vide
-      // ligne d'année : une cellule = 4 chiffres, pas de mois en 1re case
-      const an=cs.find(c=>/^(20\d{2})$/.test(c));
-      const mois=MOIS_PARSE[(cs[0]||"").toLowerCase()];
-      if(an && !mois){ annee=an; return; }
-      if(/^total/i.test(cs[0]||"")) return;               // ligne total
-      if(!mois) return;                                   // pas une ligne de mois
-      if(!annee) return;                                  // pas d'année connue → on saute
-      const coti=cotiIdx>=0?parseMontant(cs[cotiIdx]):null;
-      const net =netIdx>=0?parseMontant(cs[netIdx]):null;
-      sourceIdx.forEach(si=>{
-        const brut=parseMontant(cs[si]);
-        if(brut===null||brut<=0) return;                  // pas de revenu de cette source ce mois-ci
-        const pct=(coti!==null && brut>0)?Math.round(coti/brut*1000)/10:0;
-        const netFinal=(net!==null && sourceIdx.length===1)?net:brut*(1-pct/100);
-        const type=entete[si];
-        if(!revtypes.some(rt=>rt.nom===type) && !nouveauxTypes.includes(type)) nouveauxTypes.push(type);
-        const dIso=annee+"-"+String(mois).padStart(2,"0")+"-01";
-        revenus.push({id:Date.now()+n, montant:brut, cotisation:pct, net:netFinal, type, description:"", date:dIso, mois:dIso.slice(0,7), dateAffichee:dateAff(dIso)});
-        n++;
-      });
+      const cells=(l.includes("\t")?l.split("\t"):l.split(/ {2,}/)).map(c=>c.trim()).filter(Boolean);
+      if(!cells.length) return;
+      if(cells.length===1 && /^(19|20)\d{2}$/.test(cells[0])){ anneeCourante=parseInt(cells[0],10); return; }
+      if(cells.length===1){ typeCourant=cells[0]; return; }
+      if(/^total/i.test(cells[0])) return; // ligne total éventuelle, ignorée
+      const mo=MOIS_PARSE[cells[0].toLowerCase()];
+      if(!mo){ problemes.push(l); return; }
+      // le montant est la dernière cellule qui contient un chiffre (tolère une cellule "€" isolée en fin de ligne)
+      let idxMontant=-1;
+      for(let i=cells.length-1;i>=1;i--){ if(/\d/.test(cells[i])){ idxMontant=i; break; } }
+      if(idxMontant===-1) return; // ex. "Janvier  -  €" : pas de revenu ce mois-là
+      const brut=parseMontant(cells[idxMontant]);
+      if(brut===null||brut<=0) return;
+      if(!typeCourant){ problemes.push(l); return; }
+      const pct=cotisationDuType(typeCourant);
+      const net=brut*(1-pct/100);
+      const dIso=anneeCourante+"-"+String(mo).padStart(2,"0")+"-01";
+      if(!revtypes.some(rt=>rt.nom===typeCourant) && !nouveauxTypes.includes(typeCourant)) nouveauxTypes.push(typeCourant);
+      aImporter.push({montant:brut, cotisation:pct, net, type:typeCourant, date:dIso});
     });
-    if(!n){ msgIrev("Aucun revenu détecté. Vérifie le format (années, mois, montants).","warn"); return; }
+    if(!aImporter.length){ msgIrev("Aucun revenu détecté. Vérifie le format : le type de revenu en 1re ligne, puis une ligne par mois avec son montant.","warn"); return; }
     nouveauxTypes.forEach(t=>{ if(!revtypes.some(rt=>rt.nom===t)) revtypes.push({nom:t, cotisation:0}); });
+    aImporter.forEach((r,i)=>{ revenus.push({id:Date.now()+i, montant:r.montant, cotisation:r.cotisation, net:r.net, type:r.type, description:"", date:r.date, mois:r.date.slice(0,7), dateAffichee:dateAff(r.date)}); });
     sauverRev(); sauverRevType(); $("zone-import-rev").value="";
-    msgIrev(n+" revenu(s) importé(s)"+(nouveauxTypes.length?(" — nouveaux types : "+nouveauxTypes.join(", ")):"")+".","ok");
+    let msg=aImporter.length+" revenu(s) importé(s)";
+    if(nouveauxTypes.length) msg+=" — nouveau(x) type(s) créé(s) : "+nouveauxTypes.join(", ");
+    if(problemes.length) msg+=" ("+problemes.length+" ligne(s) ignorée(s), mois non reconnu)";
+    msgIrev(msg, problemes.length?"warn":"ok");
     rendreRevenus(); rendreRevTypes();
   };
   function msgIrev(t,ty){$("msg-imprev").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
