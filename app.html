@@ -997,7 +997,7 @@
   }
 
   // ---- Détail d'une catégorie (clic depuis le résumé, même période) ----
-  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set(), venantCatdet=false;
+  let detCat=null, detFiltre=null, modeGestionCat=false, catdetSelection=new Set(), venantCatdet=false, detCatDepuisBudget=false;
   function fermerTicketRetourCatdet(){
     if(!venantCatdet) return;
     venantCatdet=false;
@@ -1039,7 +1039,7 @@
     if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat();
     rendreDepenses(); rendreAccueil();
   };
-  function ouvrirDetailCat(cat){ detCat=cat; detFiltre=null; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
+  function ouvrirDetailCat(cat, depuisBudget){ detCat=cat; detCatDepuisBudget=!!depuisBudget; detFiltre=null; modeGestionCat=false; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); rendreDetailCat(); $("catdet-overlay").style.display="flex"; }
   function majToggleCatdet(){ $("catdet-gestion-toggle").classList.toggle("on",modeGestionCat); $("catdet-gestion-toggle").setAttribute("aria-checked",modeGestionCat); }
   $("catdet-gestion-toggle").onclick=()=>{ modeGestionCat=!modeGestionCat; catdetSelection.clear(); majToggleCatdet(); majBarreCatdet(); if(detTypeRevActuel) rendreDetailRevTypeInterne(detTypeRevActuel); else rendreDetailCat(); };
   let detTypeRevActuel=null;
@@ -1080,9 +1080,9 @@
   }
   function rendreDetailCat(){
     detTypeRevActuel=null;
-    const cat=detCat, b=bornesResume();
+    const cat=detCat, b=detCatDepuisBudget?bornesGen(budMode,budDate):bornesResume();
     let items=depenses.filter(d=>{const dd=depDate(d);return d.categorie===cat && dd && dd>=b.debut && dd<=b.fin;}).sort((x,y)=>(depDate(y)||"").localeCompare(depDate(x)||""));
-    $("catdet-titre").textContent=cat+" — "+labelResume();
+    $("catdet-titre").textContent=cat+" — "+(detCatDepuisBudget?labelBudget():labelResume());
     // Filtre par sous-catégorie (uniquement celles présentes)
     const sousPresentes=[...new Set(items.map(d=>d.sousCat).filter(Boolean))].sort();
     const fbox=$("catdet-filtre"); fbox.innerHTML="";
@@ -1192,12 +1192,13 @@
       const pct=prevu>0?Math.min(100, r/prevu*100):(r>0?100:0);
       const over=prevu>0 && r>prevu;
       const emoji=cat.emoji?cat.emoji+" ":"";
-      const row=document.createElement("div"); row.className="bud-row";
+      const row=document.createElement("div"); row.className="bud-row"; row.style.cursor="pointer";
       row.innerHTML=
         '<div class="bud-tete"><span class="nom">'+emoji+cat.nom+'</span>'+
         (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'dépassé ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non défini</span>')+'</div>'+
         '<div class="bud-det">Prévu '+fmt(prevu)+'<span style="margin-left:auto;">Réel '+fmt(r)+'</span></div>'+
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
+      row.onclick=()=>ouvrirDetailCat(cat.nom, true);
       box.appendChild(row);
     });
     // Ligne informative (le montant est déjà déduit ci-dessus, catégorie par catégorie)
