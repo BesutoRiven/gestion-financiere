@@ -1741,6 +1741,19 @@
 
   const cleTypeRevenu=nom=>normaliser(nom).replace(/s$/,"");
   const trouverTypeExistant=nom=>{ const cible=cleTypeRevenu(nom); return revtypes.find(t=>cleTypeRevenu(t.nom)===cible)||null; };
+  function distanceLevenshtein(a,b){
+    const m=a.length, n=b.length; const d=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+    for(let j=0;j<=n;j++) d[0][j]=j;
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j]=a[i-1]===b[j-1]?d[i-1][j-1]:1+Math.min(d[i-1][j],d[i][j-1],d[i-1][j-1]);
+    return d[m][n];
+  }
+  function suggestionTypeProche(nom){
+    const cible=cleTypeRevenu(nom); let meilleur=null, meilleureDist=Infinity;
+    revtypes.forEach(t=>{ const d=distanceLevenshtein(cible,cleTypeRevenu(t.nom)); if(d<meilleureDist){ meilleureDist=d; meilleur=t.nom; } });
+    // Seuil tolérant à 1-2 lettres selon la longueur du mot, pour éviter de suggérer un type sans rapport
+    if(meilleur && meilleureDist<=Math.max(2,Math.round(cible.length*0.25))) return meilleur;
+    return null;
+  }
   // ---- Import des revenus (format simplifié : type en 1re ligne, puis mois + montant) ----
   $("btn-importer-rev").onclick=()=>{
     const lignes=($("zone-import-rev").value).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
@@ -1776,6 +1789,18 @@
       aImporter.push({montant:brut, cotisation:pct, net, type:typeCourant, date:dIso});
     });
     if(!aImporter.length){ msgIrev("Aucun revenu détecté. Vérifie le format : le type de revenu en 1re ligne, puis une ligne par mois avec son montant.","warn"); return; }
+    if(nouveauxTypes.length){
+      const detail=nouveauxTypes.map(t=>{
+        const sugg=suggestionTypeProche(t);
+        return "« "+t+" »"+(sugg?" — vouliez-vous dire « "+sugg+" » ?":" (nouveau type)");
+      }).join("\n");
+      const suite=confirm(
+        "Type(s) de revenu introuvable(s) parmi tes types existants :\n\n"+detail+
+        "\n\nVérifie l'orthographe, l'année, ou si le type existe déjà sous un autre nom dans Réglages.\n\n"+
+        "OK = créer quand même ce(s) nouveau(x) type(s) et importer.\nAnnuler = ne rien importer, pour corriger le texte collé."
+      );
+      if(!suite){ msgIrev("Import annulé. Corrige l'orthographe du type de revenu (ou l'année) puis réessaie.","warn"); return; }
+    }
     nouveauxTypes.forEach(t=>{ if(!revtypes.some(rt=>rt.nom===t)) revtypes.push({nom:t, cotisation:0}); });
     aImporter.forEach((r,i)=>{ revenus.push({id:Date.now()+i, montant:r.montant, cotisation:r.cotisation, net:r.net, type:r.type, description:"", date:r.date, mois:r.date.slice(0,7), dateAffichee:dateAff(r.date)}); });
     sauverRev(); sauverRevType(); $("zone-import-rev").value="";
