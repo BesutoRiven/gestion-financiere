@@ -187,7 +187,18 @@
     .bud-mini-v{font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px;}
     .bud-row{padding:10px 2px; border-bottom:1px solid var(--border);}
     .bud-row:last-child{border-bottom:none;}
-    .bud-tete{display:flex; justify-content:space-between; align-items:center;}
+    .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+    .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
+    .recur-carte{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin:8px 0;}
+    .recur-tete{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+    .recur-nom{font-weight:600; font-size:14px;}
+    .recur-mnt{font-weight:700; font-variant-numeric:tabular-nums;}
+    .recur-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+    .recur-actions{display:flex; gap:4px; margin-top:8px; justify-content:flex-end;}
+    #part-liste .cat-ligne{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px 4px 4px 14px; margin:8px 0;}
+    #part-liste .cat-ligne input{border:none; background:transparent; padding:8px 4px;}
+    #part-liste .cat-ligne button{width:34px; height:34px; border-radius:10px; font-size:16px;}
+    #part-liste .cat-ligne button:hover{background:rgba(163,45,45,.1);}
     .bud-tete .nom{font-weight:600; font-size:15px;}
     .bud-ecart{font-size:13px; font-weight:600; font-variant-numeric:tabular-nums;}
     .bud-det{display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:var(--muted);}
@@ -399,7 +410,10 @@
                 <input id="recur-jour" type="number" min="1" max="28" placeholder="Jour" style="flex:0 0 60px;" />
               </div>
               <div class="dd" id="dd-recur-cat" style="margin-top:8px;"><button type="button" class="dd-btn vide">Catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
-              <button id="ajouter-recur" class="btn-ligne" style="height:40px; margin-top:8px;">＋ Ajouter la récurrence</button>
+              <div class="rangee">
+                <button id="ajouter-recur" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">＋ Ajouter la récurrence</button>
+                <button id="recur-annuler-edit" style="display:none;">Annuler</button>
+              </div>
             </div>
           </details>
         </div>
@@ -1404,18 +1418,23 @@
       const pct=prevu>0?Math.min(100, r/prevu*100):(r>0?100:0);
       const over=prevu>0 && r>prevu;
       const emoji=cat.emoji?cat.emoji+" ":"";
+      const sousAAfficher = budgetParSousCat ? (souscats[cat.nom]||[]).filter(sous=>budgetSousCatPourPeriode(cat.nom+"|"+sous,budMode)>0) : [];
+      const ouvertB=budgetOuvertSet.has(cat.nom);
       const row=document.createElement("div"); row.className="bud-row"; row.style.cursor="pointer";
       row.innerHTML=
         '<div class="bud-tete"><span class="nom">'+emoji+cat.nom+'</span>'+
-        (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'dépassé ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non défini</span>')+'</div>'+
+        (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'dépassé ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non défini</span>')+
+        (sousAAfficher.length?'<button class="bud-chevron" aria-label="Déplier">'+(ouvertB?"▲":"▼")+'</button>':'')+'</div>'+
         '<div class="bud-det">Prévu '+fmt(prevu)+'<span style="margin-left:auto;">Réel '+fmt(r)+'</span></div>'+
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
       row.onclick=()=>ouvrirDetailCat(cat.nom, true);
+      if(sousAAfficher.length){
+        row.querySelector(".bud-chevron").onclick=e=>{ e.stopPropagation(); if(ouvertB) budgetOuvertSet.delete(cat.nom); else budgetOuvertSet.add(cat.nom); rendreBudget(); };
+      }
       box.appendChild(row);
-      if(budgetParSousCat){
-        (souscats[cat.nom]||[]).forEach(sous=>{
+      if(sousAAfficher.length && ouvertB){
+        sousAAfficher.forEach(sous=>{
           const cle=cat.nom+"|"+sous, sprevu=budgetSousCatPourPeriode(cle,budMode);
-          if(!sprevu) return; // seules les sous-catégories avec un budget défini sont affichées, pour ne pas surcharger
           const sr=reelSousCat[cle]||0, secart=sprevu-sr, spct=sprevu>0?Math.min(100, sr/sprevu*100):(sr>0?100:0), sover=sprevu>0 && sr>sprevu;
           const srow=document.createElement("div"); srow.className="bud-row"; srow.style.cssText="margin-left:18px; opacity:.9;";
           srow.innerHTML='<div class="bud-tete"><span class="nom" style="font-size:13px; font-weight:500;">↳ '+sous+'</span>'+
@@ -1441,18 +1460,24 @@
     $("bt-reste").style.color = reste>=0 ? "var(--accent)" : "var(--danger)";
   }
   // ---- Gestion du budget personnalisé (dans Réglages > Gestion) ----
+  let budGestionOuvert=new Set(), budgetOuvertSet=new Set();
   function rendreBudGestion(){
     const box=$("bud-gestion-liste"); if(!box) return; box.innerHTML="";
     const sw=$("toggle-bud-souscat");
     if(sw){ sw.classList.toggle("on",budgetParSousCat); sw.setAttribute("aria-checked",budgetParSousCat); }
     categories.forEach(cat=>{
       const b=budCat[cat.nom]||{montant:0,unite:"mois"};
+      const sousArr=budgetParSousCat?(souscats[cat.nom]||[]):[];
+      const ouvert=budGestionOuvert.has(cat.nom);
       const row=document.createElement("div"); row.className="bud-row";
-      row.innerHTML='<div class="bud-tete"><span class="nom">'+(cat.emoji?cat.emoji+" ":"")+cat.nom+'</span></div>'+
+      row.innerHTML='<div class="bud-tete"><span class="nom">'+(cat.emoji?cat.emoji+" ":"")+cat.nom+'</span>'+
+        (sousArr.length?'<button class="bud-chevron" aria-label="Déplier">'+(ouvert?"▲":"▼")+'</button>':'')+'</div>'+
         '<div class="bud-det"><input type="text" inputmode="decimal" data-bcat="'+cat.nom.replace(/"/g,'&quot;')+'" value="'+(b.montant?String(b.montant).replace(".",","):"")+'" placeholder="0" style="width:90px;" /> € par <select data-bunit="'+cat.nom.replace(/"/g,'&quot;')+'" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-family:inherit;"><option value="jour"'+(b.unite==="jour"?" selected":"")+'>jour</option><option value="semaine"'+(b.unite==="semaine"?" selected":"")+'>semaine</option><option value="mois"'+((!b.unite||b.unite==="mois")?" selected":"")+'>mois</option><option value="annee"'+(b.unite==="annee"?" selected":"")+'>année</option></select></div>';
+      if(sousArr.length){
+        row.querySelector(".bud-chevron").onclick=()=>{ if(ouvert) budGestionOuvert.delete(cat.nom); else budGestionOuvert.add(cat.nom); rendreBudGestion(); };
+      }
       box.appendChild(row);
-      if(budgetParSousCat){
-        const sousArr=souscats[cat.nom]||[];
+      if(sousArr.length && ouvert){
         sousArr.forEach(sous=>{
           const cle=cat.nom+"|"+sous; const bs=budSousCat[cle]||{montant:0,unite:"mois"};
           const srow=document.createElement("div"); srow.className="bud-row"; srow.style.cssText="margin-left:18px; opacity:.9;";
@@ -1479,29 +1504,56 @@
 
   // ---- Dépenses récurrentes ----
   let ddRecurCat=null, recurCatSel=null;
+  let editionRecur=null;
   function rendreRecur(){
     const box=$("recur-liste"); if(!box) return; box.innerHTML="";
     recurrentes.forEach((r,idx)=>{
-      const l=document.createElement("div"); l.className="cat-ligne";
-      const span=document.createElement("span"); span.style.cssText="flex:1; font-size:14px;";
-      span.textContent=r.nom+" · "+fmt(r.montant)+" · le "+r.jour+" · "+(r.categorie||"?");
+      const catObj=categories.find(c=>c.nom===r.categorie);
+      const l=document.createElement("div"); l.className="recur-carte";
+      l.innerHTML='<div class="recur-tete"><span class="recur-nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+r.nom+'</span><span class="recur-mnt">'+fmt(r.montant)+'</span></div>'+
+        '<div class="recur-sub">Le '+r.jour+' de chaque mois · '+(r.categorie||"?")+'</div>';
+      const actions=document.createElement("div"); actions.className="recur-actions";
+      const modif=document.createElement("button"); modif.className="cat-move"; modif.textContent="✎"; modif.style.color="var(--accent)"; modif.setAttribute("aria-label","Modifier");
+      modif.onclick=()=>{
+        editionRecur=r.id;
+        $("recur-nom").value=r.nom; $("recur-montant").value=String(r.montant).replace(".",","); $("recur-jour").value=r.jour;
+        recurCatSel=r.categorie; ddRecurCat.set(r.categorie);
+        $("ajouter-recur").textContent="✓ Enregistrer les modifications";
+        $("recur-annuler-edit").style.display="inline-block";
+        $("recur-nom").scrollIntoView({behavior:"smooth", block:"center"});
+      };
       const monter=document.createElement("button"); monter.textContent="▲"; monter.className="cat-move"; monter.disabled=idx===0;
       monter.onclick=()=>{ if(idx===0)return; [recurrentes[idx-1],recurrentes[idx]]=[recurrentes[idx],recurrentes[idx-1]]; sauverCloud(); rendreRecur(); };
       const descendre=document.createElement("button"); descendre.textContent="▼"; descendre.className="cat-move"; descendre.disabled=idx===recurrentes.length-1;
       descendre.onclick=()=>{ if(idx===recurrentes.length-1)return; [recurrentes[idx+1],recurrentes[idx]]=[recurrentes[idx],recurrentes[idx+1]]; sauverCloud(); rendreRecur(); };
-      const del=document.createElement("button"); del.textContent="×"; del.onclick=()=>{ if(!confirmDouble("Supprimer la récurrence « "+r.nom+" » ? (les dépenses déjà créées restent)")) return; recurrentes.splice(idx,1); sauverCloud(); rendreRecur(); };
-      l.appendChild(span); l.appendChild(monter); l.appendChild(descendre); l.appendChild(del); box.appendChild(l);
+      const del=document.createElement("button"); del.className="cat-move"; del.style.color="var(--danger)"; del.textContent="×"; del.setAttribute("aria-label","Supprimer");
+      del.onclick=()=>{ if(!confirmDouble("Supprimer la récurrence « "+r.nom+" » ? (les dépenses déjà créées restent)")) return; recurrentes.splice(idx,1); sauverCloud(); rendreRecur(); };
+      actions.appendChild(modif); actions.appendChild(monter); actions.appendChild(descendre); actions.appendChild(del);
+      l.appendChild(actions); box.appendChild(l);
     });
     if(!recurrentes.length) box.innerHTML='<small class="aide">Aucune dépense récurrente pour l\'instant.</small>';
   }
+  function annulerEditionRecur(){
+    editionRecur=null;
+    $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value="";
+    recurCatSel=null; ddRecurCat.set(null);
+    $("ajouter-recur").textContent="＋ Ajouter la récurrence";
+    $("recur-annuler-edit").style.display="none";
+  }
+  $("recur-annuler-edit").onclick=annulerEditionRecur;
   $("ajouter-recur").onclick=()=>{
     const nom=$("recur-nom").value.trim();
     const montant=parseFloat(($("recur-montant").value||"").replace(",","."));
     const jour=Math.min(28,Math.max(1,parseInt($("recur-jour").value,10)||1));
     if(!nom||!montant||montant<=0){ alert("Renseigne un nom et un montant valide."); return; }
     if(!recurCatSel){ alert("Choisis une catégorie."); return; }
-    recurrentes.push({id:Date.now(), nom, montant, categorie:recurCatSel, jour, dernierMoisGenere:null});
-    $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value="";
+    if(editionRecur){
+      const r=recurrentes.find(x=>x.id===editionRecur);
+      if(r) Object.assign(r,{nom, montant, categorie:recurCatSel, jour});
+    } else {
+      recurrentes.push({id:Date.now(), nom, montant, categorie:recurCatSel, jour, dernierMoisGenere:null});
+    }
+    annulerEditionRecur();
     sauverCloud(); rendreRecur();
   };
   // Génère automatiquement les dépenses récurrentes du mois en cours si pas déjà fait, et si le jour indiqué est passé (ou aujourd'hui)
