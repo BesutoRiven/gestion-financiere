@@ -62,7 +62,8 @@
     .cat-ligne input{flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:14px; font-family:inherit; background:var(--surface); color:var(--text);}
     .cat-ligne .pastille{width:18px; height:18px; border-radius:50%; flex:0 0 auto;}
     .cat-ligne button{border:none; background:transparent; color:var(--danger); font-size:18px; cursor:pointer;}
-    .cat-move{color:var(--muted) !important; font-size:14px !important; padding:2px 4px; flex:0 0 auto; line-height:1;}
+    .cat-move{color:var(--muted) !important; font-size:14px !important; padding:5px 9px; flex:0 0 auto; line-height:1; background:var(--bg); border:none !important; border-radius:8px; cursor:pointer;}
+    .cat-move:hover{background:var(--border);}
     .cat-move:disabled{opacity:.25; cursor:default;}
     .glisser-poignee{color:var(--muted); font-size:18px; padding:2px 8px; flex:0 0 auto; cursor:grab; touch-action:none; user-select:none;}
     .glisser-ligne.glisse-actif{opacity:.5; background:var(--accent-soft); border-radius:10px;}
@@ -198,8 +199,10 @@
     .recur-sub{font-size:12px; color:var(--muted); margin-top:2px;}
     .recur-actions{display:flex; gap:4px; margin-top:8px; justify-content:flex-end;}
     .recur-toggle{display:flex; gap:8px; margin-top:12px;}
-    .recur-toggle button{flex:1; height:38px; border:1px solid var(--border); background:var(--surface); color:var(--muted); border-radius:10px; font-weight:600; font-size:13px; cursor:pointer;}
+    .recur-toggle button{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 4px; border:1px solid var(--border); background:var(--surface); color:var(--muted); border-radius:14px; font-weight:600; font-size:12px; cursor:pointer;}
+    .recur-toggle-icon{width:34px; height:34px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--muted);}
     .recur-toggle button.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent);}
+    .recur-toggle button.on .recur-toggle-icon{background:var(--accent); color:#fff;}
     #part-liste .cat-ligne{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:4px 4px 4px 14px; margin:8px 0;}
     #part-liste .cat-ligne input{border:none; background:transparent; padding:8px 4px;}
     #part-liste .cat-ligne button{width:34px; height:34px; border-radius:10px; font-size:16px;}
@@ -410,8 +413,9 @@
               <small class="aide">Une dépense ou un revenu de ce type est créé automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé).</small>
               <div id="recur-liste" style="margin-top:10px;"></div>
               <div class="recur-toggle">
-                <button type="button" id="recur-type-dep" class="on">− Dépense</button>
-                <button type="button" id="recur-type-rev">+ Revenu</button>
+                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon">−</span>Dépense</button>
+                <button type="button" id="recur-type-rev"><span class="recur-toggle-icon">＋</span>Revenu</button>
+                <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon">↩</span>Remboursement</button>
               </div>
               <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap;">
                 <input id="recur-nom" type="text" placeholder="Nom (ex. Loyer)" style="flex:2 1 120px;" />
@@ -444,6 +448,17 @@
           <textarea id="zone-import-rev" placeholder="Prestations informatiques&#10;Janvier&#9;-&#10;Février&#9;-&#10;Mars&#9;2 000,00 €&#10;Avril&#9;-&#10;Mai&#9;1 500,00 €"></textarea>
           <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
           <div id="msg-imprev"></div>
+        </div>
+      </details>
+
+      <details class="bloc det">
+        <summary>🔧 Options avancées</summary>
+        <div class="det-corps">
+          <small class="aide">Petites options facultatives, désactivées par défaut.</small>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+            <span style="font-size:13px; font-weight:600;">Bouton "Remboursement" dans les transactions récurrentes</span>
+            <button id="toggle-recur-remb" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le bouton Remboursement dans les transactions récurrentes"><span class="knob"></span></button>
+          </div>
         </div>
       </details>
 
@@ -760,6 +775,7 @@
   let deviseDefaut="EUR", devisesPerso=[], moyensPaiement=MOYENS_DEFAUT.slice();
   let recurrentes=[]; // {id, nom, montant, categorie, sousCat, jour, dernierMoisGenere}
   let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
+  let optionsActivees={}; // options avancées facultatives, désactivées par défaut (ex. "recurRemb")
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
@@ -884,7 +900,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -929,9 +945,10 @@
     recurrentes = c.recurrentes || [];
     budgetParSousCat = !!c.budgetParSousCat;
     budSousCat = c.budSousCat || {};
+    optionsActivees = c.optionsActivees || {};
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -1581,11 +1598,14 @@
   function rendreRecur(){
     const box=$("recur-liste"); if(!box) return; box.innerHTML="";
     recurrentes.forEach((r,idx)=>{
-      const estRev=r.type==="revenu";
-      const catObj=!estRev?categories.find(c=>c.nom===r.categorie):null;
+      const estRev=r.type==="revenu", estRemb=r.type==="remboursement";
+      const catObj=(!estRev&&!estRemb)?categories.find(c=>c.nom===r.categorie):null;
+      const icone=estRemb?"↩ ":(estRev?"💰 ":(catObj&&catObj.emoji?catObj.emoji+" ":""));
+      const couleur=estRemb?"var(--remb-fg)":(estRev?"var(--accent)":"var(--text)");
+      const signe=estRemb?"↩ ":(estRev?"+":"−");
       const l=document.createElement("div"); l.className="recur-carte glisser-ligne";
-      l.innerHTML='<div class="recur-tete"><span class="recur-nom">'+(estRev?"💰 ":(catObj&&catObj.emoji?catObj.emoji+" ":""))+r.nom+'</span><span class="recur-mnt" style="color:'+(estRev?"var(--accent)":"var(--text)")+';">'+(estRev?"+":"−")+fmt(r.montant)+'</span></div>'+
-        '<div class="recur-sub">Le '+r.jour+' de chaque mois · '+(r.categorie||"?")+'</div>';
+      l.innerHTML='<div class="recur-tete"><span class="recur-nom">'+icone+r.nom+'</span><span class="recur-mnt" style="color:'+couleur+';">'+signe+fmt(r.montant)+'</span></div>'+
+        '<div class="recur-sub">Le '+r.jour+' de chaque mois'+(estRemb?'':(' · '+(r.categorie||"?")))+'</div>';
       const actions=document.createElement("div"); actions.className="recur-actions";
       const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
       const modif=document.createElement("button"); modif.className="cat-move"; modif.textContent="✎"; modif.style.color="var(--accent)"; modif.setAttribute("aria-label","Modifier");
@@ -1606,15 +1626,30 @@
     if(!recurrentes.length) box.innerHTML='<small class="aide">Aucune transaction récurrente pour l\'instant.</small>';
     activerGlisser(box, recurrentes, ()=>{ sauverCloud(); rendreRecur(); });
   }
+  function rendreOptions(){
+    const actif=!!optionsActivees.recurRemb;
+    const sw=$("toggle-recur-remb");
+    if(sw){ sw.classList.toggle("on",actif); sw.setAttribute("aria-checked",actif); }
+    $("recur-type-remb").style.display=actif?"flex":"none";
+  }
+  $("toggle-recur-remb").onclick=()=>{ optionsActivees.recurRemb=!optionsActivees.recurRemb; sauverCloud(); rendreOptions(); };
+
   function basculerRecurType(type){
     recurTypeSel=type; recurCatSel=null;
     $("recur-type-dep").classList.toggle("on", type==="depense");
     $("recur-type-rev").classList.toggle("on", type==="revenu");
-    ddRecurCat=initDD("dd-recur-cat", ()=> type==="revenu"?revtypes.map(t=>t.nom):categories.map(c=>c.nom), v=>{recurCatSel=v;});
-    ddRecurCat.set(null);
+    $("recur-type-remb").classList.toggle("on", type==="remboursement");
+    if(type==="remboursement"){
+      $("dd-recur-cat").style.display="none"; recurCatSel="—";
+    } else {
+      $("dd-recur-cat").style.display="block";
+      ddRecurCat=initDD("dd-recur-cat", ()=> type==="revenu"?revtypes.map(t=>t.nom):categories.map(c=>c.nom), v=>{recurCatSel=v;});
+      ddRecurCat.set(null);
+    }
   }
   $("recur-type-dep").onclick=()=>basculerRecurType("depense");
   $("recur-type-rev").onclick=()=>basculerRecurType("revenu");
+  $("recur-type-remb").onclick=()=>basculerRecurType("remboursement");
   function annulerEditionRecur(){
     editionRecur=null;
     $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value="";
@@ -1649,6 +1684,8 @@
       if(r.type==="revenu"){
         const pct=cotisationDuType(r.categorie);
         revenus.push({id:Date.now()+Math.random(), montant:r.montant, cotisation:pct, net:r.montant*(1-pct/100), type:r.categorie, description:r.nom+" (récurrent)", date:isoJour, mois:isoJour.slice(0,7), dateAffichee:dateAff(isoJour)});
+      } else if(r.type==="remboursement"){
+        remboursements.push({id:Date.now()+Math.random(), montant:r.montant, devise:deviseDefaut, description:r.nom+" (récurrent)", depenseIds:[], date:isoJour, dateAffichee:dateAff(isoJour)});
       } else {
         depenses.push({id:Date.now()+Math.random(), montant:r.montant, categorie:r.categorie, sousCat:null, paiement:null, participant:participants[0]||"Moi", devise:deviseDefaut, commentaire:r.nom+" (récurrent)", date:isoJour, mois:moisAuj, dateAffichee:dateAff(isoJour), photo:false});
       }
@@ -2689,7 +2726,7 @@
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur();
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions();
     // Mode sombre
     const sw=$("theme-switch");
     sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
