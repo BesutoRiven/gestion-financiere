@@ -18,9 +18,30 @@
     summary::-webkit-details-marker{display:none;}
     summary::after{content:"▾"; float:right; color:var(--muted); font-size:14px;}
     details[open] summary::after{content:"▴";}
+    .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
+    .verrou-point.rempli{background:var(--accent); border-color:var(--accent);}
+    #verrou-pave button{width:64px; height:64px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:22px; font-weight:600; cursor:pointer;}
+    #verrou-pave button:active{background:var(--accent-soft);}
+    #verrou-pave button.verrou-suppr{font-size:16px; color:var(--danger); border:none; background:none;}
+    .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
+    .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
+    .switch.on{background:var(--accent);}
+    .switch.on .knob{transform:translateX(22px);}
+    .switch-sm{width:34px; height:20px;}
+    .switch-sm .knob{width:16px; height:16px; top:2px; left:2px;}
+    .switch-sm.on .knob{transform:translateX(14px);}
   </style>
 </head>
 <body>
+  <div id="verrou-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div style="font-size:40px; margin-bottom:8px;">🔒</div>
+    <p id="verrou-titre" style="font-weight:600; font-size:16px; margin:0 0 4px;">Code verrouillage</p>
+    <p id="verrou-msg" style="color:var(--muted); font-size:13px; margin:0 0 16px;">Entre ton code à 4 chiffres</p>
+    <div id="verrou-points" style="display:flex; gap:14px; margin-bottom:20px;">
+      <span class="verrou-point"></span><span class="verrou-point"></span><span class="verrou-point"></span><span class="verrou-point"></span>
+    </div>
+    <div id="verrou-pave" style="display:grid; grid-template-columns:repeat(3,64px); gap:12px;"></div>
+  </div>
   <div class="app">
     <div class="topbar">
       <a href="app.html" aria-label="Retour">‹ Retour</a>
@@ -88,13 +109,32 @@
       <button id="btn-deconnexion" class="btn btn-danger">Se déconnecter</button>
     </div>
 
+    <!-- Sécurité -->
+    <details class="carte">
+      <summary style="cursor:pointer; font-size:16px; font-weight:600;">🔒 Sécurité</summary>
+      <small class="aide" style="display:block; margin-top:8px;">Demande un code à 4 chiffres à chaque ouverture de l'app, sur cet appareil (propre à ce téléphone/ordinateur, pas synchronisé).</small>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+        <span style="font-size:13px; font-weight:600;">Verrouiller l'app avec un code</span>
+        <button id="toggle-pin" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le verrouillage par code"><span class="knob"></span></button>
+      </div>
+      <button id="btn-changer-pin" class="btn btn-ligne" style="display:none; margin-top:12px;">Changer le code</button>
+    </details>
+
+    <!-- Sauvegarde -->
+    <div class="carte">
+      <p style="font-weight:600; font-size:16px; margin:0 0 8px;">💾 Sauvegarde</p>
+      <small class="aide">Export/import complet des données, disponible dans l'app.</small>
+      <a href="app.html" class="btn btn-ligne" style="margin-top:10px; display:block; text-align:center; text-decoration:none;">Ouvrir Réglages &gt; Sauvegarde</a>
+    </div>
+
     <!-- Zone dangereuse -->
     <details class="carte" style="border-color:#e0b4b4;">
       <summary style="cursor:pointer; font-size:16px; font-weight:600; color:var(--danger);">⚠️ Zone dangereuse</summary>
       <small class="aide" style="display:block; margin-top:8px;">Ces deux actions sont définitives et ne peuvent pas être annulées.</small>
 
       <hr class="sep" />
-      <p style="font-weight:600; margin:0 0 4px;">Réinitialiser toutes mes données</p>
+      <details>
+      <summary style="cursor:pointer; font-weight:600;">Réinitialiser toutes mes données</summary>
       <small class="aide">
         <strong>Si tu n'es dans aucun partage :</strong> efface tes dépenses, revenus, catégories et réglages personnels. Ton compte reste actif, mais repart à zéro.<br /><br />
         <strong>Si tu es dans un partage :</strong> seules les données <u>du partage</u> sont effacées (celles que tout le monde y voit) — d'éventuelles données personnelles que tu aurais à côté, elles, ne sont jamais touchées par cette action. Seul un propriétaire du partage peut le déclencher, et s'il y a un(e) autre propriétaire, son accord est obligatoire avant que quoi que ce soit ne s'efface.
@@ -113,9 +153,11 @@
         <button id="btn-reset-annuler" class="lien">Annuler</button>
       </div>
       <div id="msg-reset"></div>
+      </details>
 
       <hr class="sep" />
-      <p style="font-weight:600; margin:0 0 4px;">Supprimer mon compte</p>
+      <details>
+      <summary style="cursor:pointer; font-weight:600;">Supprimer mon compte</summary>
       <small class="aide">Supprime définitivement ton compte et toutes tes données personnelles. Si tu es dans un partage, tu en sors automatiquement (les données partagées restent pour les autres membres).</small>
       <button id="btn-suppr-ouvrir" class="btn btn-ligne" style="margin-top:10px; color:var(--danger); border-color:#e0b4b4;">Supprimer mon compte</button>
       <div id="zone-suppr" style="display:none; margin-top:10px;">
@@ -125,6 +167,7 @@
         <button id="btn-suppr-annuler" class="lien">Annuler</button>
       </div>
       <div id="msg-suppr"></div>
+      </details>
     </details>
   </div>
 
@@ -233,6 +276,74 @@
   // ---- Compte ----
   $("btn-changer").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
   $("btn-deconnexion").onclick = async () => { await sb.auth.signOut(); window.location.href = "index.html"; };
+
+  async function hasherPin(pin){
+    const enc=new TextEncoder().encode("gf-sel-"+pin);
+    const buf=await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function pinActif(){ return localStorage.getItem("gf_pin_actif")==="1"; }
+  function demanderPin(titre, sousTitre){
+    return new Promise(resolve=>{
+      let saisie="";
+      const points=[...document.querySelectorAll("#verrou-points .verrou-point")];
+      const majPoints=()=>points.forEach((p,i)=>p.classList.toggle("rempli", i<saisie.length));
+      $("verrou-titre").textContent=titre; $("verrou-msg").textContent=sousTitre||""; $("verrou-msg").style.color="var(--muted)";
+      saisie=""; majPoints();
+      const pave=$("verrou-pave"); pave.innerHTML="";
+      const touches=["1","2","3","4","5","6","7","8","9","","0","⌫"];
+      touches.forEach(t=>{
+        const b=document.createElement("button"); b.type="button";
+        if(t==="") { b.style.visibility="hidden"; }
+        else { b.textContent=t; if(t==="⌫") b.className="verrou-suppr"; }
+        b.onclick=()=>{
+          if(t==="⌫"){ saisie=saisie.slice(0,-1); majPoints(); return; }
+          if(t==="") return;
+          if(saisie.length>=4) return;
+          saisie+=t; majPoints();
+          if(saisie.length===4){ const code=saisie; saisie=""; setTimeout(()=>{ majPoints(); resolve(code); },80); }
+        };
+        pave.appendChild(b);
+      });
+      $("verrou-overlay").style.display="flex";
+    });
+  }
+  async function definirNouveauPin(){
+    const p1=await demanderPin("Choisis un code","Entre un nouveau code à 4 chiffres");
+    const p2=await demanderPin("Confirme le code","Retape le même code");
+    if(p1!==p2){ alert("Les deux codes ne correspondent pas, réessaie."); return false; }
+    localStorage.setItem("gf_pin_hash", await hasherPin(p1));
+    localStorage.setItem("gf_pin_actif","1");
+    $("verrou-overlay").style.display="none";
+    return true;
+  }
+  function rendreSecurite(){
+    const actif=pinActif();
+    const sw=$("toggle-pin"); if(sw){ sw.classList.toggle("on",actif); sw.setAttribute("aria-checked",actif); }
+    $("btn-changer-pin").style.display=actif?"block":"none";
+  }
+  $("toggle-pin").onclick=async()=>{
+    if(!pinActif()){
+      const ok=await definirNouveauPin();
+      if(ok) rendreSecurite();
+    } else {
+      const hashAttendu=localStorage.getItem("gf_pin_hash");
+      const saisi=await demanderPin("Désactiver le code","Entre ton code actuel pour confirmer");
+      const h=await hasherPin(saisi);
+      $("verrou-overlay").style.display="none";
+      if(h!==hashAttendu){ alert("Code incorrect."); return; }
+      localStorage.removeItem("gf_pin_hash"); localStorage.removeItem("gf_pin_actif");
+      rendreSecurite();
+    }
+  };
+  $("btn-changer-pin").onclick=async()=>{
+    const hashAttendu=localStorage.getItem("gf_pin_hash");
+    const saisi=await demanderPin("Changer le code","Entre ton code actuel");
+    const h=await hasherPin(saisi);
+    if(h!==hashAttendu){ $("verrou-overlay").style.display="none"; alert("Code incorrect."); return; }
+    await definirNouveauPin();
+  };
+  rendreSecurite();
 
   // ---- Zone dangereuse ----
   const PHRASE_RESET = "je souhaite réinitialiser toutes mes données";

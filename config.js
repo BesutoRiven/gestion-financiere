@@ -53,15 +53,41 @@ async function exigerConnexion() {
   return data.session;
 }
 
-// ---- Thème clair / sombre (partagé sur toutes les pages) ----
-function appliquerTheme(sombre) {
-  document.documentElement.classList.toggle("sombre", !!sombre);
+// ---- Thèmes de fond (partagé sur toutes les pages) ----
+const THEMES_FOND = ["clair","sombre","beige","rose","noir"];
+function appliquerThemeNomme(nom) {
+  THEMES_FOND.forEach(t => document.documentElement.classList.remove(t));
+  if (nom && nom !== "clair" && nom !== "personnalise") document.documentElement.classList.add(nom);
+  if (nom === "personnalise") {
+    const c = JSON.parse(localStorage.getItem("gf_theme_perso") || "null");
+    if (c) {
+      document.documentElement.style.setProperty("--bg", c.bg);
+      document.documentElement.style.setProperty("--surface", c.surface);
+      document.documentElement.style.setProperty("--text", c.text);
+      document.documentElement.style.setProperty("--border", c.border);
+    }
+  } else {
+    ["--bg","--surface","--text","--border"].forEach(v => document.documentElement.style.removeProperty(v));
+  }
 }
-function themeEstSombre() {
-  return localStorage.getItem("gf_theme") === "sombre";
+function themeActuel() {
+  return localStorage.getItem("gf_theme") || "clair";
 }
-function basculerTheme(sombre) {
-  localStorage.setItem("gf_theme", sombre ? "sombre" : "clair");
-  appliquerTheme(sombre);
+function choisirTheme(nom) {
+  localStorage.setItem("gf_theme", nom);
+  appliquerThemeNomme(nom);
 }
-appliquerTheme(themeEstSombre()); // appliqué au chargement de chaque page
+function definirThemePerso(bgHex) {
+  const r=parseInt(bgHex.slice(1,3),16), g=parseInt(bgHex.slice(3,5),16), b=parseInt(bgHex.slice(5,7),16);
+  const clair = (r*299+g*587+b*114)/1000 > 150;
+  const mix = v => Math.round(clair ? v*0.9 : v*1.15 + 10);
+  const surface = "#"+[r,g,b].map(v=>Math.min(255,Math.max(0,mix(v))).toString(16).padStart(2,"0")).join("");
+  const text = clair ? "#222222" : "#f2f2f2";
+  const border = clair ? "#00000022" : "#ffffff22";
+  localStorage.setItem("gf_theme_perso", JSON.stringify({bg:bgHex, surface, text, border}));
+  choisirTheme("personnalise");
+}
+// Compat avec l'ancien système (mode sombre simple)
+function themeEstSombre() { return themeActuel() === "sombre"; }
+function basculerTheme(sombre) { choisirTheme(sombre ? "sombre" : "clair"); }
+appliquerThemeNomme(themeActuel()); // appliqué au chargement de chaque page
