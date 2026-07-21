@@ -2287,7 +2287,10 @@
       if(e.context && typeof e.context.json==="function"){
         try{ const corps=await e.context.json(); if(corps && corps.error) detail=corps.error; }catch(_){}
       }
-      $("r-photo-analyse-msg").innerHTML='<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+detail+'</div>';
+      const surcharge=/503|UNAVAILABLE|high demand/i.test(detail);
+      $("r-photo-analyse-msg").innerHTML = surcharge
+        ? '<div class="message warn" style="margin-top:8px;">L\'analyse est momentanément surchargée — réessaie dans une minute, ou remplis à la main.</div>'
+        : '<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+detail+'</div>';
     }
     $("r-photo-analyser").disabled=false; $("r-photo-analyser").textContent="🔍 Analyser le ticket";
   };
