@@ -1,8 +1,3 @@
-// Fonction Supabase Edge : analyse une photo de ticket de caisse et en extrait
-// montant / commercant / date, via l'API Google Gemini (gratuite pour un usage
-// personnel a faible volume - jusqu'a environ 1500 requetes/jour, sans carte bancaire).
-// La cle API reste cote serveur : jamais exposee au navigateur.
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -15,13 +10,26 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    const { image, mediaType } = await req.json();
+    const { image, mediaType, categories, moyens } = await req.json();
     if (!image) throw new Error("Aucune image recue.");
 
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) throw new Error("GEMINI_API_KEY manquante cote serveur.");
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent?key=${apiKey}`;
+
+    const listeCat = Array.isArray(categories) && categories.length ? categories.join(", ") : "aucune";
+    const listeMoy = Array.isArray(moyens) && moyens.length ? moyens.join(", ") : "aucun";
+
+    const prompt =
+      "Voici la photo d'un ticket de caisse. Reponds UNIQUEMENT avec un objet JSON valide, " +
+      "sans aucun texte autour, sans backticks, avec exactement ces cles :\n" +
+      "- montant (nombre, le total final paye en euros, ou null si illisible)\n" +
+      "- commercant (texte court, nom du magasin, ou null si illisible)\n" +
+      "- date (format JJ/MM/AAAA, ou null si illisible)\n" +
+      "- categorie : choisis EXACTEMENT une valeur parmi cette liste, celle qui correspond le mieux au type d'achat, ou null si aucune ne convient : [" + listeCat + "]\n" +
+      "- moyenPaiement : choisis EXACTEMENT une valeur parmi cette liste si le ticket l'indique clairement (ex. \"ESPECES\", \"CB\"), ou null sinon : [" + listeMoy + "]\n" +
+      "Ne reponds rien d'autre que ce JSON.";
 
     const resp = await fetch(url, {
       method: "POST",
@@ -30,15 +38,13 @@ Deno.serve(async (req: Request) => {
         contents: [{
           parts: [
             { inline_data: { mime_type: mediaType || "image/jpeg", data: image } },
-            {
-              text: "Voici la photo d'un ticket de caisse. Reponds UNIQUEMENT avec un objet JSON valide, " +
-                    "sans aucun texte autour, avec exactement ces cles : " +
-                    "montant (nombre, le total final paye en euros, ou null si illisible), " +
-                    "commercant (texte court, nom du magasin, ou null si illisible), " +
-                    "date (format JJ/MM/AAAA, ou null si illisible)."
-            }
+            { text: prompt }
           ]
-        }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 200,
+          temperature: 0
+        }
       })
     });
 
