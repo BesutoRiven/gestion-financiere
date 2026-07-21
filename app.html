@@ -195,13 +195,17 @@
     .bud-row:last-child{border-bottom:none;}
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
-    .photo-grille{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
-    .photo-case{aspect-ratio:1; border-radius:12px; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+    .photo-grille{display:flex; justify-content:center; gap:28px; margin-top:10px;}
+    .photo-action{display:flex; flex-direction:column; align-items:center; gap:6px; border:none; background:none; color:var(--papier-muted); font-size:12px; font-family:inherit; cursor:pointer; padding:4px;}
+    .photo-icone{width:46px; height:46px; border-radius:50%; background:var(--papier-vert); display:flex; align-items:center; justify-content:center; color:var(--accent);}
+    .photo-icone svg{width:20px; height:20px;}
+    .photo-case{aspect-ratio:1; border-radius:12px; position:relative; overflow:hidden; background:var(--papier); border:1px solid var(--papier-border);}
     .photo-case img{width:100%; height:100%; object-fit:cover;}
-    .photo-action{flex-direction:column; gap:4px; border:1px dashed var(--papier-border); background:none; color:var(--papier-muted); font-size:11px; font-family:inherit; cursor:pointer; padding:6px; text-align:center; line-height:1.2;}
-    .photo-icone{font-size:22px;}
-    #photo-case-apercu{background:var(--papier); border:1px solid var(--papier-border);}
     .photo-x{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+    .photo-grille.remplie{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; justify-items:stretch;}
+    .photo-grille.remplie .photo-action{border:1px dashed var(--papier-border); border-radius:12px; aspect-ratio:1; justify-content:center; padding:6px;}
+    .photo-grille.remplie .photo-icone{width:32px; height:32px; background:none;}
+    .photo-grille.remplie .photo-icone svg{width:18px; height:18px;}
     .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
     .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:10px 14px; margin:0 12px 8px; font-size:13px;}
     .bud-alerte:not(.grave){background:rgba(212,160,23,.12); color:#b8860b;}
@@ -561,14 +565,19 @@
 
         <div class="recu-photo">
           <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
-          <div class="photo-grille" style="margin-top:8px;">
-            <div class="photo-case" id="photo-case-apercu">
-              <img id="r-photo-apercu" alt="" style="display:none;" />
-              <span id="photo-case-vide" style="font-size:22px; color:var(--papier-muted);">🖼️</span>
-              <button type="button" id="r-photo-suppr" class="photo-x" style="display:none;" aria-label="Retirer la photo">×</button>
+          <div class="photo-grille" id="photo-grille">
+            <div class="photo-case" id="photo-case-apercu" style="display:none;">
+              <img id="r-photo-apercu" alt="" />
+              <button type="button" id="r-photo-suppr" class="photo-x" aria-label="Retirer la photo">×</button>
             </div>
-            <button type="button" id="r-photo-camera" class="photo-case photo-action"><span class="photo-icone">📷</span><span>Prendre en photo</span></button>
-            <button type="button" id="r-photo-btn" class="photo-case photo-action"><span class="photo-icone">🖼️</span><span>Galerie</span></button>
+            <button type="button" id="r-photo-camera" class="photo-action">
+              <span class="photo-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3.3"/></svg></span>
+              <span>Prendre en photo</span>
+            </button>
+            <button type="button" id="r-photo-btn" class="photo-action">
+              <span class="photo-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 13.5l3.3-3.3a1.5 1.5 0 0 1 2.1 0L13 14.5"/><circle cx="7.7" cy="7.7" r="1.2"/><path d="M8 21h10a2 2 0 0 0 2-2V9"/></svg></span>
+              <span>Galerie</span>
+            </button>
           </div>
           <button type="button" id="r-photo-analyser" style="display:none; margin-top:8px; width:100%; height:38px; border:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;">🔍 Analyser le ticket</button>
           <div id="r-photo-analyse-msg"></div>
@@ -1300,6 +1309,7 @@
   async function photoGet(id){const db=await ouvrirDB();return new Promise((res)=>{const tx=db.transaction("photos","readonly");const rq=tx.objectStore("photos").get(String(id));rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);});}
   async function photoDel(id){const db=await ouvrirDB();return new Promise((res)=>{const tx=db.transaction("photos","readwrite");tx.objectStore("photos").delete(String(id));tx.oncomplete=()=>res();});}
   function compresser(file){return new Promise(res=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const max=1000;let w=img.width,h=img.height;if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(img,0,0,w,h);cv.toBlob(b=>{URL.revokeObjectURL(url);res(b);},"image/jpeg",0.7);};img.src=url;});}
+  function compresserPourAnalyse(blob){return new Promise(res=>{const img=new Image();const url=URL.createObjectURL(blob);img.onload=()=>{const max=700;let w=img.width,h=img.height;if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(img,0,0,w,h);cv.toBlob(b=>{URL.revokeObjectURL(url);res(b);},"image/jpeg",0.6);};img.src=url;});}
 
   // ================= Menus déroulants =================
   function initDD(idConteneur, options, onSelect){
@@ -2199,7 +2209,7 @@
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
-    $("r-photo-apercu").style.display="none"; $("photo-case-vide").style.display="block"; $("r-photo-suppr").style.display="none"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
+    majAffichagePhoto(false); $("r-photo-suppr").style.display="none"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
     if(id){
       const d=depenses.find(x=>x.id===id);
       $("r-montant").value=String(d.montant).replace(".",","); $("r-desc").value=d.commentaire||"";
@@ -2207,7 +2217,7 @@
       rDeviseTicket = d.devise || deviseDefaut; $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
       rDateTicket = d.date ? new Date(d.date+"T12:00:00") : new Date(selDate);
       ddCat.set(rCat); ddSous.set(rSous); ddPay.set(rPay); ddPart.set(rPart);
-      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("photo-case-vide").style.display="none"; $("r-photo-suppr").style.display="flex"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
+      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); majAffichagePhoto(true); $("r-photo-suppr").style.display="flex"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
       rCat=categories[0]?categories[0].nom:null; rSous=null; rPay=null; rPart=participants[0]||"Moi";
@@ -2226,11 +2236,15 @@
   initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
   $("recu-date").onclick=()=>ouvrirCal(rDateTicket, d=>{ rDateTicket=d; majRDateAff(); });
 
+  function majAffichagePhoto(present){
+    $("photo-grille").classList.toggle("remplie", present);
+    $("photo-case-apercu").style.display = present ? "block" : "none";
+    $("r-photo-apercu").style.display = present ? "block" : "none";
+  }
   async function traiterPhotoChoisie(f){
     if(!f)return;
     photoBlob=await compresser(f); photoEtat="nouvelle";
-    $("r-photo-apercu").src=URL.createObjectURL(photoBlob); $("r-photo-apercu").style.display="block";
-    $("photo-case-vide").style.display="none";
+    $("r-photo-apercu").src=URL.createObjectURL(photoBlob); majAffichagePhoto(true);
     $("r-photo-suppr").style.display="flex";
     $("r-photo-analyser").style.display="block"; $("r-photo-analyse-msg").innerHTML="";
   }
@@ -2239,7 +2253,7 @@
   $("r-photo-btn").onclick=()=>$("r-photo-file").click();
   $("r-photo-file").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
   $("r-photo-suppr").onclick=()=>{ photoBlob=null; photoEtat="supprimee";
-    $("r-photo-apercu").style.display="none"; $("photo-case-vide").style.display="block"; $("r-photo-suppr").style.display="none";
+    majAffichagePhoto(false); $("r-photo-suppr").style.display="none";
     $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML=""; };
 
   $("r-photo-analyser").onclick=async()=>{
@@ -2247,18 +2261,25 @@
     $("r-photo-analyser").disabled=true; $("r-photo-analyser").textContent="🔍 Analyse en cours…";
     $("r-photo-analyse-msg").innerHTML="";
     try{
-      const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(photoBlob); });
-      const { data, error } = await sb.functions.invoke("scan-recu", { body:{ image:b64, mediaType:photoBlob.type||"image/jpeg" } });
+      const petite=await compresserPourAnalyse(photoBlob);
+      const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(petite); });
+      const { data, error } = await sb.functions.invoke("scan-recu", { body:{
+        image:b64, mediaType:"image/jpeg",
+        categories: categories.map(c=>c.nom),
+        moyens: moyensPaiement
+      } });
       if(error) throw error;
       if(data && data.error) throw new Error(data.error);
-      let msg="";
-      if(data.montant){ $("r-montant").value=String(data.montant).replace(".",","); msg+="Montant : "+data.montant+" € · "; }
-      if(data.commercant){ $("r-desc").value=data.commercant; msg+="Commerçant : "+data.commercant+" · "; }
+      let msg=[];
+      if(data.montant){ $("r-montant").value=String(data.montant).replace(".",","); msg.push("Montant : "+data.montant+" €"); }
+      if(data.commercant){ $("r-desc").value=data.commercant; msg.push("Commerçant : "+data.commercant); }
       if(data.date){
         const m=data.date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-        if(m){ let an=m[3]; if(an.length===2) an="20"+an; rDateTicket=new Date(parseInt(an),parseInt(m[2])-1,parseInt(m[1])); majRDateAff(); msg+="Date : "+data.date; }
+        if(m){ let an=m[3]; if(an.length===2) an="20"+an; rDateTicket=new Date(parseInt(an),parseInt(m[2])-1,parseInt(m[1])); majRDateAff(); msg.push("Date : "+data.date); }
       }
-      $("r-photo-analyse-msg").innerHTML = msg ? '<div class="message ok" style="margin-top:8px;">Rempli automatiquement — '+msg+'<br />Vérifie avant de valider !</div>' : '<div class="message warn" style="margin-top:8px;">Rien de lisible sur ce ticket, remplis à la main.</div>';
+      if(data.categorie && categories.some(c=>c.nom===data.categorie)){ rCat=data.categorie; ddCat.set(rCat); ddSous.set(null); rSous=null; msg.push("Catégorie : "+data.categorie); }
+      if(data.moyenPaiement && moyensPaiement.includes(data.moyenPaiement)){ rPay=data.moyenPaiement; ddPay.set(rPay); msg.push("Paiement : "+data.moyenPaiement); }
+      $("r-photo-analyse-msg").innerHTML = msg.length ? '<div class="message ok" style="margin-top:8px;">Rempli automatiquement — '+msg.join(" · ")+'<br />Vérifie avant de valider !</div>' : '<div class="message warn" style="margin-top:8px;">Rien de lisible sur ce ticket, remplis à la main.</div>';
     }catch(e){
       let detail=e.message||String(e);
       if(e.context && typeof e.context.json==="function"){
