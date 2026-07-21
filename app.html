@@ -195,6 +195,13 @@
     .bud-row:last-child{border-bottom:none;}
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
+    .photo-grille{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+    .photo-case{aspect-ratio:1; border-radius:12px; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+    .photo-case img{width:100%; height:100%; object-fit:cover;}
+    .photo-action{flex-direction:column; gap:4px; border:1px dashed var(--papier-border); background:none; color:var(--papier-muted); font-size:11px; font-family:inherit; cursor:pointer; padding:6px; text-align:center; line-height:1.2;}
+    .photo-icone{font-size:22px;}
+    #photo-case-apercu{background:var(--papier); border:1px solid var(--papier-border);}
+    .photo-x{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
     .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:10px 14px; margin:0 12px 8px; font-size:13px;}
     .bud-alerte:not(.grave){background:rgba(212,160,23,.12); color:#b8860b;}
@@ -554,11 +561,14 @@
 
         <div class="recu-photo">
           <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
-          <div class="zone" style="margin-top:8px;">
-            <img id="r-photo-apercu" alt="" style="display:none;" />
-            <button type="button" id="r-photo-camera">📷 Prendre le ticket en photo</button>
-            <button type="button" id="r-photo-btn">🖼️ Depuis la galerie</button>
-            <button type="button" id="r-photo-suppr" style="display:none; border-color:#e0b4b4; color:var(--danger);">Retirer</button>
+          <div class="photo-grille" style="margin-top:8px;">
+            <div class="photo-case" id="photo-case-apercu">
+              <img id="r-photo-apercu" alt="" style="display:none;" />
+              <span id="photo-case-vide" style="font-size:22px; color:var(--papier-muted);">🖼️</span>
+              <button type="button" id="r-photo-suppr" class="photo-x" style="display:none;" aria-label="Retirer la photo">×</button>
+            </div>
+            <button type="button" id="r-photo-camera" class="photo-case photo-action"><span class="photo-icone">📷</span><span>Prendre en photo</span></button>
+            <button type="button" id="r-photo-btn" class="photo-case photo-action"><span class="photo-icone">🖼️</span><span>Galerie</span></button>
           </div>
           <button type="button" id="r-photo-analyser" style="display:none; margin-top:8px; width:100%; height:38px; border:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;">🔍 Analyser le ticket</button>
           <div id="r-photo-analyse-msg"></div>
@@ -2189,7 +2199,7 @@
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
-    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").style.display="inline-block"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
+    $("r-photo-apercu").style.display="none"; $("photo-case-vide").style.display="block"; $("r-photo-suppr").style.display="none"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
     if(id){
       const d=depenses.find(x=>x.id===id);
       $("r-montant").value=String(d.montant).replace(".",","); $("r-desc").value=d.commentaire||"";
@@ -2197,7 +2207,7 @@
       rDeviseTicket = d.devise || deviseDefaut; $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
       rDateTicket = d.date ? new Date(d.date+"T12:00:00") : new Date(selDate);
       ddCat.set(rCat); ddSous.set(rSous); ddPay.set(rPay); ddPart.set(rPart);
-      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("r-photo-suppr").style.display="inline-block"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
+      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("photo-case-vide").style.display="none"; $("r-photo-suppr").style.display="flex"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
       rCat=categories[0]?categories[0].nom:null; rSous=null; rPay=null; rPart=participants[0]||"Moi";
@@ -2220,7 +2230,8 @@
     if(!f)return;
     photoBlob=await compresser(f); photoEtat="nouvelle";
     $("r-photo-apercu").src=URL.createObjectURL(photoBlob); $("r-photo-apercu").style.display="block";
-    $("r-photo-suppr").style.display="inline-block";
+    $("photo-case-vide").style.display="none";
+    $("r-photo-suppr").style.display="flex";
     $("r-photo-analyser").style.display="block"; $("r-photo-analyse-msg").innerHTML="";
   }
   $("r-photo-camera").onclick=()=>$("r-photo-file-camera").click();
@@ -2228,7 +2239,7 @@
   $("r-photo-btn").onclick=()=>$("r-photo-file").click();
   $("r-photo-file").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
   $("r-photo-suppr").onclick=()=>{ photoBlob=null; photoEtat="supprimee";
-    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none";
+    $("r-photo-apercu").style.display="none"; $("photo-case-vide").style.display="block"; $("r-photo-suppr").style.display="none";
     $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML=""; };
 
   $("r-photo-analyser").onclick=async()=>{
