@@ -556,12 +556,14 @@
           <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
           <div class="zone" style="margin-top:8px;">
             <img id="r-photo-apercu" alt="" style="display:none;" />
-            <button type="button" id="r-photo-btn">Ajouter une photo</button>
+            <button type="button" id="r-photo-camera">📷 Prendre le ticket en photo</button>
+            <button type="button" id="r-photo-btn">🖼️ Depuis la galerie</button>
             <button type="button" id="r-photo-suppr" style="display:none; border-color:#e0b4b4; color:var(--danger);">Retirer</button>
           </div>
           <button type="button" id="r-photo-analyser" style="display:none; margin-top:8px; width:100%; height:38px; border:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;">🔍 Analyser le ticket</button>
           <div id="r-photo-analyse-msg"></div>
           <input type="file" id="r-photo-file" accept="image/*" style="display:none;" />
+          <input type="file" id="r-photo-file-camera" accept="image/*" capture="environment" style="display:none;" />
         </div>
 
         <button class="recu-valider" id="recu-valider">Valider ✓</button>
@@ -2195,12 +2197,12 @@
       rDeviseTicket = d.devise || deviseDefaut; $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
       rDateTicket = d.date ? new Date(d.date+"T12:00:00") : new Date(selDate);
       ddCat.set(rCat); ddSous.set(rSous); ddPay.set(rPay); ddPart.set(rPart);
-      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("r-photo-suppr").style.display="inline-block"; $("r-photo-btn").textContent="Changer"; } }); }
+      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); $("r-photo-apercu").style.display="block"; $("r-photo-suppr").style.display="inline-block"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
       rCat=categories[0]?categories[0].nom:null; rSous=null; rPay=null; rPart=participants[0]||"Moi";
       rDateTicket = new Date(selDate);
-      ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart); $("r-photo-btn").textContent="Ajouter une photo";
+      ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart);
     }
     majRDateAff();
     $("recu-overlay").style.display="flex";
@@ -2214,16 +2216,19 @@
   initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
   $("recu-date").onclick=()=>ouvrirCal(rDateTicket, d=>{ rDateTicket=d; majRDateAff(); });
 
-  $("r-photo-btn").onclick=()=>$("r-photo-file").click();
-  $("r-photo-file").onchange=async e=>{
-    const f=e.target.files[0]; if(!f)return;
+  async function traiterPhotoChoisie(f){
+    if(!f)return;
     photoBlob=await compresser(f); photoEtat="nouvelle";
     $("r-photo-apercu").src=URL.createObjectURL(photoBlob); $("r-photo-apercu").style.display="block";
-    $("r-photo-suppr").style.display="inline-block"; $("r-photo-btn").textContent="Changer";
+    $("r-photo-suppr").style.display="inline-block";
     $("r-photo-analyser").style.display="block"; $("r-photo-analyse-msg").innerHTML="";
-  };
+  }
+  $("r-photo-camera").onclick=()=>$("r-photo-file-camera").click();
+  $("r-photo-file-camera").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
+  $("r-photo-btn").onclick=()=>$("r-photo-file").click();
+  $("r-photo-file").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
   $("r-photo-suppr").onclick=()=>{ photoBlob=null; photoEtat="supprimee";
-    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").textContent="Ajouter une photo";
+    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none";
     $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML=""; };
 
   $("r-photo-analyser").onclick=async()=>{
@@ -2244,7 +2249,11 @@
       }
       $("r-photo-analyse-msg").innerHTML = msg ? '<div class="message ok" style="margin-top:8px;">Rempli automatiquement — '+msg+'<br />Vérifie avant de valider !</div>' : '<div class="message warn" style="margin-top:8px;">Rien de lisible sur ce ticket, remplis à la main.</div>';
     }catch(e){
-      $("r-photo-analyse-msg").innerHTML='<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+(e.message||e)+'</div>';
+      let detail=e.message||String(e);
+      if(e.context && typeof e.context.json==="function"){
+        try{ const corps=await e.context.json(); if(corps && corps.error) detail=corps.error; }catch(_){}
+      }
+      $("r-photo-analyse-msg").innerHTML='<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+detail+'</div>';
     }
     $("r-photo-analyser").disabled=false; $("r-photo-analyser").textContent="🔍 Analyser le ticket";
   };
