@@ -91,3 +91,15 @@ function definirThemePerso(bgHex) {
 function themeEstSombre() { return themeActuel() === "sombre"; }
 function basculerTheme(sombre) { choisirTheme(sombre ? "sombre" : "clair"); }
 appliquerThemeNomme(themeActuel()); // appliqué au chargement de chaque page
+
+// ---- Fond d'écran personnalisé (image, par compte) ----
+function appliquerFondPerso(url) {
+  if (url) {
+    document.body.style.backgroundImage = "url('"+url+"')";
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundAttachment = "fixed";
+  } else {
+    document.body.style.backgroundImage = "";
+  }
+}
