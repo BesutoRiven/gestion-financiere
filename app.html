@@ -173,8 +173,11 @@
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
-    .vcard-tete{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+    .vcard-majeure{border-left:3px solid #d4a017; background:linear-gradient(90deg, rgba(212,160,23,.08), transparent 60%);}
+    .vcard-tete{display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;}
     .vcard .vtag{font-family:monospace; font-weight:700; color:var(--accent);}
+    .vcard-majeure .vtag{color:#d4a017;}
+    .vcard .vmaj{font-size:11px; background:rgba(212,160,23,.15); color:#d4a017; padding:2px 8px; border-radius:10px; font-weight:700;}
     .vcard .ven{font-size:11px; background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:10px; font-weight:600;}
     .vcard .vdate{margin-left:auto; font-size:12px; color:var(--muted);}
     .vcard .vdesc{font-size:14px; line-height:1.4;}
@@ -752,6 +755,21 @@
 
   // Dépôt GitHub — l'historique des versions est lu en direct depuis ses commits
   const REPO_GH = "BesutoRiven/gestion-financiere";
+  // Table de correspondance : anciens tags plats (v32...) -> numéro sémantique, pour l'affichage seulement.
+  // 1er chiffre = refonte si radicale que l'app ne ressemble plus à elle-même (jamais atteint pour l'instant, donc tout reste en v1) ;
+  // 2e chiffre = amélioration notable (nouvel écran, nouveau système) ; 3e = ajustement mineur/correctif.
+  const VERSION_SEMANTIQUE = {
+    v32:"v1.0.0", v33:"v1.0.1", v34:"v1.1.0", v35:"v1.1.1", v36:"v1.2.0", v37:"v1.2.1", v38:"v1.2.2",
+    v39:"v1.2.3", v40:"v1.2.4", v41:"v1.2.5", v42:"v1.2.6", v43:"v1.2.7", v44:"v1.2.8", v45:"v1.3.0",
+    v46:"v1.3.1", v47:"v1.3.2", v48:"v1.3.3", v49:"v1.3.4", v50:"v1.4.0", v51:"v1.4.1", v52:"v1.5.0",
+    v53:"v1.6.0", v54:"v1.6.1", v55:"v1.6.2", v56:"v1.6.3", v57:"v1.6.4", v58:"v1.7.0", v59:"v1.7.1",
+    v60:"v1.7.2", v61:"v1.7.3", v62:"v1.7.4", v63:"v1.7.5", v64:"v1.8.0", v65:"v1.8.1", v66:"v1.8.2",
+    v67:"v1.8.3"
+  };
+  function traduireTagVersion(tag){
+    const cle=tag.toLowerCase();
+    return VERSION_SEMANTIQUE[cle] || tag; // les futurs tags déjà écrits en semver (ex. v1.9.0) passent tels quels
+  }
   const PALETTE = [{bg:"#faece7",fg:"#712b13"},{bg:"#faeeda",fg:"#854f0b"},{bg:"#e6f1fb",fg:"#0c447c"},{bg:"#eaf3de",fg:"#27500a"},{bg:"#e1f5ee",fg:"#085041"},{bg:"#eeedfe",fg:"#3c3489"},{bg:"#fbeaf0",fg:"#72243e"},{bg:"#fcebeb",fg:"#a32d2d"},{bg:"#f1efe8",fg:"#444441"}];
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
@@ -2598,10 +2616,12 @@
         const dateStr=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"});
         let tag="", desc=msg;
         const m=msg.match(/^(v[\d.]+)\s*[:\-]\s*(.*)$/i);
-        if(m){ tag=m[1]; desc=m[2]; }
-        const card=document.createElement("div"); card.className="vcard";
+        if(m){ tag=traduireTagVersion(m[1]); desc=m[2]; }
+        const estMajeure = /^v\d+\.0\.0$/i.test(tag);
+        const card=document.createElement("div"); card.className="vcard"+(estMajeure?" vcard-majeure":"");
         card.innerHTML='<div class="vcard-tete">'+
           (tag?'<span class="vtag">'+tag+'</span>':'')+
+          (estMajeure?'<span class="vmaj">🚀 Grande mise à jour</span>':'')+
           (i===0?'<span class="ven">En ligne</span>':'')+
           '<span class="vdate">'+dateStr+'</span></div>'+
           '<div class="vdesc">'+desc+'</div>';
