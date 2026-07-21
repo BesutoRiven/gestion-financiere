@@ -195,6 +195,13 @@
     .bud-row:last-child{border-bottom:none;}
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
+    .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
+    .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:10px 14px; margin:0 12px 8px; font-size:13px;}
+    .bud-alerte:not(.grave){background:rgba(212,160,23,.12); color:#b8860b;}
+    .verrou-point.rempli{background:var(--accent); border-color:var(--accent);}
+    #verrou-pave button{width:64px; height:64px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:22px; font-weight:600; cursor:pointer;}
+    #verrou-pave button:active{background:var(--accent-soft);}
+    #verrou-pave button.verrou-suppr{font-size:16px; color:var(--danger); border:none; background:none;}
     .recur-carte{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin:8px 0;}
     .recur-tete{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
     .recur-nom{font-weight:600; font-size:14px;}
@@ -260,6 +267,16 @@
   </style>
 </head>
 <body>
+  <div id="verrou-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div style="font-size:40px; margin-bottom:8px;">🔒</div>
+    <p id="verrou-titre" style="font-weight:600; font-size:16px; margin:0 0 4px;">Code verrouillage</p>
+    <p id="verrou-msg" style="color:var(--muted); font-size:13px; margin:0 0 16px;">Entre ton code à 4 chiffres</p>
+    <div id="verrou-points" style="display:flex; gap:14px; margin-bottom:20px;">
+      <span class="verrou-point"></span><span class="verrou-point"></span><span class="verrou-point"></span><span class="verrou-point"></span>
+    </div>
+    <div id="verrou-pave" style="display:grid; grid-template-columns:repeat(3,64px); gap:12px;"></div>
+  </div>
+
   <div class="app">
 
     <!-- ============ DEPENSES (page d'accueil) ============ -->
@@ -276,6 +293,7 @@
       </div>
       <div style="text-align:center; margin-top:8px;"><button id="jour-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button></div>
 
+      <div id="rappel-saisie"></div>
       <div class="jour-total"><p class="val" id="jt-val">0,00 €</p></div>
 
       <div class="segmented" id="txn-filtre">
@@ -316,7 +334,10 @@
         <div class="jour-centre" id="res-centre-clic" style="cursor:pointer;"><div class="jour-grand" id="res-label" style="text-transform:capitalize;"></div><div class="jour-sous" id="res-sous"></div></div>
         <button class="fleche" id="res-plus" aria-label="Période suivante">›</button>
       </div>
-      <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button></div>
+      <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button>
+        <button id="btn-bilan" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;">🎉 Bilan du mois</button>
+        <button id="btn-objectifs" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;">🎯 Objectifs</button>
+      </div>
       <div class="segmented" id="res-filtre">
         <button data-f="tout" class="on">Tout</button>
         <button data-f="depenses">Dépenses</button>
@@ -455,6 +476,18 @@
       </details>
 
       <details class="bloc det">
+        <summary>🔒 Sécurité</summary>
+        <div class="det-corps">
+          <small class="aide">Demande un code à 4 chiffres à chaque ouverture de l'app, sur cet appareil (propre à ce téléphone/ordinateur, pas synchronisé).</small>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+            <span style="font-size:13px; font-weight:600;">Verrouiller l'app avec un code</span>
+            <button id="toggle-pin" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le verrouillage par code"><span class="knob"></span></button>
+          </div>
+          <button id="btn-changer-pin" class="btn-ligne" style="display:none; margin-top:12px;">Changer le code</button>
+        </div>
+      </details>
+
+      <details class="bloc det">
         <summary>🔧 Options avancées</summary>
         <div class="det-corps">
           <small class="aide">Petites options facultatives, désactivées par défaut.</small>
@@ -511,6 +544,7 @@
           <button type="button" class="date recu-date-btn" id="recu-date"></button>
         </div>
         <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-r-devise"><button type="button" id="r-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
+        <div style="text-align:center; margin-top:2px;"><button type="button" id="r-vocal-btn" style="border:none; background:none; color:var(--papier-muted); font-size:13px; cursor:pointer; padding:4px 10px;">🎤 Dicter (ex. « vingt euros courses »)</button></div>
 
         <div class="recu-champ"><label>Catégorie</label><div class="dd" id="dd-cat"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
@@ -525,6 +559,8 @@
             <button type="button" id="r-photo-btn">Ajouter une photo</button>
             <button type="button" id="r-photo-suppr" style="display:none; border-color:#e0b4b4; color:var(--danger);">Retirer</button>
           </div>
+          <button type="button" id="r-photo-analyser" style="display:none; margin-top:8px; width:100%; height:38px; border:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;">🔍 Analyser le ticket</button>
+          <div id="r-photo-analyse-msg"></div>
           <input type="file" id="r-photo-file" accept="image/*" style="display:none;" />
         </div>
 
@@ -602,6 +638,28 @@
         <small class="aide">En acceptant, tu quittes le partage et repasses sur tes données personnelles. En refusant, rien ne change.</small>
         <button id="depart-refuser" class="btn-ligne" style="height:44px; margin-top:14px;">Refuser</button>
         <button id="depart-accepter" class="btn-ligne" style="height:44px; margin-top:8px; color:var(--danger); border-color:#e0b4b4;">Accepter et quitter</button>
+      </div>
+    </div>
+
+    <!-- ============ OBJECTIFS D'ÉPARGNE ============ -->
+    <div id="objectifs-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:360px; max-height:82vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre">Objectifs d'épargne</span><button id="objectifs-fermer" aria-label="Fermer">×</button></div>
+        <div id="objectifs-liste"></div>
+        <hr class="sep" />
+        <div class="cat-ligne" style="flex-wrap:wrap;">
+          <input id="objectif-nom" type="text" placeholder="Nom (ex. Nouveau PC)" style="flex:2 1 120px;" />
+          <input id="objectif-montant" type="text" inputmode="decimal" placeholder="Montant cible" style="flex:1 1 90px;" />
+        </div>
+        <button id="ajouter-objectif" class="btn-plein" style="margin-top:10px;">＋ Créer un objectif</button>
+      </div>
+    </div>
+
+    <!-- ============ BILAN DU MOIS ============ -->
+    <div id="bilan-overlay" class="cal-overlay" style="display:none;">
+      <div class="cal-box" style="max-width:360px; max-height:80vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre" id="bilan-titre">Bilan du mois</span><button id="bilan-fermer" aria-label="Fermer">×</button></div>
+        <div id="bilan-corps"></div>
       </div>
     </div>
 
@@ -708,6 +766,7 @@
         <button id="bud-ouvrir-recu"><span class="rond">＋</span>Dépense</button>
         <button id="bud-ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
       </div>
+      <div id="bud-alertes"></div>
       <div class="bloc"><div id="bud-liste"></div></div>
     </section>
 
@@ -777,6 +836,85 @@
   const LBL_AUJ={jour:"Aujourd'hui", semaine:"Cette semaine", mois:"Ce mois", annee:"Cette année"};
 
   const $ = id => document.getElementById(id);
+
+  // ---- Verrouillage par code PIN (propre à cet appareil, jamais synchronisé) ----
+  async function hasherPin(pin){
+    const enc=new TextEncoder().encode("gf-sel-"+pin);
+    const buf=await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function pinActif(){ return localStorage.getItem("gf_pin_actif")==="1"; }
+  function demanderPin(titre, sousTitre){
+    return new Promise(resolve=>{
+      let saisie="";
+      const points=[...document.querySelectorAll("#verrou-points .verrou-point")];
+      const majPoints=()=>points.forEach((p,i)=>p.classList.toggle("rempli", i<saisie.length));
+      $("verrou-titre").textContent=titre; $("verrou-msg").textContent=sousTitre||""; $("verrou-msg").style.color="var(--muted)";
+      saisie=""; majPoints();
+      const pave=$("verrou-pave"); pave.innerHTML="";
+      const touches=["1","2","3","4","5","6","7","8","9","","0","⌫"];
+      touches.forEach(t=>{
+        const b=document.createElement("button"); b.type="button";
+        if(t==="") { b.style.visibility="hidden"; }
+        else { b.textContent=t; if(t==="⌫") b.className="verrou-suppr"; }
+        b.onclick=()=>{
+          if(t==="⌫"){ saisie=saisie.slice(0,-1); majPoints(); return; }
+          if(t==="") return;
+          if(saisie.length>=4) return;
+          saisie+=t; majPoints();
+          if(saisie.length===4){ const code=saisie; saisie=""; setTimeout(()=>{ majPoints(); resolve(code); },80); }
+        };
+        pave.appendChild(b);
+      });
+      $("verrou-overlay").style.display="flex";
+    });
+  }
+  async function verrouillerEcran(){
+    if(!pinActif()) return true;
+    const hashAttendu=localStorage.getItem("gf_pin_hash");
+    while(true){
+      const saisi=await demanderPin("Code verrouillage","Entre ton code à 4 chiffres");
+      const h=await hasherPin(saisi);
+      if(h===hashAttendu){ $("verrou-overlay").style.display="none"; return true; }
+      $("verrou-msg").textContent="Code incorrect, réessaie."; $("verrou-msg").style.color="var(--danger)";
+    }
+  }
+  async function definirNouveauPin(){
+    const p1=await demanderPin("Choisis un code","Entre un nouveau code à 4 chiffres");
+    const p2=await demanderPin("Confirme le code","Retape le même code");
+    if(p1!==p2){ alert("Les deux codes ne correspondent pas, réessaie."); return false; }
+    localStorage.setItem("gf_pin_hash", await hasherPin(p1));
+    localStorage.setItem("gf_pin_actif","1");
+    $("verrou-overlay").style.display="none";
+    return true;
+  }
+  function rendreSecurite(){
+    const actif=pinActif();
+    const sw=$("toggle-pin"); if(sw){ sw.classList.toggle("on",actif); sw.setAttribute("aria-checked",actif); }
+    $("btn-changer-pin").style.display=actif?"block":"none";
+  }
+  $("toggle-pin").onclick=async()=>{
+    if(!pinActif()){
+      const ok=await definirNouveauPin();
+      if(ok) rendreSecurite();
+    } else {
+      const hashAttendu=localStorage.getItem("gf_pin_hash");
+      const saisi=await demanderPin("Désactiver le code","Entre ton code actuel pour confirmer");
+      const h=await hasherPin(saisi);
+      $("verrou-overlay").style.display="none";
+      if(h!==hashAttendu){ alert("Code incorrect."); return; }
+      localStorage.removeItem("gf_pin_hash"); localStorage.removeItem("gf_pin_actif");
+      rendreSecurite();
+    }
+  };
+  $("btn-changer-pin").onclick=async()=>{
+    const hashAttendu=localStorage.getItem("gf_pin_hash");
+    const saisi=await demanderPin("Changer le code","Entre ton code actuel");
+    const h=await hasherPin(saisi);
+    if(h!==hashAttendu){ $("verrou-overlay").style.display="none"; alert("Code incorrect."); return; }
+    await definirNouveauPin();
+  };
+
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let depenses=[], categories=[], souscats={}, souscatSel=null, participants=[];
   let budCat={}, budMode="mois", budDate=new Date();
@@ -794,6 +932,7 @@
   let recurrentes=[]; // {id, nom, montant, categorie, sousCat, jour, dernierMoisGenere}
   let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
   let optionsActivees={}; // options avancées facultatives, désactivées par défaut (ex. "recurRemb")
+  let objectifsEpargne=[]; // {id, nom, montantCible, montantActuel}
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
@@ -918,7 +1057,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -964,6 +1103,7 @@
     budgetParSousCat = !!c.budgetParSousCat;
     budSousCat = c.budSousCat || {};
     optionsActivees = c.optionsActivees || {};
+    objectifsEpargne = c.objectifsEpargne || [];
   }
   function rafraichirVueCourante(){
     rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions();
@@ -1501,6 +1641,24 @@
     const box=$("bud-liste"); box.innerHTML="";
     let totPrevu=0, totReel=0;
     const reelSousCat={};
+    // Alertes intelligentes : catégories proches ou au-delà de leur budget
+    const alertes=[];
+    categories.forEach(cat=>{
+      const prevu=budgetPourPeriode(cat.nom, budMode), r=reel[cat.nom]||0;
+      if(!prevu) return;
+      const pct=r/prevu*100;
+      if(pct>=100) alertes.push({cat:cat.nom, emoji:cat.emoji, texte:"dépassé de "+fmt(r-prevu), grave:true});
+      else if(pct>=90) alertes.push({cat:cat.nom, emoji:cat.emoji, texte:"reste seulement "+fmt(prevu-r), grave:false});
+    });
+    const boxAlertes=$("bud-alertes");
+    if(boxAlertes){
+      boxAlertes.innerHTML="";
+      alertes.forEach(a=>{
+        const d=document.createElement("div"); d.className="bud-alerte"+(a.grave?" grave":"");
+        d.innerHTML='<span>'+(a.emoji?a.emoji+" ":"")+'<strong>'+a.cat+'</strong> — '+a.texte+'</span>';
+        boxAlertes.appendChild(d);
+      });
+    }
     if(budgetParSousCat){
       depenses.forEach(d=>{ const dd=depDate(d); if(dd && dd>=b.debut && dd<=b.fin && d.sousCat){ const cle=d.categorie+"|"+d.sousCat; reelSousCat[cle]=(reelSousCat[cle]||0)+d.montant; } });
       remboursementsPeriode(b).forEach(r=>{
@@ -1643,6 +1801,17 @@
     });
     if(!recurrentes.length) box.innerHTML='<small class="aide">Aucune transaction récurrente pour l\'instant.</small>';
     activerGlisser(box, recurrentes, ()=>{ sauverCloud(); rendreRecur(); });
+  }
+  function verifierRappelSaisie(){
+    const box=$("rappel-saisie"); if(!box) return;
+    if(sessionStorage.getItem("gf_rappel_masque")==="1"){ box.innerHTML=""; return; }
+    const toutes=[...depenses.map(d=>d.date), ...revenus.map(r=>r.date)].filter(Boolean).sort().reverse();
+    const derniere=toutes[0];
+    if(!derniere){ box.innerHTML=""; return; }
+    const jours=Math.floor((new Date(iso(new Date())) - new Date(derniere)) / 86400000);
+    if(jours<2){ box.innerHTML=""; return; }
+    box.innerHTML='<div class="bud-alerte" style="margin:0 12px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;"><span>📝 Rien noté depuis '+jours+' jour(s) — pense à mettre tes dépenses à jour !</span><button id="rappel-fermer" style="border:none;background:none;color:inherit;font-size:16px;cursor:pointer;">×</button></div>';
+    $("rappel-fermer").onclick=()=>{ sessionStorage.setItem("gf_rappel_masque","1"); box.innerHTML=""; };
   }
   function rendreOptions(){
     const actif=!!optionsActivees.recurRemb;
@@ -1990,13 +2159,35 @@
   let ddCat, ddSous, ddPay, ddPart;
   let rDeviseTicket="EUR", rDateTicket=new Date();
   function majRDateAff(){ $("recu-date").textContent=rDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
+  // ---- Saisie vocale rapide (ticket dépense) ----
+  (function initVocal(){
+    const btn=$("r-vocal-btn"); if(!btn) return;
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ btn.style.display="none"; return; }
+    const LIBELLE_REPOS="🎤 Dicter (ex. « vingt euros courses »)";
+    const reco=new SR(); reco.lang="fr-FR"; reco.interimResults=false; reco.maxAlternatives=1;
+    let enCours=false;
+    btn.onclick=()=>{ if(enCours) return; enCours=true; btn.textContent="🎙️ Écoute…"; try{ reco.start(); }catch(e){ enCours=false; btn.textContent=LIBELLE_REPOS; } };
+    reco.onresult=(e)=>{
+      const texte=e.results[0][0].transcript;
+      const mNombre=texte.match(/(\d+(?:[.,]\d+)?)/);
+      if(mNombre) $("r-montant").value=mNombre[1].replace(".",",");
+      const catTrouvee=categories.find(c=>texte.toLowerCase().includes(c.nom.toLowerCase()));
+      if(catTrouvee){ rCat=catTrouvee.nom; ddCat.set(rCat); }
+      const reste=texte.replace(mNombre?mNombre[0]:"","").replace(/euros?|€/gi,"").trim();
+      if(reste && !catTrouvee) $("r-desc").value=reste;
+    };
+    reco.onerror=()=>{ enCours=false; btn.textContent=LIBELLE_REPOS; };
+    reco.onend=()=>{ enCours=false; btn.textContent=LIBELLE_REPOS; };
+  })();
+
   function ouvrirRecu(id){
     venantCatdet=false;
     editionId=id||null; photoEtat="aucune"; photoBlob=null;
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
-    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").style.display="inline-block";
+    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").style.display="inline-block"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
     if(id){
       const d=depenses.find(x=>x.id===id);
       $("r-montant").value=String(d.montant).replace(".",","); $("r-desc").value=d.commentaire||"";
@@ -2029,9 +2220,34 @@
     photoBlob=await compresser(f); photoEtat="nouvelle";
     $("r-photo-apercu").src=URL.createObjectURL(photoBlob); $("r-photo-apercu").style.display="block";
     $("r-photo-suppr").style.display="inline-block"; $("r-photo-btn").textContent="Changer";
+    $("r-photo-analyser").style.display="block"; $("r-photo-analyse-msg").innerHTML="";
   };
   $("r-photo-suppr").onclick=()=>{ photoBlob=null; photoEtat="supprimee";
-    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").textContent="Ajouter une photo"; };
+    $("r-photo-apercu").style.display="none"; $("r-photo-suppr").style.display="none"; $("r-photo-btn").textContent="Ajouter une photo";
+    $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML=""; };
+
+  $("r-photo-analyser").onclick=async()=>{
+    if(!photoBlob){ return; }
+    $("r-photo-analyser").disabled=true; $("r-photo-analyser").textContent="🔍 Analyse en cours…";
+    $("r-photo-analyse-msg").innerHTML="";
+    try{
+      const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(photoBlob); });
+      const { data, error } = await sb.functions.invoke("scan-recu", { body:{ image:b64, mediaType:photoBlob.type||"image/jpeg" } });
+      if(error) throw error;
+      if(data && data.error) throw new Error(data.error);
+      let msg="";
+      if(data.montant){ $("r-montant").value=String(data.montant).replace(".",","); msg+="Montant : "+data.montant+" € · "; }
+      if(data.commercant){ $("r-desc").value=data.commercant; msg+="Commerçant : "+data.commercant+" · "; }
+      if(data.date){
+        const m=data.date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+        if(m){ let an=m[3]; if(an.length===2) an="20"+an; rDateTicket=new Date(parseInt(an),parseInt(m[2])-1,parseInt(m[1])); majRDateAff(); msg+="Date : "+data.date; }
+      }
+      $("r-photo-analyse-msg").innerHTML = msg ? '<div class="message ok" style="margin-top:8px;">Rempli automatiquement — '+msg+'<br />Vérifie avant de valider !</div>' : '<div class="message warn" style="margin-top:8px;">Rien de lisible sur ce ticket, remplis à la main.</div>';
+    }catch(e){
+      $("r-photo-analyse-msg").innerHTML='<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+(e.message||e)+'</div>';
+    }
+    $("r-photo-analyser").disabled=false; $("r-photo-analyser").textContent="🔍 Analyser le ticket";
+  };
 
   $("recu-valider").onclick=async()=>{
     const v=parseFloat(($("r-montant").value||"").replace(",",".")); if(!v||v<=0){$("r-montant").focus();return;}
@@ -2226,6 +2442,84 @@
 
   // ================= Import / Export =================
   function moisEnCours(){return iso(new Date()).slice(0,7);}
+  function rendreBilan(){
+    const moisActuel=moisEnCours();
+    const [an,mo]=moisActuel.split("-").map(Number);
+    const moisPrec=new Date(an, mo-2, 1); const moisPrecStr=iso(moisPrec).slice(0,7);
+    const depMois=depenses.filter(d=>(d.date||"").slice(0,7)===moisActuel);
+    const depPrec=depenses.filter(d=>(d.date||"").slice(0,7)===moisPrecStr);
+    const revMois=revenus.filter(r=>(r.date||"").slice(0,7)===moisActuel);
+    $("bilan-titre").textContent="Bilan de "+(MOIS_L[mo-1]||"")+" "+an;
+    if(!depMois.length && !revMois.length){
+      $("bilan-corps").innerHTML='<p class="vide" style="padding:20px 0; text-align:center;">Rien à raconter ce mois-ci pour l\'instant — reviens quand tu auras noté quelques transactions !</p>';
+      $("bilan-overlay").style.display="flex"; return;
+    }
+    const totDep=depMois.reduce((s,d)=>s+d.montant,0);
+    const totRev=revMois.reduce((s,r)=>s+(r.net!=null?r.net:r.montant),0);
+    const plusGrosse=depMois.slice().sort((a,b)=>b.montant-a.montant)[0];
+    const parCatMois={}; depMois.forEach(d=>parCatMois[d.categorie]=(parCatMois[d.categorie]||0)+d.montant);
+    const parCatPrec={}; depPrec.forEach(d=>parCatPrec[d.categorie]=(parCatPrec[d.categorie]||0)+d.montant);
+    let catTop=null, catTopMontant=0;
+    Object.keys(parCatMois).forEach(c=>{ if(parCatMois[c]>catTopMontant){ catTopMontant=parCatMois[c]; catTop=c; } });
+    let catHausse=null, hausseMax=0;
+    Object.keys(parCatMois).forEach(c=>{ const delta=parCatMois[c]-(parCatPrec[c]||0); if(delta>hausseMax){ hausseMax=delta; catHausse=c; } });
+    const joursActifs=new Set(depMois.map(d=>d.date)).size;
+    const lignes=[];
+    lignes.push({emoji:"💸", titre:"Dépensé ce mois-ci", val:fmt(totDep)});
+    if(totRev) lignes.push({emoji:"💰", titre:"Revenus (net)", val:fmt(totRev)});
+    lignes.push({emoji:"⚖️", titre:"Solde net", val:fmt(totRev-totDep)});
+    if(plusGrosse) lignes.push({emoji:"🏆", titre:"Ta plus grosse dépense", val:fmt(plusGrosse.montant)+" — "+(plusGrosse.commentaire||plusGrosse.categorie)});
+    if(catTop) lignes.push({emoji:"📊", titre:"Catégorie la plus dépensière", val:catTop+" ("+fmt(catTopMontant)+")"});
+    if(catHausse) lignes.push({emoji:"📈", titre:"En plus forte hausse vs mois dernier", val:catHausse+" (+"+fmt(hausseMax)+")"});
+    lignes.push({emoji:"📅", titre:"Jours avec au moins une dépense", val:joursActifs+" jour(s)"});
+    $("bilan-corps").innerHTML=lignes.map(l=>
+      '<div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">'+
+        '<span style="font-size:24px;">'+l.emoji+'</span>'+
+        '<div><div style="font-size:12px; color:var(--muted);">'+l.titre+'</div><div style="font-weight:700; font-size:15px;">'+l.val+'</div></div>'+
+      '</div>'
+    ).join("");
+    $("bilan-overlay").style.display="flex";
+  }
+  $("btn-bilan").onclick=rendreBilan;
+  $("bilan-fermer").onclick=()=>$("bilan-overlay").style.display="none";
+  $("bilan-overlay").onclick=e=>{if(e.target===$("bilan-overlay"))$("bilan-overlay").style.display="none";};
+
+  // ---- Objectifs d'épargne ----
+  function rendreObjectifs(){
+    const box=$("objectifs-liste"); box.innerHTML="";
+    if(!objectifsEpargne.length){ box.innerHTML='<p class="vide" style="padding:16px 0; text-align:center;">Aucun objectif pour l\'instant. Crée-en un ci-dessous !</p>'; return; }
+    objectifsEpargne.forEach(o=>{
+      const pct=o.montantCible>0?Math.min(100, o.montantActuel/o.montantCible*100):0;
+      const atteint=o.montantActuel>=o.montantCible;
+      const carte=document.createElement("div"); carte.style.cssText="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px;";
+      carte.innerHTML='<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-weight:600;">'+(atteint?"🎉 ":"🎯 ")+o.nom+'</span><span style="font-size:12px; color:var(--muted);">'+fmt(o.montantActuel)+' / '+fmt(o.montantCible)+'</span></div>'+
+        '<div class="bud-barre" style="margin-top:8px;"><span class="'+(atteint?"":"")+'" style="width:'+pct+'%; background:'+(atteint?"var(--accent)":"var(--accent)")+';"></span></div>'+
+        '<div style="font-size:12px; color:var(--muted); margin-top:4px;">'+Math.round(pct)+'%</div>';
+      const actions=document.createElement("div"); actions.style.cssText="display:flex; gap:6px; margin-top:8px;";
+      const ajouter=document.createElement("button"); ajouter.textContent="＋ Ajouter une contribution"; ajouter.style.cssText="flex:1; height:34px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:12px; cursor:pointer;";
+      ajouter.onclick=()=>{
+        const v=parseFloat((prompt("Combien veux-tu ajouter à « "+o.nom+" » ?")||"").replace(",","."));
+        if(!v||v<=0) return;
+        o.montantActuel=(o.montantActuel||0)+v; sauverCloud(); rendreObjectifs();
+      };
+      const del=document.createElement("button"); del.textContent="×"; del.style.cssText="width:34px; height:34px; border:none; border-radius:8px; background:rgba(163,45,45,.1); color:var(--danger); font-size:16px; cursor:pointer;";
+      del.onclick=()=>{ if(!confirm("Supprimer l'objectif « "+o.nom+" » ?")) return; objectifsEpargne=objectifsEpargne.filter(x=>x.id!==o.id); sauverCloud(); rendreObjectifs(); };
+      actions.appendChild(ajouter); actions.appendChild(del);
+      carte.appendChild(actions);
+      box.appendChild(carte);
+    });
+  }
+  $("btn-objectifs").onclick=()=>{ rendreObjectifs(); $("objectifs-overlay").style.display="flex"; };
+  $("objectifs-fermer").onclick=()=>$("objectifs-overlay").style.display="none";
+  $("objectifs-overlay").onclick=e=>{if(e.target===$("objectifs-overlay"))$("objectifs-overlay").style.display="none";};
+  $("ajouter-objectif").onclick=()=>{
+    const nom=$("objectif-nom").value.trim();
+    const montant=parseFloat(($("objectif-montant").value||"").replace(",","."));
+    if(!nom||!montant||montant<=0){ alert("Renseigne un nom et un montant cible valide."); return; }
+    objectifsEpargne.push({id:Date.now(), nom, montantCible:montant, montantActuel:0});
+    $("objectif-nom").value=""; $("objectif-montant").value="";
+    sauverCloud(); rendreObjectifs();
+  };
   function duMoisCourant(){return depenses.filter(d=>{const dd=depDate(d);return dd&&dd.slice(0,7)===moisEnCours();});}
   function exportTexte(){const e="Date\tCatégorie\tSous-catégorie\tCommentaire\tMontant";
     const l=duMoisCourant().map(d=>[d.dateAffichee||"",d.categorie,d.sousCat||"",d.commentaire||"",String(d.montant).replace(".",",")].join("\t"));return [e].concat(l).join("\n");}
@@ -2736,7 +3030,9 @@
   (async()=>{
     const session=await exigerConnexion();if(!session)return;
     uid=session.user.id;
+    await verrouillerEcran();
     await chargerTout();
+    verifierRappelSaisie();
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
     ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null);});
@@ -2746,7 +3042,7 @@
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions();
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreSecurite();
     // Mode sombre
     const sw=$("theme-switch");
     sw.classList.toggle("on", themeEstSombre()); sw.setAttribute("aria-checked", themeEstSombre());
