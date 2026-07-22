@@ -202,21 +202,21 @@
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
     .recu-actions-rapides{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
-    .listen-btn{height:42px; border:1px solid rgba(255,255,255,.38); border-radius:12px; background:linear-gradient(135deg,rgba(38,179,128,.24),rgba(255,255,255,.42)); color:var(--papier-txt); font-family:inherit; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:0 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 6px 16px rgba(0,0,0,.08);}
-    .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:rgba(0,133,97,.22); color:var(--accent);}
+    .listen-btn{height:42px; border:1px solid rgba(255,255,255,.16); border-radius:12px; background:rgba(39,79,65,.22); color:var(--papier-txt); font-family:inherit; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:0 12px; box-shadow:none;}
+    .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:rgba(0,133,97,.12); color:var(--accent);}
     .listen-btn .listen-ico svg{width:15px; height:15px;}
-    .listen-btn.scan{background:linear-gradient(135deg,rgba(69,137,202,.24),rgba(255,255,255,.42));}
-    .listen-btn.scan .listen-ico{background:rgba(47,111,176,.18); color:#2f6fb0;}
+    .listen-btn.scan{background:rgba(48,68,84,.24);}
+    .listen-btn.scan .listen-ico{background:rgba(47,111,176,.10); color:#6f94b8;}
     .recu-action-single{display:flex; justify-content:center; margin-top:10px;}
     .recu-action-single .listen-btn{width:min(216px,100%);}
-    .recu-budget-card{border:1px solid rgba(255,255,255,.34); border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.22)); margin-top:10px; box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 6px 16px rgba(0,0,0,.07);}
+    .recu-budget-card{border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:10px 12px; background:rgba(100,105,104,.20); margin-top:10px; box-shadow:none;}
     .recu-budget-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; font-size:12px; color:var(--papier-muted);}
     .recu-budget-top strong{color:var(--papier-txt); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:44%;}
     .recu-budget-top span{flex:1; text-align:right;}
     .recu-budget-meta{font-size:12px; color:var(--papier-txt); white-space:nowrap; text-align:left; width:108px; flex:0 0 108px;}
     .recu-budget-bottom{display:flex; align-items:center; gap:10px; margin-top:6px;}
     .recu-budget-label{font-size:12px; color:var(--papier-muted); white-space:nowrap;}
-    .recu-budget-track{flex:1; margin-top:0; height:8px; border-radius:999px; background:rgba(255,255,255,.4); overflow:hidden;}
+    .recu-budget-track{flex:0 1 94%; margin-top:0; height:8px; border-radius:999px; background:rgba(255,255,255,.28); overflow:hidden;}
     .budget-track{margin-top:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.4); overflow:hidden;}
     .budget-fill{height:100%; border-radius:inherit; background:linear-gradient(90deg,#2aa36b,#72c55a);}
     .budget-fill.warn{background:linear-gradient(90deg,#d4a017,#f0b53c);}
@@ -245,7 +245,7 @@
     .scan-fermer{margin-top:14px; border:none; background:none; color:rgba(255,255,255,.8); font-size:13px; cursor:pointer;}
     .dd.disabled .dd-btn{opacity:.55; cursor:not-allowed; background:rgba(255,255,255,.18);}
     .dd.disabled .dd-btn::after{opacity:.45;}
-    .budget-home-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin:10px 12px 0;}
+    .budget-home-card{background:rgba(100,105,104,.12); border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:12px 14px; margin:10px 12px 0;}
     .budget-home-top{display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:12px;}
     .budget-home-top strong{color:var(--text); font-size:13px;}
     .budget-home-pct{color:var(--text); font-weight:700; font-variant-numeric:tabular-nums;}
@@ -432,9 +432,9 @@
         <div class="jour-centre" id="res-centre-clic" style="cursor:pointer;"><div class="jour-grand" id="res-label" style="text-transform:capitalize;"></div><div class="jour-sous" id="res-sous"></div></div>
         <button class="fleche" id="res-plus" aria-label="Période suivante">›</button>
       </div>
-      <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button>
-        <button id="btn-bilan" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;"><span class="btn-inline-ic"><span data-ico="bilan"></span><span>Bilan du mois</span></span></button>
-        <button id="btn-objectifs" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;"><span class="btn-inline-ic"><span data-ico="objectif"></span><span>Objectifs</span></span></button>
+      <div style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button>
+        <button id="btn-bilan" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;"><span class="btn-inline-ic"><span data-ico="bilan"></span><span>Bilan du mois</span></span></button>
+        <button id="btn-objectifs" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;"><span class="btn-inline-ic"><span data-ico="objectif"></span><span>Objectifs</span></span></button>
       </div>
       <div class="segmented" id="res-filtre">
         <button data-f="tout" class="on">Tout</button>
@@ -558,7 +558,7 @@
               <div id="recur-liste" style="margin-top:10px;"></div>
               <div class="recur-toggle">
                 <button type="button" id="recur-type-rev"><span class="recur-toggle-icon icone-revenu-rond">&#36;</span>Revenu</button>
-                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon" data-ico="depense"></span>Dépense</button>
+                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon">+</span>Dépense</button>
                 <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon">&#8617;</span>Remboursement</button>
               </div>
               <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap;">
@@ -665,7 +665,7 @@
         <div class="recu-actions-rapides">
           <button type="button" id="r-vocal-btn" class="listen-btn">
             <span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span>
-            <span>Écouter</span>
+            <span>Saisie Vocale</span>
           </button>
           <button type="button" id="r-scan-btn" class="listen-btn scan">
             <span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h2"/><path d="M20 7V5h-2"/><path d="M4 17v2h2"/><path d="M20 17v2h-2"/><path d="M7 12h10"/><path d="M7 9h10"/><path d="M7 15h7"/></svg></span>
@@ -838,7 +838,7 @@
           <button type="button" class="date recu-date-btn" id="rev-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div class="recu-action-single"><button type="button" id="rev-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>?couter</span></button></div>
+        <div class="recu-action-single"><button type="button" id="rev-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Saisie Vocale</span></button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
@@ -856,7 +856,7 @@
           <button type="button" class="date recu-date-btn" id="remb-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div class="recu-action-single"><button type="button" id="remb-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>?couter</span></button></div>
+        <div class="recu-action-single"><button type="button" id="remb-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Saisie Vocale</span></button></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
@@ -1050,7 +1050,7 @@
   let rCat=null, rSous=null, rPay=null, rPart=null, photoEtat="aucune", photoBlobs=[], modeAjoutPhoto="manuel";
 
   // ================= Utilitaires =================
-  const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"CN¥"}];
+  const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"\u00a5"}];
   let deviseDefaut="EUR", devisesPerso=[], moyensPaiement=MOYENS_DEFAUT.slice();
   let recurrentes=[]; // {id, nom, montant, categorie, sousCat, jour, dernierMoisGenere}
   let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
@@ -2583,9 +2583,9 @@
     reco.onerror=()=>{ enCours=false; btn.lastElementChild.textContent=libelleRepos; };
     reco.onend=()=>{ enCours=false; btn.lastElementChild.textContent=libelleRepos; };
   }
-  initBoutonVocal("r-vocal-btn","Écouter","Écoute…",appliquerTexteDepense);
-  initBoutonVocal("rev-vocal-btn","Écouter un revenu","Écoute…",appliquerTexteRevenu);
-  initBoutonVocal("remb-vocal-btn","Écouter un remboursement","Écoute…",appliquerTexteRemboursement);
+  initBoutonVocal("r-vocal-btn","Saisie Vocale","Ecoute...",appliquerTexteDepense);
+  initBoutonVocal("rev-vocal-btn","Saisie Vocale","Ecoute...",appliquerTexteRevenu);
+  initBoutonVocal("remb-vocal-btn","Saisie Vocale","Ecoute...",appliquerTexteRemboursement);
   function majEtatSousCategorie(){
     const active=!!(rCat && rCat!==DEP_SIMPLE.nom);
     if(ddSous && ddSous.setDisabled) ddSous.setDisabled(!active,"Choisis d'abord une catégorie");
@@ -2713,13 +2713,14 @@
 
   $("recu-valider").onclick=async()=>{
     const v=parseFloat(($("r-montant").value||"").replace(",",".")); if(!v||v<=0){$("r-montant").focus();return;}
-    if(!rCat || rCat===DEP_SIMPLE.nom){alert("Choisis une catégorie.");return;}
+    const catFinal=rCat||DEP_SIMPLE.nom;
+    const sousFinal=catFinal===DEP_SIMPLE.nom?null:rSous;
     const isoJour=iso(rDateTicket); const com=$("r-desc").value.trim().slice(0,30);
     let d;
     if(editionId){ d=depenses.find(x=>x.id===editionId);
-      Object.assign(d,{montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
+      Object.assign(d,{montant:v,categorie:catFinal,sousCat:sousFinal,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
     } else {
-      d={id:Date.now(),montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour),photo:false,photoCount:0};
+      d={id:Date.now(),montant:v,categorie:catFinal,sousCat:sousFinal,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour),photo:false,photoCount:0};
       depenses.push(d);
     }
     if(photoEtat==="nouvelle" && photoBlobs.length){ await photoSet(d.id,photoBlobs); d.photo=true; d.photoCount=photoBlobs.length; }
