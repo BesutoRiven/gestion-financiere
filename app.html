@@ -382,7 +382,7 @@
 
       <div class="actions3">
         <button id="ouvrir-rev"><span class="rond icone-revenu-rond">â¬</span>Revenu</button>
-        <button id="ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="ouvrir-recu"><span class="rond">+</span>Dépense</button>
         <button id="ouvrir-remb"><span class="rond">â©</span>Remboursement</button>
       </div>
 
@@ -423,7 +423,7 @@
       </div>
       <div class="actions3">
         <button id="res-ouvrir-rev"><span class="rond icone-revenu-rond">â¬</span>Revenu</button>
-        <button id="res-ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="res-ouvrir-recu"><span class="rond">+</span>Dépense</button>
         <button id="res-ouvrir-remb"><span class="rond">â©</span>Remboursement</button>
       </div>
       <div id="kpi-zone"></div>
@@ -512,11 +512,11 @@
             </div>
           </details>
           <details class="det-nested">
-            <summary><span class="sum-ico"><span data-ico="budgetcat"></span><span>Budget personnalisé</span></span></summary>
+            <summary>Budget personnalisé</summary>
             <div class="det-corps">
               <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px;">
-                <span style="font-size:13px; font-weight:600;">Période du budget affiché par défaut dans l'accueil</span>
+                <span style="font-size:13px; font-weight:600;">Période par défaut souhaitée</span>
                 <select id="budget-pref-select" style="border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-family:inherit; background:var(--surface); color:var(--text);">
                   <option value="jour">Journalier</option>
                   <option value="semaine">Hebdomadaire</option>
@@ -900,7 +900,7 @@
       </div>
       <div class="actions3">
         <button id="bud-ouvrir-rev"><span class="rond icone-revenu-rond">â¬</span>Revenu</button>
-        <button id="bud-ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="bud-ouvrir-recu"><span class="rond">+</span>Dépense</button>
         <button id="bud-ouvrir-remb"><span class="rond">â©</span>Remboursement</button>
       </div>
       <div id="bud-alertes"></div>
@@ -1931,8 +1931,8 @@
       row.innerHTML=
         '<div class="bud-tete"><span class="nom">'+emoji+cat.nom+'</span>'+
         (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'d?pass? ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non d?fini</span>')+
-        (sousAAfficher.length?'<button class="bud-chevron" aria-label="D?plier">'+(ouvertB?"?":"?")+'</button>':'')+'</div>'+
-        '<div class="bud-det">Pr?vu '+fmt(prevu)+'<span style="margin-left:auto;">R?el '+fmt(r)+'</span></div>'+
+        (sousAAfficher.length?'<button class="bud-chevron" aria-label="Déplier">'+(ouvertB?"▲":"▼")+'</button>':'')+'</div>'+
+        '<div class="bud-det">Prévu '+fmt(prevu)+'<span style="margin-left:auto;">Réel '+fmt(r)+'</span></div>'+
         '<div class="bud-barre"><span class="'+(over?"over":"")+'" style="width:'+pct+'%;"></span></div>';
       row.onclick=()=>ouvrirDetailCat(cat.nom, true);
       if(sousAAfficher.length){ row.querySelector(".bud-chevron").onclick=e=>{ e.stopPropagation(); if(ouvertB) budgetOuvertSet.delete(cat.nom); else budgetOuvertSet.add(cat.nom); rendreBudget(); }; }
@@ -1942,9 +1942,9 @@
           const cle=cat.nom+"|"+sous, sprevu=budgetSousCatPourPeriode(cle,budMode);
           const sr=reelSousCat[cle]||0, secart=sprevu-sr, spct=sprevu>0?Math.min(100, sr/sprevu*100):(sr>0?100:0), sover=sprevu>0 && sr>sprevu;
           const srow=document.createElement("div"); srow.className="bud-row"; srow.style.cssText="margin-left:18px; opacity:.9;";
-          srow.innerHTML='<div class="bud-tete"><span class="nom" style="font-size:13px; font-weight:500;">? '+sous+'</span>'+
+          srow.innerHTML='<div class="bud-tete"><span class="nom" style="font-size:13px; font-weight:500;">↳ '+sous+'</span>'+
             '<span class="bud-ecart" style="color:'+(secart>=0?'var(--accent)':'var(--danger)')+'; font-size:12px;">'+(secart>=0?'reste ':'d?pass? ')+fmt(Math.abs(secart))+'</span></div>'+
-            '<div class="bud-det" style="font-size:12px;">Pr?vu '+fmt(sprevu)+'<span style="margin-left:auto;">R?el '+fmt(sr)+'</span></div>'+
+            '<div class="bud-det" style="font-size:12px;">Prévu '+fmt(sprevu)+'<span style="margin-left:auto;">Réel '+fmt(sr)+'</span></div>'+
             '<div class="bud-barre"><span class="'+(sover?"over":"")+'" style="width:'+spct+'%;"></span></div>';
           box.appendChild(srow);
         });
@@ -1953,14 +1953,14 @@
     Object.keys(reel).filter(nom=>!categories.some(c=>c.nom===nom)).forEach(nom=>{
       const r=reel[nom]||0; totReel+=r;
       const row=document.createElement("div"); row.className="bud-row"; row.style.cssText="opacity:.75; cursor:pointer;";
-      row.innerHTML='<div class="bud-tete"><span class="nom">??? '+nom+' <small style="color:var(--muted); font-weight:400;">(supprim?e)</small></span></div>'+'<div class="bud-det">R?el '+fmt(r)+'</div>';
+      row.innerHTML='<div class="bud-tete"><span class="nom">🗑️ '+nom+' <small style="color:var(--muted); font-weight:400;">(supprimée)</small></span></div>'+'<div class="bud-det">Réel '+fmt(r)+'</div>';
       row.onclick=()=>ouvrirDetailCat(nom, true);
       box.appendChild(row);
     });
     const totalRemb = remboursementsPeriode(b).reduce((s,r)=>s+r.montant,0);
     if(totalRemb>0){
       const row=document.createElement("div"); row.className="bud-row"; row.style.cursor="pointer";
-      row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">? Remboursements pris en compte</span></div><div class="bud-det">D?j? d?duits du r?el ci-dessus <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
+      row.innerHTML='<div class="bud-tete"><span class="nom" style="color:var(--remb-fg);">↩ Remboursements pris en compte</span></div><div class="bud-det">Déjà déduits du réel ci-dessus <span style="margin-left:auto;">-'+fmt(totalRemb)+'</span></div>';
       row.onclick=()=>ouvrirDetailRemb(true);
       box.appendChild(row);
     }
@@ -2727,7 +2727,7 @@
       panel.appendChild(b);
     });
     const custom=document.createElement("button"); custom.type="button"; custom.className="swatch-custom"; custom.textContent="Custom";
-    custom.onclick=()=>{ panel.remove(); coulInput.dataset.pickCustom="1"; coulInput.click(); };
+    custom.onclick=()=>{ panel.remove(); coulInput.dataset.pickCustom="1"; if(typeof coulInput.showPicker === "function"){ coulInput.showPicker(); } else { setTimeout(()=>coulInput.click(),0); } };
     panel.appendChild(custom);
     document.body.appendChild(panel);
     const r=coulInput.getBoundingClientRect();
@@ -2881,7 +2881,7 @@
     const revPeriode=revenus.filter(r=>(r.date||"")>=bornes.debut && (r.date||"")<=bornes.fin);
     $("bilan-titre").textContent="Bilan "+labelResume();
     if(!depPeriode.length && !revPeriode.length){
-      $("bilan-corps").innerHTML='<p class="vide" style="padding:20px 0; text-align:center;">Rien ? raconter sur cette p?riode pour l?instant ? reviens quand tu auras not? quelques transactions.</p>';
+      $("bilan-corps").innerHTML='<p class="vide" style="padding:20px 0; text-align:center;">Rien à raconter sur cette période pour l'instant - reviens quand tu auras noté quelques transactions.</p>';
       $("bilan-overlay").style.display="flex"; return;
     }
     const totDep=depPeriode.reduce((s,d)=>s+d.montant,0);
