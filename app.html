@@ -3427,18 +3427,22 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
-        "Corriger le sélecteur couleur et les accents":"v1.15.9",
-        "Réparer les boutons et harmoniser les icônes":"v1.15.7",
+        "Corriger le s\u00e9lecteur couleur et les accents":"v1.15.12",
+        "Restaurer l'\u00e9l\u00e9ment de visionneuse photo":"v1.15.11",
+        "Forcer le rechargement du cache applicatif":"v1.15.10",
+        "R\u00e9parer le script et restaurer les boutons principaux":"v1.15.9",
+        "Am\u00e9liorer budget mobile, photos et p\u00e9riode par d\u00e9faut":"v1.15.8",
+        "R\u00e9parer les boutons et harmoniser les ic\u00f4nes":"v1.15.7",
         "Corriger l'interface budget et les accents":"v1.15.6",
-        "Affiner l'écran de dépense et les vues budget":"v1.15.5"
+        "Affiner l'\u00e9cran de d\u00e9pense et les vues budget":"v1.15.5"
       };
       commits.forEach((c,i)=>{
         const msg=(c.commit.message||"").split("\n")[0];
         const d=new Date(c.commit.author.date);
         const dateStr=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"});
         let tag="", desc=msg;
-        const m=msg.match(/^(v[\d.]+)\s*[:\-]\s*(.*)$/i);
-        if(m){ tag=traduireTagVersion(m[1]); desc=m[2]; }
+        const m=msg.match(/^(?:Version\s+)?(v?\d+(?:\.\d+)+)\s*[:\-]\s*(.*)$/i);
+        if(m){ tag=traduireTagVersion(m[1].toLowerCase().startsWith("v")?m[1]:"v"+m[1]); desc=m[2]; }
         else if(versionsForcees[msg]){ tag=versionsForcees[msg]; desc=msg; }
         const estMajeure = /^v\d+\.0\.0$/i.test(tag);
         const card=document.createElement("div"); card.className="vcard"+(estMajeure?" vcard-majeure":"");
