@@ -33,6 +33,17 @@
   </style>
 </head>
 <body>
+  <div id="crop-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div id="crop-cadre" style="width:260px; height:260px; overflow:hidden; position:relative; border-radius:12px; border:2px solid #fff; touch-action:none;">
+      <img id="crop-img" style="position:absolute; max-width:none; cursor:grab; user-select:none;" />
+    </div>
+    <input id="crop-zoom" type="range" min="1" max="3" step="0.01" value="1" style="width:260px; margin-top:16px;" />
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button id="crop-annuler" style="width:120px; height:44px; border-radius:10px; border:1px solid #fff; background:transparent; color:#fff; font-family:inherit;">Annuler</button>
+      <button id="crop-valider" style="width:120px; height:44px; border-radius:10px; border:none; background:var(--accent); color:#fff; font-weight:600; font-family:inherit;">Valider</button>
+    </div>
+  </div>
+
   <div id="verrou-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
     <div style="font-size:40px; margin-bottom:8px;">🔒</div>
     <p id="verrou-titre" style="font-weight:600; font-size:16px; margin:0 0 4px;">Code verrouillage</p>
@@ -167,20 +178,68 @@
   let utilisateur = null;
 
     $("avatar-wrap").onclick = () => $("fichier-photo").click();
-  $("fichier-photo").onchange = async (e) => {
+  function ouvrirRecadrage(fichier, tailleCadre, rond, tailleSortie, callback){
+    const img=$("crop-img"), cadre=$("crop-cadre");
+    cadre.style.width=tailleCadre+"px"; cadre.style.height=tailleCadre+"px";
+    cadre.style.borderRadius=rond?"50%":"12px";
+    const url=URL.createObjectURL(fichier);
+    let natW=0,natH=0, echelleMin=1, echelle=1, x=0, y=0;
+    img.onload=()=>{
+      natW=img.naturalWidth; natH=img.naturalHeight;
+      echelleMin=Math.max(tailleCadre/natW, tailleCadre/natH);
+      echelle=echelleMin;
+      x=(tailleCadre-natW*echelle)/2; y=(tailleCadre-natH*echelle)/2;
+      $("crop-zoom").value=1;
+      appliquer();
+    };
+    img.src=url;
+    function appliquer(){
+      img.style.width=(natW*echelle)+"px"; img.style.height=(natH*echelle)+"px";
+      img.style.left=x+"px"; img.style.top=y+"px";
+    }
+    function clamp(){
+      const w=natW*echelle, h=natH*echelle;
+      x=Math.min(0,Math.max(tailleCadre-w,x)); y=Math.min(0,Math.max(tailleCadre-h,y));
+    }
+    $("crop-zoom").oninput=e=>{
+      const cx=x-tailleCadre/2, cy=y-tailleCadre/2;
+      const ratio=(echelleMin*parseFloat(e.target.value))/echelle;
+      x=x-(cx*(ratio-1)); y=y-(cy*(ratio-1));
+      echelle=echelleMin*parseFloat(e.target.value);
+      clamp(); appliquer();
+    };
+    let depart=null;
+    cadre.onpointerdown=e=>{ depart={px:e.clientX,py:e.clientY,x0:x,y0:y}; cadre.setPointerCapture(e.pointerId); };
+    cadre.onpointermove=e=>{
+      if(!depart) return;
+      x=depart.x0+(e.clientX-depart.px); y=depart.y0+(e.clientY-depart.py);
+      clamp(); appliquer();
+    };
+    cadre.onpointerup=()=>{depart=null;};
+    $("crop-annuler").onclick=()=>{ $("crop-overlay").style.display="none"; URL.revokeObjectURL(url); };
+    $("crop-valider").onclick=()=>{
+      const cv=document.createElement("canvas"); cv.width=tailleSortie; cv.height=tailleSortie;
+      const ctx=cv.getContext("2d");
+      ctx.drawImage(img, -x/echelle, -y/echelle, tailleCadre/echelle, tailleCadre/echelle, 0,0,tailleSortie,tailleSortie);
+      cv.toBlob(b=>{ $("crop-overlay").style.display="none"; URL.revokeObjectURL(url); callback(b); }, "image/jpeg", 0.85);
+    };
+    $("crop-overlay").style.display="flex";
+  }
+  $("fichier-photo").onchange = (e) => {
     const f = e.target.files[0]; if (!f) return;
     if (!f.type.startsWith("image/")){ msg("msg-photo", "Choisis un fichier image.", "err"); return; }
-    if (f.size > MAX_PHOTO){ msg("msg-photo", "Image trop lourde (2 Mo maximum).", "err"); return; }
-    msg("msg-photo", "Envoi en cours…", "ok");
-    const chemin = utilisateur.id + "/avatar";
-    const up = await sb.storage.from("avatars").upload(chemin, f, { upsert: true });
-    if (up.error){ msg("msg-photo", messageErreur(up.error), "err"); return; }
-    const { data } = sb.storage.from("avatars").getPublicUrl(chemin);
-    const url = data.publicUrl + "?t=" + Date.now();
-    const maj = await sb.auth.updateUser({ data: { avatar_url: url } });
-    if (maj.error){ msg("msg-photo", messageErreur(maj.error), "err"); return; }
-    $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" id="avatar" alt="Photo de profil" />';
-    msg("msg-photo", "Photo mise à jour.", "ok");
+    ouvrirRecadrage(f, 260, true, 500, async blob=>{
+      msg("msg-photo", "Envoi en cours…", "ok");
+      const chemin = utilisateur.id + "/avatar";
+      const up = await sb.storage.from("avatars").upload(chemin, blob, { upsert: true, contentType:"image/jpeg" });
+      if (up.error){ msg("msg-photo", messageErreur(up.error), "err"); return; }
+      const { data } = sb.storage.from("avatars").getPublicUrl(chemin);
+      const url = data.publicUrl + "?t=" + Date.now();
+      const maj = await sb.auth.updateUser({ data: { avatar_url: url } });
+      if (maj.error){ msg("msg-photo", messageErreur(maj.error), "err"); return; }
+      $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" id="avatar" alt="Photo de profil" />';
+      msg("msg-photo", "Photo mise à jour.", "ok");
+    });
   };
 
   // ---- Téléphone ----

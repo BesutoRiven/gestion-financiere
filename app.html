@@ -132,6 +132,8 @@
     .recu-montant span{font-size:30px; color:var(--papier-muted);}
     .recu-champ{margin-top:12px;}
     .recu-grille2{display:grid; grid-template-columns:1fr 1fr; gap:0 10px;}
+    .recu-grille2 > .recu-champ{min-width:0;}
+    .recu-grille2 .dd{min-width:0;}
     .recu-champ label{font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;}
     .rev-cot-clic{cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;}
     .rev-cot-input{width:56px; height:26px; border:1px solid var(--papier-border); border-radius:6px; padding:0 6px; font-size:13px; font-family:inherit; text-align:center; background:var(--papier); color:var(--papier-txt);}
@@ -278,6 +280,17 @@
   </style>
 </head>
 <body>
+  <div id="crop-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div id="crop-cadre" style="width:260px; height:260px; overflow:hidden; position:relative; border-radius:12px; border:2px solid #fff; touch-action:none;">
+      <img id="crop-img" style="position:absolute; max-width:none; cursor:grab; user-select:none;" />
+    </div>
+    <input id="crop-zoom" type="range" min="1" max="3" step="0.01" value="1" style="width:260px; margin-top:16px;" />
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button id="crop-annuler" style="width:120px; height:44px; border-radius:10px; border:1px solid #fff; background:transparent; color:#fff; font-family:inherit;">Annuler</button>
+      <button id="crop-valider" style="width:120px; height:44px; border-radius:10px; border:none; background:var(--accent); color:#fff; font-weight:600; font-family:inherit;">Valider</button>
+    </div>
+  </div>
+
   <div id="verrou-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:20px;">
     <div style="font-size:40px; margin-bottom:8px;">🔒</div>
     <p id="verrou-titre" style="font-weight:600; font-size:16px; margin:0 0 4px;">Code verrouillage</p>
@@ -1815,22 +1828,70 @@
     box.innerHTML='<div class="bud-alerte" style="margin:0 12px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;"><span>📝 Rien noté depuis '+jours+' jour(s) — pense à mettre tes dépenses à jour !</span><button id="rappel-fermer" style="border:none;background:none;color:inherit;font-size:16px;cursor:pointer;">×</button></div>';
     $("rappel-fermer").onclick=()=>{ sessionStorage.setItem("gf_rappel_masque","1"); box.innerHTML=""; };
   }
+  function ouvrirRecadrage(fichier, tailleCadre, rond, tailleSortie, callback){
+    const img=$("crop-img"), cadre=$("crop-cadre");
+    cadre.style.width=tailleCadre+"px"; cadre.style.height=tailleCadre+"px";
+    cadre.style.borderRadius=rond?"50%":"12px";
+    const url=URL.createObjectURL(fichier);
+    let natW=0,natH=0, echelleMin=1, echelle=1, x=0, y=0;
+    img.onload=()=>{
+      natW=img.naturalWidth; natH=img.naturalHeight;
+      echelleMin=Math.max(tailleCadre/natW, tailleCadre/natH);
+      echelle=echelleMin;
+      x=(tailleCadre-natW*echelle)/2; y=(tailleCadre-natH*echelle)/2;
+      $("crop-zoom").value=1;
+      appliquer();
+    };
+    img.src=url;
+    function appliquer(){
+      img.style.width=(natW*echelle)+"px"; img.style.height=(natH*echelle)+"px";
+      img.style.left=x+"px"; img.style.top=y+"px";
+    }
+    function clamp(){
+      const w=natW*echelle, h=natH*echelle;
+      x=Math.min(0,Math.max(tailleCadre-w,x)); y=Math.min(0,Math.max(tailleCadre-h,y));
+    }
+    $("crop-zoom").oninput=e=>{
+      const cx=x-tailleCadre/2, cy=y-tailleCadre/2;
+      const ratio=(echelleMin*parseFloat(e.target.value))/echelle;
+      x=x-(cx*(ratio-1)); y=y-(cy*(ratio-1));
+      echelle=echelleMin*parseFloat(e.target.value);
+      clamp(); appliquer();
+    };
+    let depart=null;
+    cadre.onpointerdown=e=>{ depart={px:e.clientX,py:e.clientY,x0:x,y0:y}; cadre.setPointerCapture(e.pointerId); };
+    cadre.onpointermove=e=>{
+      if(!depart) return;
+      x=depart.x0+(e.clientX-depart.px); y=depart.y0+(e.clientY-depart.py);
+      clamp(); appliquer();
+    };
+    cadre.onpointerup=()=>{depart=null;};
+    $("crop-annuler").onclick=()=>{ $("crop-overlay").style.display="none"; URL.revokeObjectURL(url); };
+    $("crop-valider").onclick=()=>{
+      const cv=document.createElement("canvas"); cv.width=tailleSortie; cv.height=tailleSortie;
+      const ctx=cv.getContext("2d");
+      ctx.drawImage(img, -x/echelle, -y/echelle, tailleCadre/echelle, tailleCadre/echelle, 0,0,tailleSortie,tailleSortie);
+      cv.toBlob(b=>{ $("crop-overlay").style.display="none"; URL.revokeObjectURL(url); callback(b); }, "image/jpeg", 0.85);
+    };
+    $("crop-overlay").style.display="flex";
+  }
   $("btn-fond").onclick=()=>$("fichier-fond").click();
-  $("fichier-fond").onchange=async e=>{
+  $("fichier-fond").onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
     if(!f.type.startsWith("image/")){ $("msg-fond").innerHTML='<div class="message err">Choisis un fichier image.</div>'; return; }
-    if(f.size>2*1024*1024){ $("msg-fond").innerHTML='<div class="message err">Image trop lourde (2 Mo maximum).</div>'; return; }
-    $("msg-fond").innerHTML='<div class="message ok">Envoi en cours…</div>';
-    const chemin=uid+"/fond";
-    const up=await sb.storage.from("avatars").upload(chemin, f, { upsert:true });
-    if(up.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(up.error)+'</div>'; return; }
-    const { data }=sb.storage.from("avatars").getPublicUrl(chemin);
-    const url=data.publicUrl+"?t="+Date.now();
-    const maj=await sb.auth.updateUser({ data:{ fond_url:url } });
-    if(maj.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(maj.error)+'</div>'; return; }
-    appliquerFondPerso(url);
-    $("btn-fond-retirer").style.display="inline-block";
-    $("msg-fond").innerHTML='<div class="message ok">Fond d\'écran mis à jour.</div>';
+    ouvrirRecadrage(f, 280, false, 1200, async blob=>{
+      $("msg-fond").innerHTML='<div class="message ok">Envoi en cours…</div>';
+      const chemin=uid+"/fond";
+      const up=await sb.storage.from("avatars").upload(chemin, blob, { upsert:true, contentType:"image/jpeg" });
+      if(up.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(up.error)+'</div>'; return; }
+      const { data }=sb.storage.from("avatars").getPublicUrl(chemin);
+      const url=data.publicUrl+"?t="+Date.now();
+      const maj=await sb.auth.updateUser({ data:{ fond_url:url } });
+      if(maj.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(maj.error)+'</div>'; return; }
+      appliquerFondPerso(url);
+      $("btn-fond-retirer").style.display="inline-block";
+      $("msg-fond").innerHTML='<div class="message ok">Fond d\'écran mis à jour.</div>';
+    });
   };
   $("btn-fond-retirer").onclick=async()=>{
     const maj=await sb.auth.updateUser({ data:{ fond_url:null } });
