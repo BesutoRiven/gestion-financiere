@@ -202,11 +202,14 @@
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
     .recu-actions-rapides{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
-    .listen-btn{height:42px; border:1px solid var(--papier-border); border-radius:12px; background:rgba(255,255,255,.35); color:var(--papier-txt); font-family:inherit; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:0 12px;}
-    .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:var(--accent-soft); color:var(--accent);}
+    .listen-btn{height:42px; border:1px solid rgba(255,255,255,.38); border-radius:12px; background:linear-gradient(135deg,rgba(38,179,128,.24),rgba(255,255,255,.42)); color:var(--papier-txt); font-family:inherit; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:0 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 6px 16px rgba(0,0,0,.08);}
+    .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:rgba(0,133,97,.22); color:var(--accent);}
     .listen-btn .listen-ico svg{width:15px; height:15px;}
-    .listen-btn.scan .listen-ico{background:rgba(47,111,176,.14); color:#2f6fb0;}
-    .recu-budget-card{border:1px solid var(--papier-border); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.28); margin-top:10px;}
+    .listen-btn.scan{background:linear-gradient(135deg,rgba(69,137,202,.24),rgba(255,255,255,.42));}
+    .listen-btn.scan .listen-ico{background:rgba(47,111,176,.18); color:#2f6fb0;}
+    .recu-action-single{display:flex; justify-content:center; margin-top:10px;}
+    .recu-action-single .listen-btn{width:min(216px,100%);}
+    .recu-budget-card{border:1px solid rgba(255,255,255,.34); border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.22)); margin-top:10px; box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 6px 16px rgba(0,0,0,.07);}
     .recu-budget-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; font-size:12px; color:var(--papier-muted);}
     .recu-budget-top strong{color:var(--papier-txt); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:44%;}
     .recu-budget-top span{flex:1; text-align:right;}
@@ -835,7 +838,7 @@
           <button type="button" class="date recu-date-btn" id="rev-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div style="margin-top:10px;"><button type="button" id="rev-vocal-btn" class="listen-btn" style="width:100%;"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Écouter un revenu</span></button></div>
+        <div class="recu-action-single"><button type="button" id="rev-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>?couter</span></button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
@@ -853,7 +856,7 @@
           <button type="button" class="date recu-date-btn" id="remb-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div style="margin-top:10px;"><button type="button" id="remb-vocal-btn" class="listen-btn" style="width:100%;"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Écouter un remboursement</span></button></div>
+        <div class="recu-action-single"><button type="button" id="remb-vocal-btn" class="listen-btn"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>?couter</span></button></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
