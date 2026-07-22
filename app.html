@@ -112,7 +112,7 @@
     .cal-fermer{width:100%; margin-top:8px; height:42px; border:1px solid var(--border); background:var(--surface); border-radius:10px; cursor:pointer; color:var(--text);}
 
     /* Reçu (ajout de dépense) */
-    .recu{background:var(--papier); width:100%; max-width:360px; max-height:88vh; overflow-y:auto; padding:0 20px 20px; position:relative;
+    .recu{background:var(--papier); width:100%; max-width:350px; max-height:min(82vh,760px); overflow-y:auto; padding:0 16px 16px; position:relative;
       border-radius:16px 16px 0 0;
       -webkit-mask:
         linear-gradient(#000 0 0) top/100% calc(100% - 11px) no-repeat,
@@ -121,16 +121,15 @@
         linear-gradient(#000 0 0) top/100% calc(100% - 11px) no-repeat,
         radial-gradient(circle at 9px 11px, #0000 8px, #000 8.5px) bottom left/18px 22px repeat-x;
       box-shadow:0 12px 40px rgba(0,0,0,.3);}
-    .recu-tete{text-align:center; padding:18px 0 10px; border-bottom:2px dashed var(--papier-border);}
-    .recu-tete .marque{font-size:13px; letter-spacing:3px; color:var(--papier-muted); text-transform:uppercase;}
-    .recu-tete h3{margin:6px 0 2px; font-size:20px; font-family:'Courier New',monospace; color:var(--papier-txt);}
+    .recu-tete{text-align:center; padding:14px 0 8px; border-bottom:2px dashed var(--papier-border);}
+    .recu-tete h3{margin:0 0 2px; font-size:19px; font-family:'Courier New',monospace; color:var(--papier-txt);}
     .recu-tete .date{font-size:12px; color:var(--papier-muted);}
     .recu-date-btn{font:inherit; background:none; border:none; cursor:pointer; padding:2px 0; text-decoration:underline dotted; text-underline-offset:3px;}
     .recu-date-btn:active{opacity:.65;}
-    .recu-montant{display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 0 6px; border-bottom:2px dashed var(--papier-border);}
-    .recu-montant input{border:none; outline:none; background:transparent; width:60%; text-align:right; font-size:38px; font-weight:700; font-family:'Courier New',monospace; color:var(--papier-txt);}
+    .recu-montant{display:flex; align-items:center; justify-content:center; gap:8px; padding:12px 0 6px; border-bottom:2px dashed var(--papier-border);}
+    .recu-montant input{border:none; outline:none; background:transparent; width:60%; text-align:right; font-size:34px; font-weight:700; font-family:'Courier New',monospace; color:var(--papier-txt);}
     .recu-montant span{font-size:30px; color:var(--papier-muted);}
-    .recu-champ{margin-top:12px;}
+    .recu-champ{margin-top:10px;}
     .recu-grille2{display:grid; grid-template-columns:1fr 1fr; gap:0 10px;}
     .recu-grille2 > .recu-champ{min-width:0;}
     .recu-grille2 .dd{min-width:0;}
@@ -139,15 +138,15 @@
     .rev-cot-input{width:56px; height:26px; border:1px solid var(--papier-border); border-radius:6px; padding:0 6px; font-size:13px; font-family:inherit; text-align:center; background:var(--papier); color:var(--papier-txt);}
     .recu-desc{width:100%; height:46px; margin-top:10px; border:1px solid var(--papier-border); border-radius:10px; padding:0 12px; font-size:15px; font-family:inherit; background:var(--papier); color:var(--papier-txt); outline:none;}
     .recu .dd-btn{background:var(--papier); border-color:var(--papier-border); color:var(--papier-txt);}
-    .recu-photo{margin-top:14px; border-top:2px dashed var(--papier-border); padding-top:14px;}
+    .recu-photo{margin-top:12px; border-top:2px dashed var(--papier-border); padding-top:12px;}
     .recu-photo .zone{display:flex; align-items:center; gap:12px;}
     .recu-photo img{width:64px; height:64px; object-fit:cover; border-radius:10px;}
-    .recu-valider{width:100%; margin-top:18px; height:50px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
+    .recu-valider{width:100%; margin-top:14px; height:48px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
     .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--papier-muted); border:none; font-size:14px; cursor:pointer;}
-    .devise-btn{font-size:28px; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 0 0 4px; font-family:inherit;}
+    .devise-btn{display:inline-flex; align-items:center; justify-content:center; min-height:46px; font-size:28px; line-height:1; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 4px; font-family:inherit;}
     .dd-devise{position:relative; margin-top:0;}
     .dd-devise .devise-btn{padding:0 18px 0 2px; position:relative;}
-    .dd-devise .devise-btn::after{content:"▾"; font-size:12px; position:absolute; right:0; top:50%; transform:translateY(-50%); color:var(--papier-muted);}
+    .dd-devise .devise-btn::after{content:"▾"; font-size:12px; position:absolute; right:0; top:50%; transform:translateY(-50%); color:var(--papier-muted); line-height:1;}
     .dd-devise .dd-panel{left:auto; right:0; top:calc(100% + 8px); width:210px; background:var(--papier); border-color:var(--papier-border);}
     .dd-devise .dd-opt{color:var(--papier-txt); font-size:14px;}
     .dd-devise .dd-opt:hover{background:var(--papier-vert);}
@@ -197,15 +196,46 @@
     .bud-row:last-child{border-bottom:none;}
     .bud-tete{display:flex; justify-content:space-between; align-items:center; gap:8px;}
     .bud-chevron{border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px; margin-left:auto;}
-    .photo-grille{display:flex; justify-content:center; gap:24px; margin-top:10px;}
-    .photo-action{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; border:none; background:var(--papier); color:var(--papier-muted); font-size:12px; font-family:inherit; cursor:pointer; padding:6px; aspect-ratio:1; width:100px; border-radius:12px;}
+    .recu-actions-rapides{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
+    .listen-btn{height:42px; border:1px solid var(--papier-border); border-radius:12px; background:rgba(255,255,255,.35); color:var(--papier-txt); font-family:inherit; font-size:13px; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:0 12px;}
+    .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:var(--accent-soft); color:var(--accent);}
+    .listen-btn .listen-ico svg{width:15px; height:15px;}
+    .listen-btn.scan .listen-ico{background:rgba(47,111,176,.14); color:#2f6fb0;}
+    .recu-budget-wrap{display:grid; gap:8px; margin-top:10px;}
+    .recu-budget-card{display:none; border:1px solid var(--papier-border); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.28);}
+    .recu-budget-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--papier-muted);}
+    .recu-budget-head strong{color:var(--papier-txt); font-size:13px;}
+    .recu-budget-meta{margin-top:4px; font-size:12px; color:var(--papier-txt);}
+    .budget-track{margin-top:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.4); overflow:hidden;}
+    .budget-fill{height:100%; border-radius:inherit; background:linear-gradient(90deg,#2aa36b,#72c55a);}
+    .budget-fill.warn{background:linear-gradient(90deg,#d4a017,#f0b53c);}
+    .budget-fill.danger{background:linear-gradient(90deg,#bf4a4a,#dd6666);}
+    .photo-grille{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:10px;}
+    .photo-action{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border:1px dashed var(--papier-border); background:rgba(255,255,255,.28); color:var(--papier-muted); font-size:11px; font-family:inherit; cursor:pointer; padding:6px; aspect-ratio:1; width:auto; min-height:70px; border-radius:12px;}
     .photo-icone{width:22px; height:22px; display:flex; align-items:center; justify-content:center; color:var(--accent);}
     .photo-icone svg{width:20px; height:20px;}
     .photo-case{aspect-ratio:1; border-radius:12px; position:relative; overflow:hidden; background:var(--papier); border:1px solid var(--papier-border);}
     .photo-case img{width:100%; height:100%; object-fit:cover;}
     .photo-x{position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; border:none; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-    .photo-grille.remplie{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; justify-items:stretch;}
-    .photo-grille.remplie .photo-action{width:auto;}
+    .photo-compteur{font-size:12px; color:var(--papier-muted); text-align:right; margin-top:6px;}
+    .scan-overlay{position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:120; display:flex; align-items:center; justify-content:center; padding:18px;}
+    .scan-guide{width:min(100%,360px); color:#fff; text-align:center;}
+    .scan-frame{width:min(72vw,260px); aspect-ratio:1; margin:0 auto 18px; border:4px solid rgba(255,255,255,.92); border-radius:20px; box-shadow:0 0 0 999px rgba(255,255,255,.02) inset;}
+    .scan-helper{font-size:15px; line-height:1.45; color:rgba(255,255,255,.92);}
+    .scan-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px;}
+    .scan-actions button,.photo-source-box button{height:44px; border:none; border-radius:12px; font-family:inherit; font-weight:600; cursor:pointer;}
+    .scan-actions .primaire,.photo-source-box .primaire{background:var(--accent); color:#fff;}
+    .scan-actions .secondaire,.photo-source-box .secondaire{background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.22);}
+    .photo-source-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:320px; text-align:center;}
+    .photo-source-box p{margin:0 0 12px; color:var(--text);}
+    .photo-source-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .scan-fermer{margin-top:14px; border:none; background:none; color:rgba(255,255,255,.8); font-size:13px; cursor:pointer;}
+    @media (max-width:380px){
+      .recu-overlay{padding:8px;}
+      .recu{max-width:none; width:100%;}
+      .recu-grille2{grid-template-columns:1fr; gap:0;}
+      .recu-montant input{font-size:31px;}
+    }
     .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
     .theme-pastille{width:38px; height:38px; border-radius:50%; border:2px solid var(--border); cursor:pointer; position:relative;}
     .theme-pastille.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft);}
@@ -538,6 +568,10 @@
             <span style="font-size:13px; font-weight:600;">Champ "Participant" sur une dépense</span>
             <button id="toggle-participant" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le champ Participant"><span class="knob"></span></button>
           </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+            <span style="font-size:13px; font-weight:600;">Afficher le budget de la sous-catégorie dans Nouvelle dépense</span>
+            <button id="toggle-ticket-sousbudget" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Afficher le budget de la sous-catégorie dans Nouvelle dépense"><span class="knob"></span></button>
+          </div>
         </div>
       </details>
 
@@ -582,12 +616,20 @@
     <div id="recu-overlay" class="recu-overlay" style="display:none;">
       <div class="recu">
         <div class="recu-tete">
-          <div class="marque">Gestion financière</div>
           <h3 id="recu-titre">Nouvelle dépense</h3>
           <button type="button" class="date recu-date-btn" id="recu-date"></button>
         </div>
         <div class="recu-montant"><input id="r-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-r-devise"><button type="button" id="r-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
-        <div style="text-align:center; margin-top:2px;"><button type="button" id="r-vocal-btn" style="border:none; background:none; color:var(--papier-muted); font-size:13px; cursor:pointer; padding:4px 10px;">🎤 Dicter (ex. « vingt euros courses »)</button></div>
+        <div class="recu-actions-rapides">
+          <button type="button" id="r-vocal-btn" class="listen-btn">
+            <span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span>
+            <span>Écouter</span>
+          </button>
+          <button type="button" id="r-scan-btn" class="listen-btn scan">
+            <span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h2"/><path d="M20 7V5h-2"/><path d="M4 17v2h2"/><path d="M20 17v2h-2"/><path d="M7 12h10"/><path d="M7 9h10"/><path d="M7 15h7"/></svg></span>
+            <span>Scan ticket</span>
+          </button>
+        </div>
 
         <div class="recu-grille2">
           <div class="recu-champ"><label>Catégorie</label><div class="dd" id="dd-cat"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
@@ -595,29 +637,32 @@
           <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
           <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" placeholder="Ex. Bowl protéiné avec Louise" /></div>
         </div>
+        <div class="recu-budget-wrap" id="recu-budget-wrap">
+          <div class="recu-budget-card" id="recu-budget-cat">
+            <div class="recu-budget-head"><strong id="recu-budget-cat-titre"></strong><span>Budget du mois</span></div>
+            <div class="recu-budget-meta" id="recu-budget-cat-meta"></div>
+            <div class="budget-track"><div class="budget-fill" id="recu-budget-cat-bar"></div></div>
+          </div>
+          <div class="recu-budget-card" id="recu-budget-sous">
+            <div class="recu-budget-head"><strong id="recu-budget-sous-titre"></strong><span>Sous-catégorie</span></div>
+            <div class="recu-budget-meta" id="recu-budget-sous-meta"></div>
+            <div class="budget-track"><div class="budget-fill" id="recu-budget-sous-bar"></div></div>
+          </div>
+        </div>
         <div class="recu-champ" id="champ-participant" style="display:none;"><label>Participant</label><div class="dd" id="dd-part"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
 
         <div class="recu-photo">
-          <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photo (ticket, souvenir…)</label>
+          <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photos</label>
           <div class="photo-grille" id="photo-grille">
-            <div class="photo-case" id="photo-case-apercu" style="display:none;">
-              <img id="r-photo-apercu" alt="" />
-              <button type="button" id="r-photo-suppr" class="photo-x" aria-label="Retirer la photo">×</button>
-            </div>
-            <button type="button" id="r-photo-camera" class="photo-action">
+            <button type="button" id="r-photo-trigger" class="photo-action">
               <span class="photo-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3.3"/></svg></span>
-              <span>Prendre en photo</span>
-            </button>
-            <button type="button" id="r-photo-btn" class="photo-action">
-              <span class="photo-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 13.5l3.3-3.3a1.5 1.5 0 0 1 2.1 0L13 14.5"/><circle cx="7.7" cy="7.7" r="1.2"/><path d="M8 21h10a2 2 0 0 0 2-2V9"/></svg></span>
-              <span>Galerie</span>
+              <span>Ajouter</span>
             </button>
           </div>
-          <small class="aide" id="photo-astuce" style="display:block; text-align:center; margin-top:8px;">📸 Astuce : prends le ticket en photo, l'app peut le lire toute seule (montant, catégorie…)</small>
-          <button type="button" id="r-photo-analyser" style="display:none; margin-top:8px; width:100%; height:38px; border:none; border-radius:10px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer;">🔍 Analyser le ticket</button>
+          <div class="photo-compteur" id="photo-compteur">0 / 4</div>
           <div id="r-photo-analyse-msg"></div>
-          <input type="file" id="r-photo-file" accept="image/*" style="display:none;" />
-          <input type="file" id="r-photo-file-camera" accept="image/*" capture="environment" style="display:none;" />
+          <input type="file" id="r-photo-file" accept="image/*" multiple style="display:none;" />
+          <input type="file" id="r-photo-file-camera" accept="image/*" capture="environment" multiple style="display:none;" />
         </div>
 
         <button class="recu-valider" id="recu-valider">Valider ✓</button>
@@ -627,6 +672,28 @@
 
     <!-- ============ VISIONNEUSE PHOTO ============ -->
     <div id="lb-overlay" class="lb-overlay" style="display:none;"><img id="lb-img" alt="Photo de la dépense" /></div>
+
+    <div id="photo-source-overlay" class="cal-overlay" style="display:none;">
+      <div class="photo-source-box">
+        <p>Choisis comment ajouter tes photos.</p>
+        <div class="photo-source-actions">
+          <button type="button" id="photo-source-camera" class="primaire">Photo</button>
+          <button type="button" id="photo-source-gallery" class="secondaire" style="color:var(--text); border-color:var(--border); background:transparent;">Galerie</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="scan-overlay" class="scan-overlay" style="display:none;">
+      <div class="scan-guide">
+        <div class="scan-frame"></div>
+        <div class="scan-helper">Place le ticket de caisse au milieu, puis prends une photo ou choisis-la dans la galerie.</div>
+        <div class="scan-actions">
+          <button type="button" id="scan-camera" class="primaire">Photo</button>
+          <button type="button" id="scan-gallery" class="secondaire">Galerie</button>
+        </div>
+        <button type="button" id="scan-fermer" class="scan-fermer">Fermer</button>
+      </div>
+    </div>
 
 
     <!-- ============ HISTORIQUE DES VERSIONS (admin) ============ -->
@@ -732,11 +799,11 @@
     <div id="rev-overlay" class="recu-overlay" style="display:none;">
       <div class="recu" style="background:var(--papier-vert);">
         <div class="recu-tete">
-          <div class="marque">Gestion financière</div>
           <h3 id="rev-modal-titre">Nouveau revenu</h3>
           <button type="button" class="date recu-date-btn" id="rev-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="rev-brut" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-rev-devise"><button type="button" id="rev-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
+        <div style="margin-top:10px;"><button type="button" id="rev-vocal-btn" class="listen-btn" style="width:100%;"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Écouter un revenu</span></button></div>
         <div class="recu-champ"><label>Type de revenu</label><div class="dd" id="dd-revtype"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         <div id="rev-cot-zone" style="font-size:13px; color:var(--papier-muted); margin:8px 0 0; text-align:center;"></div>
         <p style="text-align:center; font-size:15px; margin:10px 0 4px; color:var(--papier-txt);">Net estimé : <strong id="rev-net" style="font-size:22px;">0,00 €</strong></p>
@@ -750,11 +817,11 @@
     <div id="remb-overlay" class="recu-overlay" style="display:none;">
       <div class="recu" style="background:var(--papier-bleu);">
         <div class="recu-tete">
-          <div class="marque">Gestion financière</div>
           <h3 id="remb-modal-titre">Nouveau remboursement</h3>
           <button type="button" class="date recu-date-btn" id="remb-date-aff"></button>
         </div>
         <div class="recu-montant"><input id="remb-montant" type="text" inputmode="decimal" placeholder="0,00" /><div class="dd dd-devise" id="dd-remb-devise"><button type="button" id="remb-devise-sym" class="devise-btn">€</button><div class="dd-panel" style="display:none;"></div></div></div>
+        <div style="margin-top:10px;"><button type="button" id="remb-vocal-btn" class="listen-btn" style="width:100%;"><span class="listen-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8.2 7.2v3.8a3.8 3.8 0 0 0 7.6 0V7.2"/><path d="M6 11.5a6 6 0 0 0 12 0"/><path d="M9 20h6"/><path d="M12 17v3"/></svg></span><span>Écouter un remboursement</span></button></div>
         <div class="recu-champ"><label>Description</label><input id="remb-desc" class="recu-desc" type="text" placeholder="Ex. Retour SHEIN" /></div>
         <div class="recu-champ">
           <label>Dépense(s) concernée(s)</label>
@@ -946,7 +1013,7 @@
   let selDate=new Date(), resDate=new Date(), calY, calM, calSel;
   let dashMode="tout", editionId=null;
   // état de la fenêtre reçu
-  let rCat=null, rSous=null, rPay=null, rPart=null, photoEtat="aucune", photoBlob=null;
+  let rCat=null, rSous=null, rPay=null, rPart=null, photoEtat="aucune", photoBlobs=[], modeAjoutPhoto="manuel";
 
   // ================= Utilitaires =================
   const DEVISES=[{code:"EUR",sym:"€"},{code:"USD",sym:"$"},{code:"GBP",sym:"£"},{code:"CHF",sym:"CHF"},{code:"JPY",sym:"¥"},{code:"CAD",sym:"$CA"},{code:"CNY",sym:"CN¥"}];
@@ -963,6 +1030,66 @@
   }
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
+  const MAX_PHOTOS=4;
+  function normaliserTexte(texte){
+    return (texte||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").trim();
+  }
+  function tokensTexte(texte){ return normaliserTexte(texte).split(/\s+/).filter(Boolean); }
+  function meilleurChoix(texte, liste){
+    const base=normaliserTexte(texte); if(!base || !Array.isArray(liste) || !liste.length) return null;
+    const baseTokens=tokensTexte(texte);
+    let meilleur=null, scoreMax=0;
+    liste.forEach(val=>{
+      const cible=normaliserTexte(val); if(!cible) return;
+      const cibleTokens=tokensTexte(val);
+      let score=0;
+      if(base===cible) score+=10;
+      if(base.includes(cible)) score+=6;
+      const communs=cibleTokens.filter(tok=>baseTokens.includes(tok)).length;
+      score+=communs*2;
+      if(cibleTokens.length && communs===cibleTokens.length) score+=3;
+      if(score>scoreMax){ scoreMax=score; meilleur=val; }
+    });
+    return scoreMax>=3 ? meilleur : null;
+  }
+  function extraireMontantTexte(texte){
+    const direct=(texte||"").match(/(\d+(?:[.,]\d+)?)/);
+    if(direct) return parseFloat(direct[1].replace(",","."));
+    const mots=tokensTexte(texte).map(t=>t==="une"?"un":t);
+    const valeurs={zero:0,un:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,vingt:20,trente:30,quarante:40,cinquante:50,soixante:60};
+    let total=0, courant=0, decimales="", modeDecimal=false, vuNombre=false;
+    for(const mot of mots){
+      if(mot==="euro" || mot==="euros" || mot==="balles") break;
+      if(mot==="et") continue;
+      if(mot==="virgule" || mot==="point"){ modeDecimal=true; continue; }
+      if(mot==="cent" || mot==="cents"){ courant=(courant||1)*100; vuNombre=true; continue; }
+      if(mot==="mille"){ total+=(courant||1)*1000; courant=0; vuNombre=true; continue; }
+      if(mot==="quatre" && mots.includes("vingt")){}
+      if(modeDecimal){
+        if(Object.prototype.hasOwnProperty.call(valeurs,mot) && valeurs[mot] < 10){ decimales+=String(valeurs[mot]); vuNombre=true; }
+        continue;
+      }
+      if(mot==="quatre" && mots.includes("vingt")){}
+      if(Object.prototype.hasOwnProperty.call(valeurs,mot)){ courant+=valeurs[mot]; vuNombre=true; continue; }
+      if(mot==="vingts"){ courant+=20; vuNombre=true; continue; }
+    }
+    if(!vuNombre) return null;
+    const brut=total+courant;
+    return parseFloat(brut+(decimales?("."+decimales.slice(0,2)):""));
+  }
+  function texteSansFragments(texte, fragments){
+    let sortie=" "+(texte||"")+" ";
+    (fragments||[]).filter(Boolean).forEach(fragment=>{
+      const ech=fragment.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      sortie=sortie.replace(new RegExp(ech,"ig")," ");
+    });
+    return sortie.replace(/\b(euro|euros|€)\b/gi," ").replace(/\s+/g," ").trim();
+  }
+  function couleurBudget(pct){
+    if(pct>=100) return "danger";
+    if(pct>=85) return "warn";
+    return "";
+  }
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
   function confirmerOuiNon(texte){
     return new Promise(resolve=>{
@@ -1305,8 +1432,9 @@
 
   // ================= Photos (IndexedDB) =================
   function ouvrirDB(){return new Promise((res,rej)=>{const r=indexedDB.open("gf_photos",1);r.onupgradeneeded=()=>r.result.createObjectStore("photos");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
-  async function photoSet(id,blob){const db=await ouvrirDB();return new Promise((res,rej)=>{const tx=db.transaction("photos","readwrite");tx.objectStore("photos").put(blob,String(id));tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
-  async function photoGet(id){const db=await ouvrirDB();return new Promise((res)=>{const tx=db.transaction("photos","readonly");const rq=tx.objectStore("photos").get(String(id));rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);});}
+  function normaliserPhotosStockees(val){ if(!val) return []; return Array.isArray(val) ? val.filter(Boolean) : [val].filter(Boolean); }
+  async function photoSet(id,blobs){const db=await ouvrirDB();const charge=normaliserPhotosStockees(blobs);return new Promise((res,rej)=>{const tx=db.transaction("photos","readwrite");tx.objectStore("photos").put(charge.length<=1?(charge[0]||null):charge,String(id));tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+  async function photoGet(id){const db=await ouvrirDB();return new Promise((res)=>{const tx=db.transaction("photos","readonly");const rq=tx.objectStore("photos").get(String(id));rq.onsuccess=()=>res(normaliserPhotosStockees(rq.result));rq.onerror=()=>res([]);});}
   async function photoDel(id){const db=await ouvrirDB();return new Promise((res)=>{const tx=db.transaction("photos","readwrite");tx.objectStore("photos").delete(String(id));tx.oncomplete=()=>res();});}
   function compresser(file){return new Promise(res=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const max=1000;let w=img.width,h=img.height;if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(img,0,0,w,h);cv.toBlob(b=>{URL.revokeObjectURL(url);res(b);},"image/jpeg",0.7);};img.src=url;});}
   function compresserPourAnalyse(blob){return new Promise(res=>{const img=new Image();const url=URL.createObjectURL(blob);img.onload=()=>{const max=700;let w=img.width,h=img.height;if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}const cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(img,0,0,w,h);cv.toBlob(b=>{URL.revokeObjectURL(url);res(b);},"image/jpeg",0.6);};img.src=url;});}
@@ -1641,6 +1769,54 @@
     const parJour = b.montant / JOURS_PAR[b.unite||"mois"];
     return parJour * JOURS_PAR[modeAffiche];
   }
+  function reelBudgetPeriode(modeAffiche, dateRef){
+    const b=bornesGen(modeAffiche, dateRef), reel={}, reelSous={};
+    depenses.forEach(d=>{
+      const dd=depDate(d); if(!dd || dd<b.debut || dd>b.fin) return;
+      reel[d.categorie]=(reel[d.categorie]||0)+d.montant;
+      if(d.sousCat) reelSous[d.categorie+"|"+d.sousCat]=(reelSous[d.categorie+"|"+d.sousCat]||0)+d.montant;
+    });
+    remboursementsPeriode(b).forEach(r=>{
+      const liees=(r.depenseIds||[]).map(id=>depenses.find(d=>d.id===id)).filter(Boolean);
+      const totalLiees=liees.reduce((s,d)=>s+d.montant,0);
+      if(!totalLiees) return;
+      liees.forEach(d=>{
+        const part=r.montant*(d.montant/totalLiees);
+        reel[d.categorie]=(reel[d.categorie]||0)-part;
+        if(d.sousCat) reelSous[d.categorie+"|"+d.sousCat]=(reelSous[d.categorie+"|"+d.sousCat]||0)-part;
+      });
+    });
+    return {reel,reelSous};
+  }
+  function rendreBudgetSelectionTicket(){
+    const carteCat=$("recu-budget-cat"), carteSous=$("recu-budget-sous");
+    if(!carteCat || !carteSous) return;
+    carteCat.style.display="none"; carteSous.style.display="none";
+    const mode="mois", stats=reelBudgetPeriode(mode,new Date());
+    if(rCat){
+      const prevu=budgetPourPeriode(rCat,mode), reel=stats.reel[rCat]||0;
+      if(prevu>0){
+        const pct=prevu>0?Math.min(100,reel/prevu*100):0, reste=prevu-reel;
+        $("recu-budget-cat-titre").textContent=rCat;
+        $("recu-budget-cat-meta").textContent="Réel "+fmt(reel)+" • "+(reste>=0?"reste ":"dépassé ")+fmt(Math.abs(reste));
+        $("recu-budget-cat-bar").style.width=pct+"%";
+        $("recu-budget-cat-bar").className="budget-fill "+couleurBudget(reel>=prevu?100:pct);
+        carteCat.style.display="block";
+      }
+    }
+    const afficherSous=!!optionsActivees.budgetSousCatTicket && budgetParSousCat && rCat && rSous;
+    if(afficherSous){
+      const cle=rCat+"|"+rSous, prevu=budgetSousCatPourPeriode(cle,mode), reel=stats.reelSous[cle]||0;
+      if(prevu>0){
+        const pct=prevu>0?Math.min(100,reel/prevu*100):0, reste=prevu-reel;
+        $("recu-budget-sous-titre").textContent=rSous;
+        $("recu-budget-sous-meta").textContent="Réel "+fmt(reel)+" • "+(reste>=0?"reste ":"dépassé ")+fmt(Math.abs(reste));
+        $("recu-budget-sous-bar").style.width=pct+"%";
+        $("recu-budget-sous-bar").className="budget-fill "+couleurBudget(reel>=prevu?100:pct);
+        carteSous.style.display="block";
+      }
+    }
+  }
   function rendreBudget(){
     rendreBudModes();
     const curB=estPeriodeCourante(budMode, budDate);
@@ -1788,7 +1964,7 @@
       sel.onchange=()=>{ const cle=sel.dataset.bsunit; budSousCat[cle]=budSousCat[cle]||{montant:0}; budSousCat[cle].unite=sel.value; sauverCloud(); rendreBudget(); };
     });
   }
-  $("toggle-bud-souscat").onclick=()=>{ budgetParSousCat=!budgetParSousCat; sauverCloud(); rendreBudGestion(); rendreBudget(); };
+  $("toggle-bud-souscat").onclick=()=>{ budgetParSousCat=!budgetParSousCat; sauverCloud(); rendreBudGestion(); rendreBudget(); rendreBudgetSelectionTicket(); };
 
   // ---- Transactions récurrentes (dépenses ou revenus) ----
   let ddRecurCat=null, recurCatSel=null;
@@ -1928,9 +2104,14 @@
     const swp=$("toggle-participant");
     if(swp){ swp.classList.toggle("on",actifPart); swp.setAttribute("aria-checked",actifPart); }
     $("champ-participant").style.display=actifPart?"block":"none";
+    const actifSousBudget=!!optionsActivees.budgetSousCatTicket;
+    const swsb=$("toggle-ticket-sousbudget");
+    if(swsb){ swsb.classList.toggle("on",actifSousBudget); swsb.setAttribute("aria-checked",actifSousBudget); }
+    rendreBudgetSelectionTicket();
   }
   $("toggle-recur-remb").onclick=()=>{ optionsActivees.recurRemb=!optionsActivees.recurRemb; sauverCloud(); rendreOptions(); };
   $("toggle-participant").onclick=()=>{ optionsActivees.participant=!optionsActivees.participant; sauverCloud(); rendreOptions(); };
+  $("toggle-ticket-sousbudget").onclick=()=>{ optionsActivees.budgetSousCatTicket=!optionsActivees.budgetSousCatTicket; sauverCloud(); rendreOptions(); };
 
   function basculerRecurType(type){
     recurTypeSel=type; recurCatSel=null;
@@ -2270,35 +2451,62 @@
   let ddCat, ddSous, ddPay, ddPart;
   let rDeviseTicket="EUR", rDateTicket=new Date();
   function majRDateAff(){ $("recu-date").textContent=rDateTicket.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
-  // ---- Saisie vocale rapide (ticket dépense) ----
-  (function initVocal(){
-    const btn=$("r-vocal-btn"); if(!btn) return;
+  function appliquerTexteDepense(texte){
+    const montant=extraireMontantTexte(texte);
+    if(montant) $("r-montant").value=String(montant).replace(".",",");
+    let cat=meilleurChoix(texte,[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)));
+    let sous=cat ? meilleurChoix(texte,souscats[cat]||[]) : null;
+    if(!sous){
+      const toutesSous=[];
+      Object.entries(souscats).forEach(([nomCat,arr])=>(arr||[]).forEach(sc=>toutesSous.push({nomCat,sous:sc})));
+      const meilleurSous=toutesSous.find(item=>meilleurChoix(texte,[item.sous])===item.sous);
+      if(meilleurSous){ sous=meilleurSous.sous; if(!cat || cat===DEP_SIMPLE.nom) cat=meilleurSous.nomCat; }
+    }
+    const paiement=meilleurChoix(texte,moyensPaiement);
+    if(cat){ rCat=cat; ddCat.set(rCat); }
+    if(sous){ rSous=sous; ddSous.set(rSous); } else if(cat){ rSous=null; ddSous.set(null); }
+    if(paiement){ rPay=paiement; ddPay.set(rPay); }
+    const fragments=[cat,sous,paiement,montant?String(montant):null];
+    const reste=texteSansFragments(texte,fragments);
+    if(reste) $("r-desc").value=reste;
+    rendreBudgetSelectionTicket();
+  }
+  function appliquerTexteRevenu(texte){
+    const montant=extraireMontantTexte(texte);
+    if(montant) $("rev-brut").value=String(montant).replace(".",",");
+    const type=meilleurChoix(texte,revtypes.map(t=>t.nom));
+    if(type){ rType=type; ddRevType.set(type); rCotCourante=cotisationDuType(type); rendreCotAffichage(); calcNet(); }
+    const reste=texteSansFragments(texte,[type,montant?String(montant):null]);
+    if(reste) $("rev-desc").value=reste;
+  }
+  function appliquerTexteRemboursement(texte){
+    const montant=extraireMontantTexte(texte);
+    if(montant) $("remb-montant").value=String(montant).replace(".",",");
+    const reste=texteSansFragments(texte,[montant?String(montant):null]);
+    if(reste) $("remb-desc").value=reste;
+  }
+  function initBoutonVocal(id, libelleRepos, libelleEcoute, appliquer){
+    const btn=$(id); if(!btn) return;
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){ btn.style.display="none"; return; }
-    const LIBELLE_REPOS="🎤 Dicter (ex. « vingt euros courses »)";
     const reco=new SR(); reco.lang="fr-FR"; reco.interimResults=false; reco.maxAlternatives=1;
     let enCours=false;
-    btn.onclick=()=>{ if(enCours) return; enCours=true; btn.textContent="🎙️ Écoute…"; try{ reco.start(); }catch(e){ enCours=false; btn.textContent=LIBELLE_REPOS; } };
-    reco.onresult=(e)=>{
-      const texte=e.results[0][0].transcript;
-      const mNombre=texte.match(/(\d+(?:[.,]\d+)?)/);
-      if(mNombre) $("r-montant").value=mNombre[1].replace(".",",");
-      const catTrouvee=categories.find(c=>texte.toLowerCase().includes(c.nom.toLowerCase()));
-      if(catTrouvee){ rCat=catTrouvee.nom; ddCat.set(rCat); }
-      const reste=texte.replace(mNombre?mNombre[0]:"","").replace(/euros?|€/gi,"").trim();
-      if(reste && !catTrouvee) $("r-desc").value=reste;
-    };
-    reco.onerror=()=>{ enCours=false; btn.textContent=LIBELLE_REPOS; };
-    reco.onend=()=>{ enCours=false; btn.textContent=LIBELLE_REPOS; };
-  })();
+    btn.onclick=()=>{ if(enCours) return; enCours=true; btn.lastElementChild.textContent=libelleEcoute; try{ reco.start(); }catch(e){ enCours=false; btn.lastElementChild.textContent=libelleRepos; } };
+    reco.onresult=e=>{ appliquer(e.results[0][0].transcript||""); };
+    reco.onerror=()=>{ enCours=false; btn.lastElementChild.textContent=libelleRepos; };
+    reco.onend=()=>{ enCours=false; btn.lastElementChild.textContent=libelleRepos; };
+  }
+  initBoutonVocal("r-vocal-btn","Écouter","Écoute…",appliquerTexteDepense);
+  initBoutonVocal("rev-vocal-btn","Écouter un revenu","Écoute…",appliquerTexteRevenu);
+  initBoutonVocal("remb-vocal-btn","Écouter un remboursement","Écoute…",appliquerTexteRemboursement);
 
   function ouvrirRecu(id){
     venantCatdet=false;
-    editionId=id||null; photoEtat="aucune"; photoBlob=null;
+    editionId=id||null; photoEtat="aucune"; photoBlobs=[]; modeAjoutPhoto="manuel";
     rDeviseTicket = deviseDefaut;
     $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
     $("recu-titre").textContent = id ? "Modifier la dépense" : "Nouvelle dépense";
-    majAffichagePhoto(false); $("r-photo-suppr").style.display="none"; $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML="";
+    rendreMiniaturesPhoto(); $("r-photo-analyse-msg").innerHTML="";
     if(id){
       const d=depenses.find(x=>x.id===id);
       $("r-montant").value=String(d.montant).replace(".",","); $("r-desc").value=d.commentaire||"";
@@ -2306,7 +2514,7 @@
       rDeviseTicket = d.devise || deviseDefaut; $("r-devise-sym").textContent=symboleDevise(rDeviseTicket);
       rDateTicket = d.date ? new Date(d.date+"T12:00:00") : new Date(selDate);
       ddCat.set(rCat); ddSous.set(rSous); ddPay.set(rPay); ddPart.set(rPart);
-      if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); majAffichagePhoto(true); $("r-photo-suppr").style.display="flex"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
+      if(d.photo){ photoEtat="existante"; photoGet(id).then(blobs=>{ photoBlobs=blobs; rendreMiniaturesPhoto(); }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
       rCat=DEP_SIMPLE.nom; rSous=null; rPay=null; rPart=participants[0]||"Moi";
@@ -2314,6 +2522,7 @@
       ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart);
     }
     majRDateAff();
+    rendreBudgetSelectionTicket();
     $("recu-overlay").style.display="flex";
   }
   $("ouvrir-recu").onclick=()=>ouvrirRecu(null);
@@ -2324,63 +2533,82 @@
   initDDDevise("dd-r-devise", ()=>rDeviseTicket, code=>{ rDeviseTicket=code; $("r-devise-sym").textContent=symboleDevise(code); });
   $("recu-date").onclick=()=>ouvrirCal(rDateTicket, d=>{ rDateTicket=d; majRDateAff(); });
 
-  function majAffichagePhoto(present){
-    $("photo-grille").classList.toggle("remplie", present);
-    $("photo-case-apercu").style.display = present ? "block" : "none";
-    $("r-photo-apercu").style.display = present ? "block" : "none";
-    $("photo-astuce").style.display = present ? "none" : "block";
+  function rendreMiniaturesPhoto(){
+    const grille=$("photo-grille"), trigger=$("r-photo-trigger");
+    grille.querySelectorAll(".photo-case").forEach(el=>el.remove());
+    photoBlobs.forEach((blob,idx)=>{
+      const box=document.createElement("div"); box.className="photo-case";
+      const img=document.createElement("img"); img.alt="Photo "+(idx+1); img.src=URL.createObjectURL(blob);
+      const sup=document.createElement("button"); sup.type="button"; sup.className="photo-x"; sup.setAttribute("aria-label","Retirer la photo "+(idx+1)); sup.textContent="×";
+      sup.onclick=()=>{ photoBlobs.splice(idx,1); photoEtat=photoBlobs.length?"nouvelle":"supprimee"; rendreMiniaturesPhoto(); $("r-photo-analyse-msg").innerHTML=""; };
+      box.appendChild(img); box.appendChild(sup); grille.insertBefore(box,trigger);
+    });
+    trigger.style.display=photoBlobs.length>=MAX_PHOTOS?"none":"flex";
+    $("photo-compteur").textContent=photoBlobs.length+" / "+MAX_PHOTOS;
   }
-  async function traiterPhotoChoisie(f){
-    if(!f)return;
-    photoBlob=await compresser(f); photoEtat="nouvelle";
-    $("r-photo-apercu").src=URL.createObjectURL(photoBlob); majAffichagePhoto(true);
-    $("r-photo-suppr").style.display="flex";
-    $("r-photo-analyser").style.display="block"; $("r-photo-analyse-msg").innerHTML="";
+  function ouvrirChoixPhoto(mode){ modeAjoutPhoto=mode; $(mode==="scan"?"scan-overlay":"photo-source-overlay").style.display="flex"; }
+  function fermerChoixPhoto(){ $("photo-source-overlay").style.display="none"; $("scan-overlay").style.display="none"; }
+  function declencherChoixPhoto(type){
+    const input=$(type==="camera"?"r-photo-file-camera":"r-photo-file");
+    fermerChoixPhoto();
+    input.value="";
+    input.click();
   }
-  $("r-photo-camera").onclick=()=>$("r-photo-file-camera").click();
-  $("r-photo-file-camera").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
-  $("r-photo-btn").onclick=()=>$("r-photo-file").click();
-  $("r-photo-file").onchange=e=>traiterPhotoChoisie(e.target.files[0]);
-  $("r-photo-suppr").onclick=()=>{ photoBlob=null; photoEtat="supprimee";
-    majAffichagePhoto(false); $("r-photo-suppr").style.display="none";
-    $("r-photo-analyser").style.display="none"; $("r-photo-analyse-msg").innerHTML=""; };
-
-  $("r-photo-analyser").onclick=async()=>{
-    if(!photoBlob){ return; }
-    $("r-photo-analyser").disabled=true; $("r-photo-analyser").textContent="🔍 Analyse en cours…";
-    $("r-photo-analyse-msg").innerHTML="";
+  async function analyserTicketDepuisBlob(blob){
+    if(!blob) return;
+    $("r-photo-analyse-msg").innerHTML='<div class="message ok" style="margin-top:8px;">Analyse Gemini en cours…</div>';
     try{
-      const petite=await compresserPourAnalyse(photoBlob);
+      const petite=await compresserPourAnalyse(blob);
       const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(petite); });
-      const { data, error } = await sb.functions.invoke("scan-recu", { body:{
-        image:b64, mediaType:"image/jpeg",
-        categories: categories.map(c=>c.nom),
-        moyens: moyensPaiement
-      } });
+      const { data, error } = await sb.functions.invoke("scan-recu", { body:{ image:b64, mediaType:"image/jpeg", categories: categories.map(c=>c.nom), moyens: moyensPaiement, sousCategoriesByCat: souscats } });
       if(error) throw error;
       if(data && data.error) throw new Error(data.error);
       let msg=[];
-      if(data.montant){ $("r-montant").value=String(data.montant).replace(".",","); msg.push("Montant : "+data.montant+" €"); }
-      if(data.commercant){ $("r-desc").value=data.commercant; msg.push("Commerçant : "+data.commercant); }
+      if(data.montant){ $("r-montant").value=String(data.montant).replace(".",","); msg.push("montant"); }
+      if(data.commercant){ $("r-desc").value=data.commercant; msg.push("description"); }
       if(data.date){
         const m=data.date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-        if(m){ let an=m[3]; if(an.length===2) an="20"+an; rDateTicket=new Date(parseInt(an),parseInt(m[2])-1,parseInt(m[1])); majRDateAff(); msg.push("Date : "+data.date); }
+        if(m){ let an=m[3]; if(an.length===2) an="20"+an; rDateTicket=new Date(parseInt(an,10),parseInt(m[2],10)-1,parseInt(m[1],10)); majRDateAff(); msg.push("date"); }
       }
-      if(data.categorie && categories.some(c=>c.nom===data.categorie)){ rCat=data.categorie; ddCat.set(rCat); ddSous.set(null); rSous=null; msg.push("Catégorie : "+data.categorie); }
-      if(data.moyenPaiement && moyensPaiement.includes(data.moyenPaiement)){ rPay=data.moyenPaiement; ddPay.set(rPay); msg.push("Paiement : "+data.moyenPaiement); }
-      $("r-photo-analyse-msg").innerHTML = msg.length ? '<div class="message ok" style="margin-top:8px;">Rempli automatiquement — '+msg.join(" · ")+'<br />Vérifie avant de valider !</div>' : '<div class="message warn" style="margin-top:8px;">Rien de lisible sur ce ticket, remplis à la main.</div>';
+      const listeCats=[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom));
+      const catChoisie=data.categorie && listeCats.includes(data.categorie) ? data.categorie : meilleurChoix((data.categorie||"")+" "+(data.commercant||""), listeCats);
+      if(catChoisie){ rCat=catChoisie; ddCat.set(rCat); msg.push("catégorie"); }
+      const sousListe=souscats[rCat]||[];
+      const sousChoisie=data.sousCategorie && sousListe.includes(data.sousCategorie) ? data.sousCategorie : meilleurChoix((data.sousCategorie||"")+" "+(data.commercant||""), sousListe);
+      if(sousChoisie){ rSous=sousChoisie; ddSous.set(rSous); msg.push("sous-catégorie"); } else if(catChoisie){ rSous=null; ddSous.set(null); }
+      const payChoisi=data.moyenPaiement && moyensPaiement.includes(data.moyenPaiement) ? data.moyenPaiement : meilleurChoix(data.moyenPaiement||"", moyensPaiement);
+      if(payChoisi){ rPay=payChoisi; ddPay.set(rPay); msg.push("paiement"); }
+      rendreBudgetSelectionTicket();
+      $("r-photo-analyse-msg").innerHTML = msg.length ? '<div class="message ok" style="margin-top:8px;">Ticket rempli intelligemment : '+msg.join(" · ")+'<br />Vérifie avant de valider.</div>' : '<div class="message warn" style="margin-top:8px;">Scan terminé, mais rien de fiable n’a été reconnu.</div>';
     }catch(e){
       let detail=e.message||String(e);
       if(e.context && typeof e.context.json==="function"){
         try{ const corps=await e.context.json(); if(corps && corps.error) detail=corps.error; }catch(_){}
       }
       const surcharge=/503|UNAVAILABLE|high demand/i.test(detail);
-      $("r-photo-analyse-msg").innerHTML = surcharge
-        ? '<div class="message warn" style="margin-top:8px;">L\'analyse est momentanément surchargée — réessaie dans une minute, ou remplis à la main.</div>'
-        : '<div class="message err" style="margin-top:8px;">Échec de l\'analyse : '+detail+'</div>';
+      $("r-photo-analyse-msg").innerHTML = surcharge ? '<div class="message warn" style="margin-top:8px;">Le scan est momentanément surchargé. Réessaie dans une minute.</div>' : '<div class="message err" style="margin-top:8px;">Échec du scan : '+detail+'</div>';
     }
-    $("r-photo-analyser").disabled=false; $("r-photo-analyser").textContent="🔍 Analyser le ticket";
-  };
+  }
+  async function traiterPhotosChoisies(files){
+    const liste=Array.from(files||[]).filter(Boolean); if(!liste.length) return;
+    const restantes=Math.max(0,MAX_PHOTOS-photoBlobs.length);
+    const aAjouter=liste.slice(0,restantes);
+    const nouvelles=await Promise.all(aAjouter.map(compresser));
+    photoBlobs=photoBlobs.concat(nouvelles); photoEtat="nouvelle";
+    rendreMiniaturesPhoto();
+    if(modeAjoutPhoto==="scan" && nouvelles[0]) await analyserTicketDepuisBlob(nouvelles[0]);
+    else if(liste.length>restantes) $("r-photo-analyse-msg").innerHTML='<div class="message warn" style="margin-top:8px;">Maximum '+MAX_PHOTOS+' photos par dépense.</div>';
+  }
+  $("r-photo-trigger").onclick=()=>ouvrirChoixPhoto("manuel");
+  $("r-scan-btn").onclick=()=>ouvrirChoixPhoto("scan");
+  $("photo-source-overlay").onclick=e=>{ if(e.target===$("photo-source-overlay")) fermerChoixPhoto(); };
+  $("scan-fermer").onclick=fermerChoixPhoto;
+  $("photo-source-camera").onclick=()=>declencherChoixPhoto("camera");
+  $("photo-source-gallery").onclick=()=>declencherChoixPhoto("gallery");
+  $("scan-camera").onclick=()=>declencherChoixPhoto("camera");
+  $("scan-gallery").onclick=()=>declencherChoixPhoto("gallery");
+  $("r-photo-file-camera").onchange=e=>traiterPhotosChoisies(e.target.files);
+  $("r-photo-file").onchange=e=>traiterPhotosChoisies(e.target.files);
 
   $("recu-valider").onclick=async()=>{
     const v=parseFloat(($("r-montant").value||"").replace(",",".")); if(!v||v<=0){$("r-montant").focus();return;}
@@ -2390,16 +2618,17 @@
     if(editionId){ d=depenses.find(x=>x.id===editionId);
       Object.assign(d,{montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
     } else {
-      d={id:Date.now(),montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour),photo:false};
+      d={id:Date.now(),montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour),photo:false,photoCount:0};
       depenses.push(d);
     }
-    if(photoEtat==="nouvelle" && photoBlob){ await photoSet(d.id,photoBlob); d.photo=true; }
-    else if(photoEtat==="supprimee"){ await photoDel(d.id); d.photo=false; }
+    if(photoEtat==="nouvelle" && photoBlobs.length){ await photoSet(d.id,photoBlobs); d.photo=true; d.photoCount=photoBlobs.length; }
+    else if(photoEtat==="supprimee"){ await photoDel(d.id); d.photo=false; d.photoCount=0; }
+    else if(photoEtat==="existante"){ d.photo=photoBlobs.length>0; d.photoCount=photoBlobs.length; }
     selDate=new Date(rDateTicket);
     sauverDep(); $("recu-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
   };
 
-  async function voirPhoto(id){ const b=await photoGet(id); if(!b)return; $("lb-img").src=URL.createObjectURL(b); $("lb-overlay").style.display="flex"; }
+  async function voirPhoto(id){ const blobs=await photoGet(id); if(!blobs.length)return; $("lb-img").src=URL.createObjectURL(blobs[0]); $("lb-overlay").style.display="flex"; }
   $("lb-overlay").onclick=()=>$("lb-overlay").style.display="none";
 
   // ================= Catégories =================
@@ -3167,9 +3396,9 @@
     verifierRappelSaisie();
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
-    ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null);});
+    ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null); rendreBudgetSelectionTicket();});
     basculerRecurType("depense");
-    ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v;});
+    ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v; rendreBudgetSelectionTicket();});
     ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});

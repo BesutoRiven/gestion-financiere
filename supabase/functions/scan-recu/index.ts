@@ -10,7 +10,7 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
   try {
-    const { image, mediaType, categories, moyens } = await req.json();
+    const { image, mediaType, categories, moyens, sousCategoriesByCat } = await req.json();
     if (!image) throw new Error("Aucune image recue.");
 
     const apiKey = Deno.env.get("GEMINI_API_KEY");
@@ -20,6 +20,9 @@ Deno.serve(async (req: Request) => {
 
     const listeCat = Array.isArray(categories) && categories.length ? categories.join(", ") : "aucune";
     const listeMoy = Array.isArray(moyens) && moyens.length ? moyens.join(", ") : "aucun";
+    const listeSous = sousCategoriesByCat && typeof sousCategoriesByCat === "object"
+      ? JSON.stringify(sousCategoriesByCat)
+      : "{}";
 
     const prompt =
       "Voici la photo d'un ticket de caisse. Reponds UNIQUEMENT avec un objet JSON valide, " +
@@ -28,6 +31,7 @@ Deno.serve(async (req: Request) => {
       "- commercant (texte court, nom du magasin, ou null si illisible)\n" +
       "- date (format JJ/MM/AAAA, ou null si illisible)\n" +
       "- categorie : choisis EXACTEMENT une valeur parmi cette liste, celle qui correspond le mieux au type d'achat, ou null si aucune ne convient : [" + listeCat + "]\n" +
+      "- sousCategorie : si une categorie est trouvee, choisis EXACTEMENT une sous-categorie adaptee dans cet objet JSON {categorie:[...]} : " + listeSous + ", sinon null\n" +
       "- moyenPaiement : choisis EXACTEMENT une valeur parmi cette liste si le ticket l'indique clairement (ex. \"ESPECES\", \"CB\"), ou null sinon : [" + listeMoy + "]\n" +
       "Ne reponds rien d'autre que ce JSON.";
 
