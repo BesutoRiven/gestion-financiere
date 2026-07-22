@@ -143,10 +143,10 @@
     .recu-photo img{width:64px; height:64px; object-fit:cover; border-radius:10px;}
     .recu-valider{width:100%; margin-top:14px; height:48px; background:var(--accent); color:#fff; border:none; border-radius:12px; font-size:17px; font-weight:700; cursor:pointer;}
     .recu-annuler{width:100%; margin-top:8px; height:40px; background:transparent; color:var(--papier-muted); border:none; font-size:14px; cursor:pointer;}
-    .devise-btn{display:inline-flex; align-items:center; justify-content:center; min-height:46px; font-size:28px; line-height:1; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 4px; font-family:inherit;}
+    .devise-btn{display:inline-flex; align-items:center; justify-content:center; min-height:46px; font-size:28px; line-height:1; color:var(--papier-muted); background:none; border:none; cursor:pointer; padding:0 2px 0 0; font-family:inherit;}
     .dd-devise{position:relative; margin-top:0;}
-    .dd-devise .devise-btn{padding:0 18px 0 2px; position:relative;}
-    .dd-devise .devise-btn::after{content:"▾"; font-size:12px; position:absolute; right:0; top:50%; transform:translateY(-50%); color:var(--papier-muted); line-height:1;}
+    .dd-devise .devise-btn{padding:0 14px 0 0; position:relative; margin-left:-2px;}
+    .dd-devise .devise-btn::after{content:"▾"; font-size:11px; position:absolute; right:0; top:50%; transform:translateY(-48%); color:var(--papier-muted); line-height:1;}
     .dd-devise .dd-panel{left:auto; right:0; top:calc(100% + 8px); width:210px; background:var(--papier); border-color:var(--papier-border);}
     .dd-devise .dd-opt{color:var(--papier-txt); font-size:14px;}
     .dd-devise .dd-opt:hover{background:var(--papier-vert);}
@@ -201,11 +201,10 @@
     .listen-btn .listen-ico{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:var(--accent-soft); color:var(--accent);}
     .listen-btn .listen-ico svg{width:15px; height:15px;}
     .listen-btn.scan .listen-ico{background:rgba(47,111,176,.14); color:#2f6fb0;}
-    .recu-budget-wrap{display:grid; gap:8px; margin-top:10px;}
-    .recu-budget-card{display:none; border:1px solid var(--papier-border); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.28);}
-    .recu-budget-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; color:var(--papier-muted);}
-    .recu-budget-head strong{color:var(--papier-txt); font-size:13px;}
-    .recu-budget-meta{margin-top:4px; font-size:12px; color:var(--papier-txt);}
+    .recu-budget-card{border:1px solid var(--papier-border); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.28); margin-top:10px;}
+    .recu-budget-top{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; color:var(--papier-muted);}
+    .recu-budget-top strong{color:var(--papier-txt); font-size:13px;}
+    .recu-budget-meta{margin-top:4px; font-size:12px; color:var(--papier-txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .budget-track{margin-top:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.4); overflow:hidden;}
     .budget-fill{height:100%; border-radius:inherit; background:linear-gradient(90deg,#2aa36b,#72c55a);}
     .budget-fill.warn{background:linear-gradient(90deg,#d4a017,#f0b53c);}
@@ -230,6 +229,12 @@
     .photo-source-box p{margin:0 0 12px; color:var(--text);}
     .photo-source-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
     .scan-fermer{margin-top:14px; border:none; background:none; color:rgba(255,255,255,.8); font-size:13px; cursor:pointer;}
+    .dd.disabled .dd-btn{opacity:.55; cursor:not-allowed; background:rgba(255,255,255,.18);}
+    .dd.disabled .dd-btn::after{opacity:.45;}
+    .budget-home-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin:10px 12px 0;}
+    .budget-home-top{display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:12px;}
+    .budget-home-top strong{color:var(--text); font-size:13px;}
+    .budget-home-pct{color:var(--text); font-weight:700; font-variant-numeric:tabular-nums;}
     @media (max-width:380px){
       .recu-overlay{padding:8px;}
       .recu{max-width:none; width:100%;}
@@ -293,6 +298,9 @@
 
     .cat-ligne .emoji-in{width:38px; text-align:center; flex:0 0 auto; border:1px solid var(--border); border-radius:8px; padding:8px 4px; font-size:16px; background:var(--surface); color:var(--text);}
     .cat-ligne .color-in{width:34px; height:34px; flex:0 0 auto; border:none; padding:0; border-radius:8px; overflow:hidden; background:none; cursor:pointer;}
+    .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14);}
+    .swatch-chip{width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer;}
+    .swatch-custom{width:100%; height:34px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
 
     .segmented{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:3px; margin:12px 12px 0; gap:3px;}
     .segmented button{flex:1; border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; padding:8px 0; border-radius:9px; cursor:pointer;}
@@ -303,6 +311,8 @@
     .txn-revenu{border-left:3px solid var(--accent);}
     .txn-remb{border-left:3px solid #2f6fb0;}
     .bud-ro{font-size:13px; color:var(--muted); margin-top:4px;}
+    .rond svg,.recur-toggle-icon svg,.btn-inline-ic svg{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+    .btn-inline-ic{display:inline-flex; align-items:center; gap:7px;}
     .switch{width:50px; height:28px; border-radius:16px; background:var(--border); border:none; position:relative; cursor:pointer; flex:0 0 auto; transition:background .2s;}
     .switch .knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .2s;}
     .switch.on{background:var(--accent);}
@@ -356,6 +366,10 @@
 
       <div id="rappel-saisie"></div>
       <div class="jour-total"><p class="val" id="jt-val">0,00 €</p></div>
+      <div class="budget-home-card" id="home-budget-card">
+        <div class="budget-home-top"><strong id="home-budget-titre">Budget mensuel</strong><span class="budget-home-pct" id="home-budget-pct">0%</span></div>
+        <div class="budget-track"><div class="budget-fill" id="home-budget-bar" style="width:0%;"></div></div>
+      </div>
 
       <div class="segmented" id="txn-filtre">
         <button data-f="tout" class="on">Tout</button>
@@ -364,9 +378,9 @@
       </div>
 
       <div class="actions3">
-        <button id="ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
-        <button id="ouvrir-recu"><span class="rond">＋</span>Dépense</button>
-        <button id="ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
+        <button id="ouvrir-rev"><span class="rond" data-ico="revenu"></span>Revenu</button>
+        <button id="ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="ouvrir-remb"><span class="rond" data-ico="remboursement"></span>Remboursement</button>
       </div>
 
       <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0; flex-wrap:wrap;">
@@ -396,8 +410,8 @@
         <button class="fleche" id="res-plus" aria-label="Période suivante">›</button>
       </div>
       <div style="text-align:center; margin-top:8px;"><button id="res-auj" class="btn-auj" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="t">Aujourd'hui</span></button>
-        <button id="btn-bilan" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;">🎉 Bilan du mois</button>
-        <button id="btn-objectifs" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;">🎯 Objectifs</button>
+        <button id="btn-bilan" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;"><span class="btn-inline-ic"><span data-ico="bilan"></span><span>Bilan du mois</span></span></button>
+        <button id="btn-objectifs" style="height:34px; padding:0 16px; border:none; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:13px; cursor:pointer; margin-left:8px;"><span class="btn-inline-ic"><span data-ico="objectif"></span><span>Objectifs</span></span></button>
       </div>
       <div class="segmented" id="res-filtre">
         <button data-f="tout" class="on">Tout</button>
@@ -405,9 +419,9 @@
         <button data-f="revenus">Revenus</button>
       </div>
       <div class="actions3">
-        <button id="res-ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
-        <button id="res-ouvrir-recu"><span class="rond">＋</span>Dépense</button>
-        <button id="res-ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
+        <button id="res-ouvrir-rev"><span class="rond" data-ico="revenu"></span>Revenu</button>
+        <button id="res-ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="res-ouvrir-remb"><span class="rond" data-ico="remboursement"></span>Remboursement</button>
       </div>
       <div id="kpi-zone"></div>
       <div class="bloc">
@@ -502,6 +516,15 @@
                 <span style="font-size:13px; font-weight:600;">Détailler aussi par sous-catégorie</span>
                 <button id="toggle-bud-souscat" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le budget par sous-catégorie"><span class="knob"></span></button>
               </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px;">
+                <span style="font-size:13px; font-weight:600;">Période affichée par défaut</span>
+                <select id="budget-pref-select" style="border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-family:inherit; background:var(--surface); color:var(--text);">
+                  <option value="jour">Journalier</option>
+                  <option value="semaine">Hebdomadaire</option>
+                  <option value="mois" selected>Mensuel</option>
+                  <option value="annee">Annuel</option>
+                </select>
+              </div>
               <div id="bud-gestion-liste" style="margin-top:10px;"></div>
             </div>
           </details>
@@ -511,9 +534,9 @@
               <small class="aide">Une dépense ou un revenu de ce type est créé automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé).</small>
               <div id="recur-liste" style="margin-top:10px;"></div>
               <div class="recur-toggle">
-                <button type="button" id="recur-type-rev"><span class="recur-toggle-icon icone-revenu-rond">＋</span>Revenu</button>
-                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon">＋</span>Dépense</button>
-                <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon">↩</span>Remboursement</button>
+                <button type="button" id="recur-type-rev"><span class="recur-toggle-icon" data-ico="revenu"></span>Revenu</button>
+                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon" data-ico="depense"></span>Dépense</button>
+                <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon" data-ico="remboursement"></span>Remboursement</button>
               </div>
               <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap;">
                 <input id="recur-nom" type="text" placeholder="Nom (ex. Loyer)" style="flex:2 1 120px;" />
@@ -567,10 +590,6 @@
           <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
             <span style="font-size:13px; font-weight:600;">Champ "Participant" sur une dépense</span>
             <button id="toggle-participant" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le champ Participant"><span class="knob"></span></button>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
-            <span style="font-size:13px; font-weight:600;">Afficher le budget de la sous-catégorie dans Nouvelle dépense</span>
-            <button id="toggle-ticket-sousbudget" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Afficher le budget de la sous-catégorie dans Nouvelle dépense"><span class="knob"></span></button>
           </div>
         </div>
       </details>
@@ -633,23 +652,16 @@
 
         <div class="recu-grille2">
           <div class="recu-champ"><label>Catégorie</label><div class="dd" id="dd-cat"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
-          <div class="recu-champ"><label>Moyen de paiement</label><div class="dd" id="dd-pay"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
           <div class="recu-champ"><label>Sous-catégorie</label><div class="dd" id="dd-sous"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
-          <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" placeholder="Ex. Bowl protéiné avec Louise" /></div>
+          <div class="recu-champ"><label>Moyen de paiement</label><div class="dd" id="dd-pay"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
+          <div class="recu-champ" id="champ-participant" style="display:none;"><label>Participant</label><div class="dd" id="dd-part"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
         </div>
-        <div class="recu-budget-wrap" id="recu-budget-wrap">
-          <div class="recu-budget-card" id="recu-budget-cat">
-            <div class="recu-budget-head"><strong id="recu-budget-cat-titre"></strong><span>Budget du mois</span></div>
-            <div class="recu-budget-meta" id="recu-budget-cat-meta"></div>
-            <div class="budget-track"><div class="budget-fill" id="recu-budget-cat-bar"></div></div>
-          </div>
-          <div class="recu-budget-card" id="recu-budget-sous">
-            <div class="recu-budget-head"><strong id="recu-budget-sous-titre"></strong><span>Sous-catégorie</span></div>
-            <div class="recu-budget-meta" id="recu-budget-sous-meta"></div>
-            <div class="budget-track"><div class="budget-fill" id="recu-budget-sous-bar"></div></div>
-          </div>
+        <div class="recu-budget-card" id="recu-budget-cat">
+          <div class="recu-budget-top"><strong id="recu-budget-cat-titre">Budget mensuel</strong><span id="recu-budget-cat-periode">Choisis une catégorie</span></div>
+          <div class="recu-budget-meta" id="recu-budget-cat-meta">La jauge de budget s’affichera ici.</div>
+          <div class="budget-track"><div class="budget-fill" id="recu-budget-cat-bar" style="width:0%;"></div></div>
         </div>
-        <div class="recu-champ" id="champ-participant" style="display:none;"><label>Participant</label><div class="dd" id="dd-part"><button type="button" class="dd-btn vide">Choisir…</button><div class="dd-panel" style="display:none;"></div></div></div>
+        <div class="recu-champ"><label>Description</label><input id="r-desc" class="recu-desc" type="text" maxlength="30" placeholder="Ex. Bowl protéiné avec Louise" /></div>
 
         <div class="recu-photo">
           <label style="font-size:12px; color:var(--papier-muted); text-transform:uppercase; letter-spacing:.5px;">Photos</label>
@@ -885,9 +897,9 @@
         <div><div class="bud-mini-l">Reste</div><div class="bud-mini-v" id="bt-reste">0,00 €</div></div>
       </div>
       <div class="actions3">
-        <button id="bud-ouvrir-rev"><span class="rond icone-revenu-rond">＋</span>Revenu</button>
-        <button id="bud-ouvrir-recu"><span class="rond">＋</span>Dépense</button>
-        <button id="bud-ouvrir-remb"><span class="rond">↩</span>Remboursement</button>
+        <button id="bud-ouvrir-rev"><span class="rond" data-ico="revenu"></span>Revenu</button>
+        <button id="bud-ouvrir-recu"><span class="rond" data-ico="depense"></span>Dépense</button>
+        <button id="bud-ouvrir-remb"><span class="rond" data-ico="remboursement"></span>Remboursement</button>
       </div>
       <div id="bud-alertes"></div>
       <div class="bloc"><div id="bud-liste"></div></div>
@@ -906,11 +918,11 @@
   <script>
   // ================= Données =================
   const CATS_DEFAUT = [
-    {nom:"Logement",bg:"#faece7",fg:"#712b13",emoji:"🏠"},{nom:"Alim. & Courses",bg:"#faeeda",fg:"#854f0b",emoji:"🛒"},
-    {nom:"Déplacements",bg:"#e6f1fb",fg:"#0c447c",emoji:"🚗"},{nom:"Santé",bg:"#eaf3de",fg:"#27500a",emoji:"💊"},
-    {nom:"Animaux",bg:"#e1f5ee",fg:"#085041",emoji:"🐾"},{nom:"Numér. & Tech.",bg:"#eeedfe",fg:"#3c3489",emoji:"💻"},
-    {nom:"Shopping",bg:"#fbeaf0",fg:"#72243e",emoji:"🛍️"},{nom:"Loisirs",bg:"#fcebeb",fg:"#a32d2d",emoji:"🎮"},
-    {nom:"Voyages",bg:"#fef0da",fg:"#9a6a00",emoji:"✈️"},{nom:"Divers",bg:"#f1efe8",fg:"#444441",emoji:"📎"},
+    {nom:"Logement",bg:"#faece7",fg:"#712b13",emoji:"⌂"},{nom:"Alim. & Courses",bg:"#faeeda",fg:"#854f0b",emoji:"◫"},
+    {nom:"Déplacements",bg:"#e6f1fb",fg:"#0c447c",emoji:"⇄"},{nom:"Santé",bg:"#eaf3de",fg:"#27500a",emoji:"✚"},
+    {nom:"Animaux",bg:"#e1f5ee",fg:"#085041",emoji:"○"},{nom:"Numér. & Tech.",bg:"#eeedfe",fg:"#3c3489",emoji:"⌘"},
+    {nom:"Shopping",bg:"#fbeaf0",fg:"#72243e",emoji:"◇"},{nom:"Loisirs",bg:"#fcebeb",fg:"#a32d2d",emoji:"◈"},
+    {nom:"Voyages",bg:"#fef0da",fg:"#9a6a00",emoji:"△"},{nom:"Divers",bg:"#f1efe8",fg:"#444441",emoji:"•"},
   ];
   const PARTICIPANTS_DEFAUT = ["Moi","Nous deux"];
   // Sous-catégories par catégorie (d'après le tableau Excel)
@@ -928,7 +940,7 @@
   };
   const MOYENS_DEFAUT = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
   // Catégorie spéciale "Dépense" : toujours disponible, invisible dans les réglages
-  const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"💳"};
+  const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"◧"};
   const REVTYPES_DEFAUT = [{nom:"Auto-entrep.",cotisation:0},{nom:"Salaire",cotisation:0},{nom:"Freelance",cotisation:0},{nom:"Prime",cotisation:0},{nom:"Autre",cotisation:0}];
 
   // Comptes administrateurs (emails). Tu peux en ajouter/retirer ici.
@@ -1006,7 +1018,8 @@
 
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let depenses=[], categories=[], souscats={}, souscatSel=null, participants=[];
-  let budCat={}, budMode="mois", budDate=new Date();
+  const BUDGET_PREF_KEY="gf_budget_mode_session";
+  let budCat={}, budMode=(sessionStorage.getItem(BUDGET_PREF_KEY)||"mois"), budDate=new Date();
   let remboursements=[], filtreTxn="tout";
   let revenus=[], revtypes=[], revTypeSel=null;
   let rType=null;
@@ -1026,11 +1039,18 @@
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
   function majIconeRevenu(){
-    document.querySelectorAll(".icone-revenu-rond").forEach(rond=>rond.textContent=iconeRevenu());
+    appliquerIconesUI();
   }
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   const MAX_PHOTOS=4;
+  const ICONES_UI={
+    revenu:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/></svg>',
+    depense:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
+    remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
+    bilan:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.9L12 16.9 6.7 19.2l1-5.9-4.2-4.1 5.9-.9L12 3z"/></svg>',
+    objectif:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v2"/><path d="M20 12h-2"/><path d="M12 20v-2"/><path d="M4 12h2"/></svg>'
+  };
   function normaliserTexte(texte){
     return (texte||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").trim();
   }
@@ -1089,6 +1109,20 @@
     if(pct>=100) return "danger";
     if(pct>=85) return "warn";
     return "";
+  }
+  function appliquerIconesUI(){
+    document.querySelectorAll("[data-ico]").forEach(el=>{
+      const nom=el.dataset.ico;
+      if(ICONES_UI[nom]) el.innerHTML=ICONES_UI[nom];
+    });
+  }
+  function libelleModeBudget(mode){
+    return ({jour:"journalier",semaine:"hebdomadaire",mois:"mensuel",annee:"annuel"})[mode]||"mensuel";
+  }
+  function setBudgetModeSession(mode){
+    budMode=mode||"mois";
+    sessionStorage.setItem(BUDGET_PREF_KEY,budMode);
+    const sel=$("budget-pref-select"); if(sel) sel.value=budMode;
   }
   function confirmDouble(msg){ if(!confirm(msg)) return false; return confirm("Es-tu vraiment sûr ? Cette action est définitive."); }
   function confirmerOuiNon(texte){
@@ -1442,7 +1476,7 @@
   // ================= Menus déroulants =================
   function initDD(idConteneur, options, onSelect){
     const wrap=$(idConteneur); const btn=wrap.querySelector(".dd-btn"); const panel=wrap.querySelector(".dd-panel");
-    function ouvrir(){ document.querySelectorAll(".dd-panel").forEach(p=>{if(p!==panel)p.style.display="none";}); panel.style.display = panel.style.display==="block"?"none":"block"; }
+    function ouvrir(){ if(btn.disabled) return; document.querySelectorAll(".dd-panel").forEach(p=>{if(p!==panel)p.style.display="none";}); panel.style.display = panel.style.display==="block"?"none":"block"; }
     btn.onclick = e => { e.stopPropagation(); construire(); ouvrir(); };
     function construire(){
       panel.innerHTML="";
@@ -1454,7 +1488,7 @@
       if(options().length===0){ const o=document.createElement("div"); o.className="dd-opt"; o.style.color="var(--muted)"; o.textContent="Choisis d'abord une catégorie"; panel.appendChild(o); }
     }
     function definir(val){ btn.textContent=val||"Choisir…"; btn.classList.toggle("vide",!val); btn.dataset.val=val||""; }
-    return { set:definir, get:()=>btn.dataset.val||"" };
+    return { set:definir, get:()=>btn.dataset.val||"", button:btn, wrap, setDisabled:(disabled,msg)=>{ btn.disabled=!!disabled; wrap.classList.toggle("disabled",!!disabled); if(disabled && !btn.dataset.val) btn.textContent=msg||"Choisis d'abord une catégorie"; } };
   }
   document.addEventListener("click",()=>document.querySelectorAll(".dd-panel").forEach(p=>p.style.display="none"));
 
@@ -1462,8 +1496,8 @@
   function changerVue(nom){
     ["accueil","depenses","reglages","budget"].forEach(v=>$("vue-"+v).style.display=(v===nom?"flex":"none"));
     document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("on",b.dataset.vue===nom));
-    if(nom==="accueil"){ resDate=new Date(); rendreAccueil(); }
-    if(nom==="budget"){ budDate=new Date(); rendreBudget(); }
+    if(nom==="accueil"){ rendreAccueil(); }
+    if(nom==="budget"){ rendreBudget(); }
     window.scrollTo(0,0);
   }
   document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>changerVue(b.dataset.vue));
@@ -1523,6 +1557,14 @@
     const totalDepNet = totalDep - totalRemb;
     let totalRev=0; const parType={};
     revenus.forEach(r=>{ if(r.date>=b.debut && r.date<=b.fin){ const net=r.net!=null?r.net:r.montant; totalRev+=net; parType[r.type||"Autre"]=(parType[r.type||"Autre"]||0)+net; } });
+    const statsBudget=reelBudgetPeriode(budMode,new Date());
+    const totalBudget=categories.reduce((s,c)=>s+budgetPourPeriode(c.nom,budMode),0);
+    const totalReelBudget=categories.reduce((s,c)=>s+(statsBudget.reel[c.nom]||0),0);
+    const pctBudget=totalBudget>0?Math.min(100,totalReelBudget/totalBudget*100):(totalReelBudget>0?100:0);
+    $("home-budget-titre").textContent="Budget "+libelleModeBudget(budMode);
+    $("home-budget-pct").textContent=Math.round(pctBudget)+"%";
+    $("home-budget-bar").style.width=pctBudget+"%";
+    $("home-budget-bar").className="budget-fill "+couleurBudget(totalReelBudget>=totalBudget && totalBudget>0?100:pctBudget);
 
     const box=$("repartition"); box.innerHTML="";
     if(filtreRes==="depenses"){
@@ -1745,7 +1787,7 @@
     const modes=[["jour","Journalier"],["semaine","Hebdomadaire"],["mois","Mensuel"],["annee","Annuel"]];
     const c=$("bud-modes"); c.innerHTML="";
     modes.forEach(m=>{const b=document.createElement("button");b.className="pchip"+(budMode===m[0]?" on":"");b.textContent=m[1];
-      b.onclick=()=>{budMode=m[0];rendreBudget();};c.appendChild(b);});
+      b.onclick=()=>{setBudgetModeSession(m[0]); rendreBudget(); rendreAccueil(); rendreBudgetSelectionTicket();};c.appendChild(b);});
   }
   function decalerBudget(sens){
     if(sens>0 && estPeriodeCourante(budMode, budDate)) return; // pas de futur
@@ -1755,6 +1797,10 @@
     else if(budMode==="mois") d.setMonth(d.getMonth()+sens);
     else d.setFullYear(d.getFullYear()+sens);
     budDate=d; rendreBudget();
+  }
+  function majBudgetPrefSelect(){
+    const sel=$("budget-pref-select");
+    if(sel) sel.value=budMode;
   }
   // Conversion d'un budget défini dans une unité vers n'importe quelle période affichée.
   // Hypothèses : semaine=7 jours, mois=30,44 jours (moyenne calendaire), année=365 jours.
@@ -1789,31 +1835,24 @@
     return {reel,reelSous};
   }
   function rendreBudgetSelectionTicket(){
-    const carteCat=$("recu-budget-cat"), carteSous=$("recu-budget-sous");
-    if(!carteCat || !carteSous) return;
-    carteCat.style.display="none"; carteSous.style.display="none";
-    const mode="mois", stats=reelBudgetPeriode(mode,new Date());
-    if(rCat){
+    const carteCat=$("recu-budget-cat"); if(!carteCat) return;
+    const titre=$("recu-budget-cat-titre"), periode=$("recu-budget-cat-periode"), meta=$("recu-budget-cat-meta"), barre=$("recu-budget-cat-bar");
+    const mode=budMode, stats=reelBudgetPeriode(mode,new Date());
+    titre.textContent=rCat && rCat!==DEP_SIMPLE.nom ? rCat : "Budget "+libelleModeBudget(mode);
+    periode.textContent=rCat && rCat!==DEP_SIMPLE.nom ? ("Budget "+libelleModeBudget(mode)) : "Choisis une catégorie";
+    meta.textContent="La jauge de budget s’affichera ici.";
+    barre.style.width="0%";
+    barre.className="budget-fill";
+    if(rCat && rCat!==DEP_SIMPLE.nom){
       const prevu=budgetPourPeriode(rCat,mode), reel=stats.reel[rCat]||0;
       if(prevu>0){
-        const pct=prevu>0?Math.min(100,reel/prevu*100):0, reste=prevu-reel;
-        $("recu-budget-cat-titre").textContent=rCat;
-        $("recu-budget-cat-meta").textContent="Réel "+fmt(reel)+" • "+(reste>=0?"reste ":"dépassé ")+fmt(Math.abs(reste));
-        $("recu-budget-cat-bar").style.width=pct+"%";
-        $("recu-budget-cat-bar").className="budget-fill "+couleurBudget(reel>=prevu?100:pct);
-        carteCat.style.display="block";
-      }
-    }
-    const afficherSous=!!optionsActivees.budgetSousCatTicket && budgetParSousCat && rCat && rSous;
-    if(afficherSous){
-      const cle=rCat+"|"+rSous, prevu=budgetSousCatPourPeriode(cle,mode), reel=stats.reelSous[cle]||0;
-      if(prevu>0){
-        const pct=prevu>0?Math.min(100,reel/prevu*100):0, reste=prevu-reel;
-        $("recu-budget-sous-titre").textContent=rSous;
-        $("recu-budget-sous-meta").textContent="Réel "+fmt(reel)+" • "+(reste>=0?"reste ":"dépassé ")+fmt(Math.abs(reste));
-        $("recu-budget-sous-bar").style.width=pct+"%";
-        $("recu-budget-sous-bar").className="budget-fill "+couleurBudget(reel>=prevu?100:pct);
-        carteSous.style.display="block";
+        const pct=Math.min(100,reel/prevu*100), reste=prevu-reel;
+        meta.textContent="Réel "+fmt(reel)+" reste "+fmt(Math.abs(reste));
+        if(reste<0) meta.textContent="Réel "+fmt(reel)+" dépassé "+fmt(Math.abs(reste));
+        barre.style.width=pct+"%";
+        barre.className="budget-fill "+couleurBudget(reel>=prevu?100:pct);
+      }else{
+        meta.textContent="Aucun budget défini pour cette catégorie.";
       }
     }
   }
@@ -1927,6 +1966,7 @@
   let budGestionOuvert=new Set(), budgetOuvertSet=new Set();
   function rendreBudGestion(){
     const box=$("bud-gestion-liste"); if(!box) return; box.innerHTML="";
+    majBudgetPrefSelect();
     const sw=$("toggle-bud-souscat");
     if(sw){ sw.classList.toggle("on",budgetParSousCat); sw.setAttribute("aria-checked",budgetParSousCat); }
     categories.forEach(cat=>{
@@ -2104,14 +2144,10 @@
     const swp=$("toggle-participant");
     if(swp){ swp.classList.toggle("on",actifPart); swp.setAttribute("aria-checked",actifPart); }
     $("champ-participant").style.display=actifPart?"block":"none";
-    const actifSousBudget=!!optionsActivees.budgetSousCatTicket;
-    const swsb=$("toggle-ticket-sousbudget");
-    if(swsb){ swsb.classList.toggle("on",actifSousBudget); swsb.setAttribute("aria-checked",actifSousBudget); }
     rendreBudgetSelectionTicket();
   }
   $("toggle-recur-remb").onclick=()=>{ optionsActivees.recurRemb=!optionsActivees.recurRemb; sauverCloud(); rendreOptions(); };
   $("toggle-participant").onclick=()=>{ optionsActivees.participant=!optionsActivees.participant; sauverCloud(); rendreOptions(); };
-  $("toggle-ticket-sousbudget").onclick=()=>{ optionsActivees.budgetSousCatTicket=!optionsActivees.budgetSousCatTicket; sauverCloud(); rendreOptions(); };
 
   function basculerRecurType(type){
     recurTypeSel=type; recurCatSel=null;
@@ -2499,6 +2535,11 @@
   initBoutonVocal("r-vocal-btn","Écouter","Écoute…",appliquerTexteDepense);
   initBoutonVocal("rev-vocal-btn","Écouter un revenu","Écoute…",appliquerTexteRevenu);
   initBoutonVocal("remb-vocal-btn","Écouter un remboursement","Écoute…",appliquerTexteRemboursement);
+  function majEtatSousCategorie(){
+    const active=!!(rCat && rCat!==DEP_SIMPLE.nom);
+    if(ddSous && ddSous.setDisabled) ddSous.setDisabled(!active,"Choisis d'abord une catégorie");
+    if(!active){ rSous=null; ddSous.set(null); }
+  }
 
   function ouvrirRecu(id){
     venantCatdet=false;
@@ -2522,6 +2563,7 @@
       ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart);
     }
     majRDateAff();
+    majEtatSousCategorie();
     rendreBudgetSelectionTicket();
     $("recu-overlay").style.display="flex";
   }
@@ -2573,6 +2615,7 @@
       const listeCats=[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom));
       const catChoisie=data.categorie && listeCats.includes(data.categorie) ? data.categorie : meilleurChoix((data.categorie||"")+" "+(data.commercant||""), listeCats);
       if(catChoisie){ rCat=catChoisie; ddCat.set(rCat); msg.push("catégorie"); }
+      majEtatSousCategorie();
       const sousListe=souscats[rCat]||[];
       const sousChoisie=data.sousCategorie && sousListe.includes(data.sousCategorie) ? data.sousCategorie : meilleurChoix((data.sousCategorie||"")+" "+(data.commercant||""), sousListe);
       if(sousChoisie){ rSous=sousChoisie; ddSous.set(rSous); msg.push("sous-catégorie"); } else if(catChoisie){ rSous=null; ddSous.set(null); }
@@ -2591,6 +2634,11 @@
   }
   async function traiterPhotosChoisies(files){
     const liste=Array.from(files||[]).filter(Boolean); if(!liste.length) return;
+    if(modeAjoutPhoto==="scan"){
+      const premiere=await compresser(liste[0]);
+      await analyserTicketDepuisBlob(premiere);
+      return;
+    }
     const restantes=Math.max(0,MAX_PHOTOS-photoBlobs.length);
     const aAjouter=liste.slice(0,restantes);
     const nouvelles=await Promise.all(aAjouter.map(compresser));
@@ -2612,8 +2660,8 @@
 
   $("recu-valider").onclick=async()=>{
     const v=parseFloat(($("r-montant").value||"").replace(",",".")); if(!v||v<=0){$("r-montant").focus();return;}
-    if(!rCat){alert("Choisis une catégorie.");return;}
-    const isoJour=iso(rDateTicket); const com=$("r-desc").value.trim();
+    if(!rCat || rCat===DEP_SIMPLE.nom){alert("Choisis une catégorie.");return;}
+    const isoJour=iso(rDateTicket); const com=$("r-desc").value.trim().slice(0,30);
     let d;
     if(editionId){ d=depenses.find(x=>x.id===editionId);
       Object.assign(d,{montant:v,categorie:rCat,sousCat:rSous,paiement:rPay,participant:rPart,devise:rDeviseTicket,commentaire:com,date:isoJour,mois:isoJour.slice(0,7),dateAffichee:dateAff(isoJour)});
@@ -2653,12 +2701,15 @@
   const SWATCHES_RAPIDES = ["#e8a1a1","#eec19a","#e9d98f","#a9d1a0","#9fd4c9","#a3c4e0","#c3aee0","#e3a3c4","#b7b09f","#8fb8bd"];
   function ouvrirSwatchPicker(cat, coulInput){
     document.querySelectorAll(".swatch-panel").forEach(p=>p.remove());
-    const panel=document.createElement("div"); panel.className="swatch-panel dd-panel"; panel.style.cssText="display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:180px; position:absolute; z-index:50;";
+    const panel=document.createElement("div"); panel.className="swatch-panel";
     SWATCHES_RAPIDES.forEach(hex=>{
-      const b=document.createElement("button"); b.type="button"; b.style.cssText="width:26px; height:26px; border-radius:50%; border:2px solid var(--border); background:"+hex+"; cursor:pointer;";
+      const b=document.createElement("button"); b.type="button"; b.className="swatch-chip"; b.style.background=hex;
       b.onclick=()=>{ cat.fg=hex; cat.bg=tintClair(hex); coulInput.value=hex; sauverCat(); rendreCategories(); rendreDepenses(); panel.remove(); };
       panel.appendChild(b);
     });
+    const custom=document.createElement("button"); custom.type="button"; custom.className="swatch-custom"; custom.textContent="Custom";
+    custom.onclick=()=>{ coulInput.dataset.pickCustom="1"; coulInput.click(); };
+    panel.appendChild(custom);
     document.body.appendChild(panel);
     const r=coulInput.getBoundingClientRect();
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
@@ -2702,12 +2753,11 @@
       const emo=document.createElement("input");emo.type="text";emo.className="emoji-in";emo.value=cat.emoji||"";emo.maxLength=2;emo.placeholder="＋";
       emo.onchange=()=>{ cat.emoji=emo.value.trim(); sauverCat(); rendreDepenses(); rendreBudget&&rendreBudget(); };
       const coul=document.createElement("input");coul.type="color";coul.className="color-in";coul.value=cat.fg||"#888888";
+      coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
       coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
-      const palette=document.createElement("button");palette.type="button";palette.className="cat-move";palette.textContent="🎨";palette.setAttribute("aria-label","Couleurs pastel proposées");
-      palette.onclick=(e)=>{ e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
       const inp=document.createElement("input");inp.type="text";inp.value=cat.nom;inp.onchange=()=>renommerCat(idx,inp.value.trim());
       const del=document.createElement("button");del.textContent="×";del.onclick=()=>supprimerCat(idx);
-      ligne.appendChild(poignee);ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(palette);ligne.appendChild(inp);ligne.appendChild(del);box.appendChild(ligne);});
+      ligne.appendChild(poignee);ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);ligne.appendChild(del);box.appendChild(ligne);});
     activerGlisser(box, categories, ()=>{ sauverCat(); rendreCategories(); rendreBudGestion(); });
   }
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
@@ -3396,14 +3446,16 @@
     verifierRappelSaisie();
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
-    ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null); rendreBudgetSelectionTicket();});
+    ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null); majEtatSousCategorie(); rendreBudgetSelectionTicket();});
     basculerRecurType("depense");
     ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v; rendreBudgetSelectionTicket();});
     ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions();
+    majBudgetPrefSelect();
+    $("budget-pref-select").onchange=e=>{ setBudgetModeSession(e.target.value); rendreBudget(); rendreAccueil(); rendreBudgetSelectionTicket(); };
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); majEtatSousCategorie();
     // Fond d'écran
     function majPastilles(){
       const actuel=themeActuel();

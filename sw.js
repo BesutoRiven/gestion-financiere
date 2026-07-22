@@ -1,5 +1,5 @@
-// IMPORTANT : incrémente ce numéro à chaque déploiement (gf-v32 -> gf-v7...).
-const CACHE = "gf-v1.15.3";
+// IMPORTANT : incrÃ©mente ce numÃ©ro Ã  chaque dÃ©ploiement (gf-v32 -> gf-v7...).
+const CACHE = "gf-v1.15.4";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
@@ -18,16 +18,16 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// Permet à la page de forcer l'activation immédiate d'une nouvelle version.
+// Permet Ã  la page de forcer l'activation immÃ©diate d'une nouvelle version.
 self.addEventListener("message", e => {
   if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-// Stratégie "réseau d'abord" : quand tu es en ligne, tu as TOUJOURS la
-// dernière version ; hors-ligne, on retombe sur la copie en cache.
+// StratÃ©gie "rÃ©seau d'abord" : quand tu es en ligne, tu as TOUJOURS la
+// derniÃ¨re version ; hors-ligne, on retombe sur la copie en cache.
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
-  if (e.request.url.includes("supabase")) return; // jamais mettre en cache les données
+  if (e.request.url.includes("supabase")) return; // jamais mettre en cache les donnÃ©es
   e.respondWith(
     fetch(e.request).then(rep => {
       const copie = rep.clone();
