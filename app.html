@@ -210,6 +210,7 @@
     .theme-pastille{width:38px; height:38px; border-radius:50%; border:2px solid var(--border); cursor:pointer; position:relative;}
     .theme-pastille.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft);}
     .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:12px 14px; margin:0 12px 12px; font-size:13px;}
+    #bud-alertes .bud-alerte:first-child{margin-top:12px;}
     .bud-alerte:not(.grave){background:rgba(212,160,23,.12); color:#b8860b;}
     .verrou-point.rempli{background:var(--accent); border-color:var(--accent);}
     #verrou-pave button{width:64px; height:64px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:22px; font-weight:600; cursor:pointer;}
@@ -254,7 +255,7 @@
     details.det-nested summary::-webkit-details-marker{display:none;}
     details.det-nested .det-corps{padding:0 16px 16px;}
     /* Import / Export : alignement identique aux sections voisines */
-    #bloc-import-export > .det-corps{padding-left:16px; padding-right:16px;}
+    #bloc-import-export > .det-corps{padding:0 16px;}
     #bloc-import-export .det-nested > summary{padding-left:0; padding-right:0;}
     #bloc-import-export .impexp{padding-left:0; padding-right:0;}
     #bloc-import-export .det-nested:last-child .impexp{padding-bottom:0;}
@@ -2308,7 +2309,7 @@
       if(d.photo){ photoEtat="existante"; photoGet(id).then(b=>{ if(b){ $("r-photo-apercu").src=URL.createObjectURL(b); majAffichagePhoto(true); $("r-photo-suppr").style.display="flex"; $("r-photo-analyser").style.display="block"; photoBlob=b; } }); }
     } else {
       $("r-montant").value=""; $("r-desc").value="";
-      rCat=(categories.find(c=>c.nom==="Dépense")||categories[0]||{}).nom||null; rSous=null; rPay=null; rPart=participants[0]||"Moi";
+      rCat=DEP_SIMPLE.nom; rSous=null; rPay=null; rPart=participants[0]||"Moi";
       rDateTicket = new Date(selDate);
       ddCat.set(rCat); ddSous.set(null); ddPay.set(null); ddPart.set(rPart);
     }
