@@ -207,7 +207,7 @@
     .verrou-point{width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent;}
     .theme-pastille{width:38px; height:38px; border-radius:50%; border:2px solid var(--border); cursor:pointer; position:relative;}
     .theme-pastille.on{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft);}
-    .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:10px 14px; margin:0 12px 8px; font-size:13px;}
+    .bud-alerte{background:rgba(163,45,45,.1); color:var(--danger); border-radius:10px; padding:12px 14px; margin:0 12px 12px; font-size:13px;}
     .bud-alerte:not(.grave){background:rgba(212,160,23,.12); color:#b8860b;}
     .verrou-point.rempli{background:var(--accent); border-color:var(--accent);}
     #verrou-pave button{width:64px; height:64px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:22px; font-weight:600; cursor:pointer;}
@@ -380,7 +380,13 @@
           <button type="button" class="theme-pastille" data-theme="rose" style="background:#fdeef2;" title="Rose"></button>
           <button type="button" class="theme-pastille" data-theme="noir" style="background:#000;" title="Noir"></button>
         </div>
-        <small class="aide" style="display:block; margin-top:8px;">Une image de fond personnelle ? C'est dans ton Profil.</small>
+        <small class="aide" style="display:block; margin-top:8px;">Ou une image à toi :</small>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button id="btn-fond" class="btn-ligne" style="height:38px;">Choisir une image</button>
+          <button id="btn-fond-retirer" class="btn-ligne" style="height:38px; display:none; color:var(--danger);">Retirer</button>
+        </div>
+        <input id="fichier-fond" type="file" accept="image/*" style="display:none;" />
+        <div id="msg-fond"></div>
       </div>
       <details class="bloc det">
         <summary>💱 Devise par défaut</summary>
@@ -477,22 +483,25 @@
 
       <details class="bloc det">
         <summary>📤 Import / Export</summary>
-        <div class="det-corps impexp">
-          <details>
+        <div class="det-corps">
+          <details class="det-nested">
           <summary style="cursor:pointer; font-weight:600;">Dépenses — Excel</summary>
+          <div class="det-corps impexp">
           <small class="aide">Export : sauvegarde le mois en cours. Import : colle des lignes Excel (une par ligne, tabulations) dans l'ordre Date · Catégorie · Commentaire · Montant. Tu peux aussi mettre une ligne « Nom de la catégorie » seule (ou suivie de tirets) au-dessus d'un bloc : elle s'appliquera à toutes les lignes suivantes qui n'ont pas de catégorie propre.</small>
           <div class="rangee"><button id="exp-copier">📋 Copier pour Excel</button><button id="exp-csv">⬇️ Télécharger CSV</button></div>
           <textarea id="zone-import" placeholder="01/05/2026&#9;Alim. &amp; Courses&#9;Carrefour&#9;1,40"></textarea>
           <div class="rangee"><button id="btn-importer" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer ces lignes</button></div>
           <div id="msg-impexp"></div>
+          </div>
           </details>
-          <hr class="sep" />
-          <details>
+          <details class="det-nested">
           <summary id="imp-titre-revenus" style="cursor:pointer; font-weight:600;">Revenus — Excel</summary>
+          <div class="det-corps impexp">
           <small class="aide">Colle un tableau par type de revenu : la 1re ligne donne le nom du type (ex. « Prestations informatiques »), puis une ligne par mois avec juste le montant reçu (« - » ou vide si aucun revenu ce mois-là). La cotisation est calculée automatiquement d'après le pourcentage réglé pour ce type dans Réglages. Une ligne « 2025 » seule change l'année des mois suivants (année en cours par défaut). Tu peux coller plusieurs types à la suite.</small>
           <textarea id="zone-import-rev" placeholder="Prestations informatiques&#10;Janvier&#9;-&#10;Février&#9;-&#10;Mars&#9;2 000,00 €&#10;Avril&#9;-&#10;Mai&#9;1 500,00 €"></textarea>
           <div class="rangee"><button id="btn-importer-rev" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">Importer les revenus</button></div>
           <div id="msg-imprev"></div>
+          </div>
           </details>
         </div>
       </details>
@@ -925,7 +934,6 @@
   let recurrentes=[]; // {id, nom, montant, categorie, sousCat, jour, dernierMoisGenere}
   let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
   let optionsActivees={}; // options avancées facultatives, désactivées par défaut (ex. "recurRemb")
-  let participantsSource=[];
   let objectifsEpargne=[]; // {id, nom, montantCible, montantActuel}
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
@@ -1807,6 +1815,30 @@
     box.innerHTML='<div class="bud-alerte" style="margin:0 12px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px;"><span>📝 Rien noté depuis '+jours+' jour(s) — pense à mettre tes dépenses à jour !</span><button id="rappel-fermer" style="border:none;background:none;color:inherit;font-size:16px;cursor:pointer;">×</button></div>';
     $("rappel-fermer").onclick=()=>{ sessionStorage.setItem("gf_rappel_masque","1"); box.innerHTML=""; };
   }
+  $("btn-fond").onclick=()=>$("fichier-fond").click();
+  $("fichier-fond").onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    if(!f.type.startsWith("image/")){ $("msg-fond").innerHTML='<div class="message err">Choisis un fichier image.</div>'; return; }
+    if(f.size>2*1024*1024){ $("msg-fond").innerHTML='<div class="message err">Image trop lourde (2 Mo maximum).</div>'; return; }
+    $("msg-fond").innerHTML='<div class="message ok">Envoi en cours…</div>';
+    const chemin=uid+"/fond";
+    const up=await sb.storage.from("avatars").upload(chemin, f, { upsert:true });
+    if(up.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(up.error)+'</div>'; return; }
+    const { data }=sb.storage.from("avatars").getPublicUrl(chemin);
+    const url=data.publicUrl+"?t="+Date.now();
+    const maj=await sb.auth.updateUser({ data:{ fond_url:url } });
+    if(maj.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(maj.error)+'</div>'; return; }
+    appliquerFondPerso(url);
+    $("btn-fond-retirer").style.display="inline-block";
+    $("msg-fond").innerHTML='<div class="message ok">Fond d\'écran mis à jour.</div>';
+  };
+  $("btn-fond-retirer").onclick=async()=>{
+    const maj=await sb.auth.updateUser({ data:{ fond_url:null } });
+    if(maj.error){ $("msg-fond").innerHTML='<div class="message err">'+messageErreur(maj.error)+'</div>'; return; }
+    appliquerFondPerso(null);
+    $("btn-fond-retirer").style.display="none";
+    $("msg-fond").innerHTML='<div class="message ok">Fond d\'écran retiré.</div>';
+  };
   function rendreOptions(){
     const actif=!!optionsActivees.recurRemb;
     const sw=$("toggle-recur-remb");
@@ -3059,7 +3091,7 @@
     basculerRecurType("depense");
     ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v;});
     ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
-    ddPart=initDD("dd-part",()=>participantsSource,v=>{rPart=v;});
+    ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
     initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
     rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions();
@@ -3079,6 +3111,7 @@
 
     const meta=session.user.user_metadata||{};
     appliquerFondPerso(meta.fond_url || null);
+    if($("btn-fond-retirer")) $("btn-fond-retirer").style.display = meta.fond_url ? "inline-block" : "none";
     if(ADMINS.includes((session.user.email||"").toLowerCase())) $("bloc-admin").style.display="block";
     // Pseudo + identifiant à 4 chiffres (façon Discord)
     monPseudo = meta.username || (session.user.email ? session.user.email.split("@")[0] : "Utilisateur");
@@ -3088,7 +3121,6 @@
       if(meta.avatar_url){const img=document.createElement("img");img.src=meta.avatar_url;img.className="avatar-mini";img.alt="Profil";el.replaceWith(img);}
       else el.textContent=(meta.username||session.user.email||"?").charAt(0).toUpperCase();});
     syncProfil();
-    participantsSource = foyerId ? (await chargerMembres()).map(m=>m.pseudo) : [monPseudo];
     if(foyerId) verifierDemandesPourMoi();
 
     rendreDepenses();rendreCategories();

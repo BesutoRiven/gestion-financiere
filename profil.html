@@ -50,19 +50,19 @@
     </div>
 
     <!-- Photo + identité -->
-    <div class="carte" style="text-align:center;">
-      <div id="avatar-wrap" style="position:relative; width:96px; margin:0 auto; cursor:pointer;">
-        <div id="avatar" class="avatar-grand">…</div>
-        <span class="avatar-badge">📷</span>
-      </div>
-      <p id="pseudo" style="margin:14px 0 0; font-weight:600; font-size:17px;"></p>
-      <p id="email" style="margin:2px 0 0; color:var(--muted); font-size:14px;"></p>
-      <input id="fichier-photo" type="file" accept="image/*" style="display:none;" />
-      <div id="msg-photo"></div>
-    </div>
-
-    <!-- Pseudo -->
     <div class="carte">
+      <div style="text-align:center;">
+        <div id="avatar-wrap" style="position:relative; width:96px; margin:0 auto; cursor:pointer;">
+          <div id="avatar" class="avatar-grand">…</div>
+          <span class="avatar-badge">📷</span>
+        </div>
+        <p id="pseudo" style="margin:14px 0 0; font-weight:600; font-size:17px;"></p>
+        <p id="email" style="margin:2px 0 0; color:var(--muted); font-size:14px;"></p>
+        <input id="fichier-photo" type="file" accept="image/*" style="display:none;" />
+        <div id="msg-photo"></div>
+      </div>
+
+      <hr class="sep" />
       <h2 style="font-size:16px; margin:0 0 4px;">Pseudo</h2>
       <small class="aide">Ton identifiant public. Le nom n'a pas besoin d'être unique : les 4 chiffres après le # le rendent unique.</small>
       <p id="pseudo-actuel" style="font-size:22px; font-weight:700; margin:10px 0 12px;">…</p>
@@ -71,10 +71,8 @@
         <button id="pseudo-save" aria-label="Enregistrer le pseudo" style="flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:18px; font-weight:700; cursor:pointer;">✓</button>
       </div>
       <div id="msg-pseudo"></div>
-    </div>
 
-    <!-- Téléphone -->
-    <div class="carte">
+      <hr class="sep" />
       <h2 style="font-size:16px; margin:0 0 4px;">Numéro de téléphone</h2>
       <small class="aide">Enregistré comme information de contact (non vérifié par SMS).</small>
       <div style="display:flex; gap:8px; align-items:center;">
@@ -82,10 +80,9 @@
         <button id="btn-tel" aria-label="Enregistrer le numéro" style="flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:18px; font-weight:700; cursor:pointer;">✓</button>
       </div>
       <div id="msg-tel"></div>
-    </div>
 
-    <!-- Mot de passe -->
-    <div class="carte" id="carte-mdp">
+      <hr class="sep" />
+      <div id="carte-mdp">
       <h2 style="font-size:16px; margin:0 0 4px;">Changer le mot de passe</h2>
       <div id="bloc-mdp">
         <input id="mdp-actuel" class="champ" type="password" placeholder="Mot de passe actuel" autocomplete="current-password" />
@@ -93,30 +90,16 @@
         <button id="btn-mdp" class="btn btn-plein">Modifier le mot de passe</button>
       </div>
       <div id="msg-mdp"></div>
-    </div>
+      </div>
 
-    <!-- 2FA -->
-    <div class="carte">
+      <hr class="sep" />
       <h2 style="font-size:16px; margin:0 0 4px;">Double authentification (2FA)</h2>
       <small class="aide">Ajoute un code temporaire depuis une app comme Google Authenticator, Authy ou 1Password.</small>
       <div id="zone-2fa"></div>
       <div id="msg-2fa"></div>
-    </div>
 
-    <!-- Fond d'écran personnalisé -->
-    <div class="carte">
-      <p style="font-weight:600; font-size:16px; margin:0 0 8px;">🖼️ Fond d'écran personnalisé</p>
-      <small class="aide">Une image à toi, affichée en fond d'écran de l'app (remplace le thème de couleur choisi dans Réglages).</small>
-      <div style="display:flex; gap:8px; margin-top:10px;">
-        <button id="btn-fond" class="btn btn-ligne" style="margin-top:0;">Choisir une image</button>
-        <button id="btn-fond-retirer" class="btn btn-danger" style="margin-top:0; display:none;">Retirer</button>
-      </div>
-      <input id="fichier-fond" type="file" accept="image/*" style="display:none;" />
-      <div id="msg-fond"></div>
-    </div>
-
-    <!-- Sécurité -->
-    <details class="carte">
+      <hr class="sep" />
+      <details>
       <summary style="cursor:pointer; font-size:16px; font-weight:600;">🔒 Sécurité</summary>
       <small class="aide" style="display:block; margin-top:8px;">Demande un code à 4 chiffres à l'ouverture de l'app depuis zéro (fermée puis rouverte), sur cet appareil (propre à ce téléphone/ordinateur, pas synchronisé).</small>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
@@ -124,10 +107,9 @@
         <button id="toggle-pin" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le verrouillage par code"><span class="knob"></span></button>
       </div>
       <button id="btn-changer-pin" class="btn btn-ligne" style="display:none; margin-top:12px;">Changer le code</button>
-    </details>
+      </details>
 
-    <!-- Compte -->
-    <div class="carte">
+      <hr class="sep" />
       <button id="btn-changer" class="btn btn-ligne">Changer de compte</button>
       <button id="btn-deconnexion" class="btn btn-danger">Se déconnecter</button>
     </div>
@@ -199,32 +181,6 @@
     if (maj.error){ msg("msg-photo", messageErreur(maj.error), "err"); return; }
     $("avatar").outerHTML = '<img src="'+url+'" class="avatar-grand" id="avatar" alt="Photo de profil" />';
     msg("msg-photo", "Photo mise à jour.", "ok");
-  };
-
-  // ---- Fond d'écran personnalisé ----
-  $("btn-fond").onclick = () => $("fichier-fond").click();
-  $("fichier-fond").onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    if (!f.type.startsWith("image/")){ msg("msg-fond", "Choisis un fichier image.", "err"); return; }
-    if (f.size > MAX_PHOTO){ msg("msg-fond", "Image trop lourde (2 Mo maximum).", "err"); return; }
-    msg("msg-fond", "Envoi en cours…", "ok");
-    const chemin = utilisateur.id + "/fond";
-    const up = await sb.storage.from("avatars").upload(chemin, f, { upsert: true });
-    if (up.error){ msg("msg-fond", messageErreur(up.error), "err"); return; }
-    const { data } = sb.storage.from("avatars").getPublicUrl(chemin);
-    const url = data.publicUrl + "?t=" + Date.now();
-    const maj = await sb.auth.updateUser({ data: { fond_url: url } });
-    if (maj.error){ msg("msg-fond", messageErreur(maj.error), "err"); return; }
-    appliquerFondPerso(url);
-    $("btn-fond-retirer").style.display = "inline-block";
-    msg("msg-fond", "Fond d'écran mis à jour.", "ok");
-  };
-  $("btn-fond-retirer").onclick = async () => {
-    const maj = await sb.auth.updateUser({ data: { fond_url: null } });
-    if (maj.error){ msg("msg-fond", messageErreur(maj.error), "err"); return; }
-    appliquerFondPerso(null);
-    $("btn-fond-retirer").style.display = "none";
-    msg("msg-fond", "Fond d'écran retiré.", "ok");
   };
 
   // ---- Téléphone ----
@@ -470,7 +426,6 @@
     $("email").textContent = utilisateur.email || "Compte Google";
     if (meta.phone_number) $("tel").value = meta.phone_number;
     appliquerFondPerso(meta.fond_url || null);
-    $("btn-fond-retirer").style.display = meta.fond_url ? "inline-block" : "none";
 
     // Pseudo + identifiant à 4 chiffres
     let tag = meta.tag;
