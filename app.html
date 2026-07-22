@@ -439,7 +439,7 @@
       <div class="topbar"><h1>Réglages</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
       <div class="bloc">
-        <span style="font-weight:600;">🎨 Fond d'écran</span>
+        <span class="sum-ico" style="font-weight:600;"><span data-ico="fond"></span><span>Fond décran</span></span>
         <div id="theme-pastilles" style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
           <button type="button" class="theme-pastille" data-theme="clair" style="background:#f6f7f6;" title="Clair"></button>
           <button type="button" class="theme-pastille" data-theme="sombre" style="background:#12161a;" title="Sombre"></button>
@@ -456,7 +456,7 @@
         <div id="msg-fond"></div>
       </div>
       <details class="bloc det">
-        <summary>💱 Devise par défaut</summary>
+        <summary><span class="sum-ico"><span data-ico="devise"></span><span>Devise par défaut</span></span></summary>
         <div class="det-corps">
           <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
           <div class="dd" id="dd-devise-reglages" style="margin-top:12px;"><button type="button" class="dd-btn" id="devise-reglages-btn"></button><div class="dd-panel" id="devise-reglages-panel" style="display:none;"></div></div>
@@ -468,7 +468,7 @@
         <summary><span class="sum-ico"><span data-ico="gestion"></span><span>Gestion</span></span></summary>
         <div class="det-corps" style="padding:0;">
           <details class="det-nested">
-            <summary>Catégories</summary>
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Catégories</span></span></summary>
             <div class="det-corps">
               <div id="cats-liste"></div>
               <div class="cat-ligne" style="margin-top:12px;">
@@ -479,7 +479,7 @@
             </div>
           </details>
           <details class="det-nested">
-            <summary>Sous-catégories</summary>
+            <summary><span class="sum-ico"><span data-ico="souscat"></span><span>Sous-catégories</span></span></summary>
             <div class="det-corps">
               <div class="dd" id="dd-cat-sous"><button type="button" class="dd-btn vide">Choisir une catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
               <div id="sous-liste" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
@@ -512,7 +512,7 @@
             </div>
           </details>
           <details class="det-nested">
-            <summary>Budget personnalisé</summary>
+            <summary><span class="sum-ico"><span data-ico="budgetcat"></span><span>Budget personnalisé</span></span></summary>
             <div class="det-corps">
               <small class="aide">Définis un montant pour chaque catégorie, dans l'unité de ton choix. Il est automatiquement recalculé pour l'affichage jour / semaine / mois / année.</small>
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px;">
@@ -532,7 +532,7 @@
             </div>
           </details>
           <details class="det-nested">
-            <summary>Transactions récurrentes</summary>
+            <summary><span class="sum-ico"><span data-ico="recurrent"></span><span>Transactions récurrentes</span></span></summary>
             <div class="det-corps">
               <small class="aide">Une dépense ou un revenu de ce type est créé automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé).</small>
               <div id="recur-liste" style="margin-top:10px;"></div>
@@ -558,7 +558,7 @@
 
 
       <details class="bloc det" id="bloc-import-export">
-        <summary>📤 Import / Export</summary>
+        <summary><span class="sum-ico"><span data-ico="importexport"></span><span>Import / Export</span></span></summary>
         <div class="det-corps">
           <details class="det-nested">
           <summary style="cursor:pointer; font-weight:600;">Dépenses — Excel</summary>
@@ -583,7 +583,7 @@
       </details>
 
       <details class="bloc det">
-        <summary>🔧 Options avancées</summary>
+        <summary><span class="sum-ico"><span data-ico="options"></span><span>Options avancées</span></span></summary>
         <div class="det-corps">
           <small class="aide">Petites options facultatives, désactivées par défaut.</small>
           <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
@@ -598,7 +598,7 @@
       </details>
 
       <details class="bloc det">
-        <summary>💾 Sauvegarde</summary>
+        <summary><span class="sum-ico"><span data-ico="sauvegarde"></span><span>Sauvegarde</span></span></summary>
         <div class="det-corps">
           <small class="aide">Exporte absolument tout (dépenses, revenus, catégories, réglages, remboursements…) dans un seul fichier. Utile pour changer de compte, ou en secours si besoin de tout récupérer.</small>
           <button id="exp-sauvegarde" class="btn-plein" style="margin-top:12px;">⬇️ Télécharger la sauvegarde</button>
@@ -610,9 +610,9 @@
       </details>
 
       <div class="bloc" id="bloc-admin" style="display:none;">
-        <h2>Administration</h2>
+        <h2><span class="sum-ico"><span data-ico="admin"></span><span>Administration</span></span></h2>
         <small class="aide">Réservé aux comptes administrateurs — suivi de l'évolution de l'application.</small>
-        <button id="btn-versions" class="btn-plein" style="margin-top:12px;">Historique des versions</button>
+        <button id="btn-versions" class="btn-plein" style="margin-top:12px;"><span class="btn-inline-ic"><span data-ico="versions"></span><span>Historique des versions</span></span></button>
       </div>
     </section>
 
@@ -1050,13 +1050,20 @@
     revenu:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/></svg>',
     depense:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
     remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
+    fond:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M20 16l-5-5-7 7"/><path d="M13 20l3-3 4 3"/></svg>',
+    devise:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/><path d="M3 8h3"/><path d="M18 16h3"/></svg>',
     gestion:'<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></svg>',
     categories:'<svg viewBox="0 0 24 24"><path d="M4 6h7v5H4z"/><path d="M13 6h7v5h-7z"/><path d="M4 13h7v5H4z"/><path d="M13 13h7v5h-7z"/></svg>',
     souscat:'<svg viewBox="0 0 24 24"><path d="M4 7h6"/><path d="M4 12h10"/><path d="M4 17h14"/><circle cx="18" cy="7" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>',
     paiement:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M16 15h2"/></svg>',
     budgetcat:'<svg viewBox="0 0 24 24"><path d="M4 20V9"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
     recurrent:'<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
-    bilan:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.9L12 16.9 6.7 19.2l1-5.9-4.2-4.1 5.9-.9L12 3z"/></svg>',
+    importexport:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M5 20h14"/></svg>',
+    options:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>',
+    sauvegarde:'<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4"/><path d="M9 17h6"/></svg>',
+    admin:'<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><circle cx="18" cy="17" r="2"/><path d="M18 13v2"/></svg>',
+    versions:'<svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>',
+    bilan:'<svg viewBox="0 0 24 24"><path d="M5 19V9"/><path d="M10 19V5"/><path d="M15 19v-7"/><path d="M20 19v-4"/><path d="M3 19h18"/></svg>',
     objectif:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v2"/><path d="M20 12h-2"/><path d="M12 20v-2"/><path d="M4 12h2"/></svg>'
   };
   function normaliserTexte(texte){
@@ -2881,7 +2888,7 @@
     const revPeriode=revenus.filter(r=>(r.date||"")>=bornes.debut && (r.date||"")<=bornes.fin);
     $("bilan-titre").textContent="Bilan "+labelResume();
     if(!depPeriode.length && !revPeriode.length){
-      $("bilan-corps").innerHTML='<p class="vide" style="padding:20px 0; text-align:center;">Rien à raconter sur cette période pour l'instant - reviens quand tu auras noté quelques transactions.</p>';
+      $("bilan-corps").innerHTML=`<p class="vide" style="padding:20px 0; text-align:center;">Rien à raconter sur cette période pour l'instant - reviens quand tu auras noté quelques transactions.</p>`;
       $("bilan-overlay").style.display="flex"; return;
     }
     const totDep=depPeriode.reduce((s,d)=>s+d.montant,0);
