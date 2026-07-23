@@ -323,9 +323,9 @@
     .color-advanced-panel h3{margin:0 0 14px; font-size:22px; font-weight:500;}
     .color-advanced-panel label{display:block; margin:12px 0 8px; font-size:18px;}
     .color-advanced-panel input[type="range"]{width:100%; height:38px; margin:0; accent-color:#28a8e8;}
-    .color-preview-row{display:flex; align-items:center; justify-content:space-between; margin-top:20px; gap:16px;}
+    .color-preview-row{display:flex; align-items:center; justify-content:flex-start; margin-top:20px; gap:14px;}
     .color-preview-row span{color:#ffc2b5; font-weight:600;}
-    .color-preview{width:46px; height:46px; border-radius:8px; border:2px solid rgba(255,255,255,.35); background:#888;}
+    .color-preview{width:48px; height:48px; flex:0 0 auto; border-radius:8px; border:2px solid rgba(255,255,255,.45); background:#888;}
     .color-actions{display:flex; justify-content:flex-end; gap:24px; margin-top:20px;}
     .color-actions button{border:none; background:transparent; color:#ffc2b5; font:inherit; font-weight:700; cursor:pointer;}
 
@@ -994,7 +994,7 @@
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
   const JSEM=["L","M","M","J","V","S","D"];
-  const LBL_AUJ={jour:"Aujourd'hui", semaine:"Retour au jour J", mois:"Ce mois", annee:"Cette année"};
+  const LBL_AUJ={jour:"Retour", semaine:"Retour", mois:"Retour", annee:"Retour"};
 
   const $ = id => document.getElementById(id);
 
@@ -2840,7 +2840,7 @@
     const rgb=hexToRgb(coulInput.value||cat.fg||"#888888");
     const hsv=rgbToHsv(rgb.r,rgb.g,rgb.b);
     const panel=document.createElement("div"); panel.className="color-advanced-panel";
-    panel.innerHTML='<h3>Select color</h3><label>Hue</label><input class="hue" type="range" min="0" max="359"><label>Saturation</label><input class="sat" type="range" min="0" max="100"><label>Value</label><input class="val" type="range" min="0" max="100"><div class="color-preview-row"><span>Suggestions</span><span>Chosen color</span><div class="color-preview"></div></div><div class="color-actions"><button type="button" class="cancel">Cancel</button><button type="button" class="set">Set</button></div>';
+    panel.innerHTML='<h3>Select color</h3><label>Hue</label><input class="hue" type="range" min="0" max="359"><label>Saturation</label><input class="sat" type="range" min="0" max="100"><label>Value</label><input class="val" type="range" min="0" max="100"><div class="color-preview-row"><div class="color-preview"></div><span>Chosen color</span></div><div class="color-actions"><button type="button" class="cancel">Cancel</button><button type="button" class="set">Set</button></div>';
     document.body.appendChild(panel);
     const hue=panel.querySelector(".hue"), sat=panel.querySelector(".sat"), val=panel.querySelector(".val"), preview=panel.querySelector(".color-preview");
     hue.value=hsv.h; sat.value=hsv.s; val.value=hsv.v;
@@ -3474,6 +3474,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Ajuster le selecteur couleur et les icones":"v1.16.7",
         "Retirer les fonds blancs des icones":"v1.16.6",
                 "Corriger les icones et l historique":"v1.16.5",
         "Ajuster les icones animees des reglages":"v1.16.4",
@@ -3694,6 +3695,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
