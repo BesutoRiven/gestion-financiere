@@ -169,6 +169,7 @@
     /* Icones animees (SVG, remplace les GIF) */
     .icon-anim{width:17px; height:17px; object-fit:contain; display:inline-block; vertical-align:middle; flex:0 0 auto; color:var(--text);}
     .icon-anim.playing{color:var(--accent);}
+    .sum-ico{display:inline-flex; align-items:center; gap:8px;}
     .sum-ico .icon-anim{width:17px; height:17px; flex:0 0 auto;}
     .btn-inline-ic .icon-anim{width:16px; height:16px;}
     .btn-ligne .icon-anim{width:15px; height:15px; margin-right:6px;}
@@ -187,11 +188,11 @@
     .icon-anim[data-anim="draw"] .draw{stroke-dasharray:24; stroke-dashoffset:0;}
     .icon-anim[data-anim="draw"].playing .draw{animation:iconDraw .4s ease;}
 
-    /* Icone Gestion : morph hamburger <-> croix, pilote par [open] */
-    .menu-morph .bar{transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .2s;}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .bar1{transform:translateY(6px) rotate(45deg);}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .bar2{opacity:0;}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .bar3{transform:translateY(-6px) rotate(-45deg);}
+    /* Icone Gestion : morph hamburger <-> chevron bas, pilote par [open] */
+    .menu-morph .menu-bars{transform-origin:center; transition:opacity .22s ease, transform .22s ease;}
+    .menu-morph .menu-chevron{transform-origin:center; opacity:0; transform:scale(.4) rotate(-90deg); transition:opacity .22s ease, transform .22s ease;}
+    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .menu-bars{opacity:0; transform:scale(.4) rotate(90deg);}
+    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .menu-chevron{opacity:1; transform:scale(1) rotate(0deg);}
     #bloc-gestion[open] [data-ico="gestion"] .menu-morph{color:var(--accent);}
 
     /* Visionneuse photo */
@@ -206,7 +207,7 @@
     .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
-    .nav-btn .icon-anim{width:18px; height:18px; object-fit:contain; display:block; color:inherit;}
+    .nav-btn .icon-anim{width:22px; height:22px; object-fit:contain; display:block; color:inherit;}
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
@@ -1106,7 +1107,7 @@
     remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
     fond:animIcon('pop','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5a1.5 1.5 0 0 0-2.1 0L5 19"/>','Fond ecran'),
     devise:animIcon('flip','<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11"/><path d="M15 9c0-1.4-1.5-2.3-3-2.3S9 7.6 9 9s1.2 1.9 3 2.3 3 .9 3 2.4-1.5 2.3-3 2.3-3-.9-3-2.3"/>','Devise'),
-    gestion:'<svg class="icon-anim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" role="img" aria-label="Gestion"><g class="menu-morph"><line class="bar bar1" x1="4" y1="7" x2="20" y2="7"/><line class="bar bar2" x1="4" y1="12" x2="20" y2="12"/><line class="bar bar3" x1="4" y1="17" x2="20" y2="17"/></g></svg>',
+    gestion:'<svg class="icon-anim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Gestion"><g class="menu-morph"><g class="menu-bars"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g><path class="menu-chevron" d="M5 9l7 7 7-7"/></g></svg>',
     categories:animIcon('pop','<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>','Categories'),
     souscat:animIcon('pop','<path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/>','Sous-categories'),
     typesrevenu:animIcon('pop','<path d="M6 3h12v18l-2.5-1.5L13 21l-1.5-1.5L10 21l-2.5-1.5L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>','Types de revenu'),
