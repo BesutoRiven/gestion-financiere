@@ -55,6 +55,9 @@
         Continuer avec Google
       </button>
 
+      <button id="btn-invite" class="btn btn-ligne" style="margin-top:10px;">Tester sans compte (mode invité)</button>
+      <small class="aide" style="display:block; text-align:center; margin-top:6px;">Essaie l'app tout de suite. En mode invité, tes données restent sur cet appareil et ne sont pas sauvegardées.</small>
+
       <div id="message"></div>
 
       <button id="bascule" class="lien">Pas encore de compte ? Créer un compte</button>
@@ -71,10 +74,16 @@
   (async () => {
     const { data } = await sb.auth.getSession();
     if (data.session) {
+      localStorage.removeItem("gf_invite");
       const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
       if (!(aal && aal.currentLevel === "aal1" && aal.nextLevel === "aal2")) window.location.href = "app.html";
     }
   })();
+
+  $("btn-invite").onclick = () => {
+    localStorage.setItem("gf_invite", "1");
+    window.location.href = "app.html";
+  };
 
   $("bascule").onclick = () => {
     mode = mode === "connexion" ? "inscription" : "connexion";
