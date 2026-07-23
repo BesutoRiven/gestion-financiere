@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -160,12 +160,12 @@
     .dd-devise-msg.err{color:var(--danger);}
     .dd-devise-msg.ok{color:var(--accent);}
     .dd-devise-retour{font-size:12px; color:var(--papier-muted); cursor:pointer; text-align:center; margin-top:8px; text-decoration:underline;}
-    .gestion-case{-webkit-appearance:none; appearance:none; width:24px; height:24px; flex:0 0 auto; border:none; border-radius:6px; background:transparent url("assets/animated-icons/check-off.gif") center/24px 24px no-repeat; cursor:pointer; margin:0;}
+    .gestion-case{-webkit-appearance:none; appearance:none; width:22px; height:22px; flex:0 0 auto; border:none; border-radius:6px; background:transparent url("assets/animated-icons/check-off.gif") center/22px 22px no-repeat; cursor:pointer; margin:0;}
     .gestion-case:checked{background-image:url("assets/animated-icons/check-on.gif");}
-    .gif-ico{width:30px; height:30px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:multiply;}
-    .sum-ico .gif-ico{width:32px; height:32px; flex:0 0 auto;}
-    .btn-inline-ic .gif-ico{width:22px; height:22px;}
-    .btn-ligne .gif-ico{width:18px; height:18px; margin-right:6px;}
+    .gif-ico{width:20px; height:20px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:normal; filter:brightness(0) invert(1); opacity:.94;}
+    .sum-ico .gif-ico{width:20px; height:20px; flex:0 0 auto;}
+    .btn-inline-ic .gif-ico{width:18px; height:18px;}
+    .btn-ligne .gif-ico{width:16px; height:16px; margin-right:6px;}
 
     /* Visionneuse photo */
     .lb-box{width:min(100%,980px); max-height:85vh; overflow:hidden;}
@@ -179,7 +179,7 @@
     .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
-    .nav-btn .gif-ico{width:24px; height:24px; object-fit:contain; display:block; mix-blend-mode:multiply; filter:var(--gif-filter,none);}
+    .nav-btn .gif-ico{width:21px; height:21px; object-fit:contain; display:block; mix-blend-mode:normal; filter:brightness(0) invert(1); opacity:.94;}
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
@@ -488,7 +488,7 @@
         </div>
       </details>
 
-      <details class="bloc det">
+      <details class="bloc det" id="bloc-gestion">
         <summary><span class="sum-ico"><span data-ico="gestion"></span><span>Gestion</span></span></summary>
         <div class="det-corps" style="padding:0;">
           <details class="det-nested">
@@ -636,7 +636,7 @@
       <div class="bloc" id="bloc-admin" style="display:none;">
         <h2><span class="sum-ico"><span data-ico="admin"></span><span>Administration</span></span></h2>
         <small class="aide">Réservé aux comptes administrateurs — suivi de l'évolution de l'application.</small>
-        <button id="btn-versions" class="btn-plein" style="margin-top:12px;"><span class="btn-inline-ic"><span data-ico="versions"></span><span>Historique des versions</span></span></button>
+        <button id="btn-versions" class="btn-plein" style="margin-top:12px;">Historique des versions</button>
       </div>
     </section>
 
@@ -932,10 +932,10 @@
     </section>
 
     <nav class="navbas">
-      <button class="nav-btn on" data-vue="depenses"><img class="gif-ico" src="assets/animated-icons/home.gif" alt="Accueil">Accueil</button>
+      <button class="nav-btn on" data-vue="depenses"><img class="gif-ico gif-paused" src="assets/animated-icons/home.png" data-gif="assets/animated-icons/home.gif" data-still="assets/animated-icons/home.png" data-duration="1170" alt="Accueil">Accueil</button>
       <button class="nav-btn" data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4a1 1 0 0 0 1 1h4"/><path d="M8.5 12.5h7M8.5 15.5h7M8.5 18.5h4.5"/></svg>Résumé</button>
       <button class="nav-btn" data-vue="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Budget</button>
-      <button class="nav-btn" data-vue="reglages"><img class="gif-ico" src="assets/animated-icons/settings.gif" alt="Reglages">R&eacute;glages</button>
+      <button class="nav-btn" data-vue="reglages"><img class="gif-ico gif-paused" src="assets/animated-icons/settings.png" data-gif="assets/animated-icons/settings.gif" data-still="assets/animated-icons/settings.png" data-duration="1170" alt="Reglages">R&eacute;glages</button>
     </nav>
   </div>
 
@@ -1070,17 +1070,19 @@
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   const MAX_PHOTOS=4;
-  const gifIcon=(nom, alt="")=>'<img class="gif-ico" src="assets/animated-icons/'+nom+'" alt="'+alt+'" loading="lazy" decoding="async">';
+  const gifStill=(nom)=>'assets/animated-icons/'+nom.replace(/\.gif$/i,'.png');
+  const gifPath=(nom)=>'assets/animated-icons/'+nom;
+  const gifIcon=(nom, alt="")=>'<img class="gif-ico gif-paused" src="'+gifStill(nom)+'" data-gif="'+gifPath(nom)+'" data-still="'+gifStill(nom)+'" data-duration="1170" alt="'+alt+'" loading="lazy" decoding="async">';
   const ICONES_UI={
     revenu:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/></svg>',
     depense:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
     remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
     fond:gifIcon('image.gif','Fond ecran'),
     devise:gifIcon('dollar.gif','Devise'),
-    gestion:gifIcon('menu-big.gif','Gestion'),
+    gestion:gifIcon('menu.gif','Gestion'),
     categories:gifIcon('folder.gif','Categories'),
     souscat:gifIcon('file.gif','Sous-categories'),
-    typesrevenu:gifIcon('cash.gif','Types de revenu'),
+    typesrevenu:gifIcon('receipt.gif','Types de revenu'),
     paiement:gifIcon('card.gif','Moyens de paiement'),
     budgetcat:gifIcon('cash.gif','Budget personnalise'),
     recurrent:gifIcon('order.gif','Transactions recurrentes'),
@@ -1088,7 +1090,6 @@
     options:gifIcon('tools.gif','Options avancees'),
     sauvegarde:gifIcon('save.gif','Sauvegarde'),
     admin:gifIcon('admin.gif','Administration'),
-    versions:gifIcon('receipt.gif','Historique des versions'),
     bilan:gifIcon('receipt.gif','Bilan'),
     objectif:gifIcon('check-all.gif','Objectifs')
   };
@@ -1153,13 +1154,40 @@
   }
 
   function iconeToutSelection(toutCoche){
-    return '<img class="gif-ico" src="assets/animated-icons/check-all.gif" alt="">'+(toutCoche?"Tout d&eacute;s&eacute;lectionner":"Tout s&eacute;lectionner");
+    return gifIcon('check-all.gif','')+(toutCoche?"Tout d&eacute;s&eacute;lectionner":"Tout s&eacute;lectionner");
+  }
+  function jouerGifIcone(img, gifOverride){
+    if(!img) return;
+    const still=img.dataset.still || img.src;
+    const gif=gifOverride || img.dataset.gif;
+    if(!gif) return;
+    clearTimeout(img._gifTimer);
+    img.src=gif+(gif.includes("?")?"&":"?")+"t="+Date.now();
+    img._gifTimer=setTimeout(()=>{ img.src=still; }, parseInt(img.dataset.duration||"1170",10));
+  }
+  function preparerGifIcones(scope=document){
+    scope.querySelectorAll(".gif-ico[data-gif]").forEach(img=>{
+      if(img.dataset.gifReady==="1") return;
+      img.dataset.gifReady="1";
+      img.addEventListener("click", ()=>{ jouerGifIcone(img); });
+    });
+  }
+  function majIconeGestion(){
+    const bloc=$("bloc-gestion");
+    const img=document.querySelector('[data-ico="gestion"] .gif-ico');
+    if(!bloc || !img) return;
+    const nom=bloc.open ? "menu-close.gif" : "menu.gif";
+    img.dataset.gif=gifPath(nom);
+    img.dataset.still=gifStill(nom);
+    img.src=gifStill(nom);
   }
   function appliquerIconesUI(){
     document.querySelectorAll("[data-ico]").forEach(el=>{
       const nom=el.dataset.ico;
       if(ICONES_UI[nom]) el.innerHTML=ICONES_UI[nom];
     });
+    majIconeGestion();
+    preparerGifIcones();
   }
   function libelleModeBudget(mode){
     return ({jour:"journalier",semaine:"hebdomadaire",mois:"mensuel",annee:"annuel"})[mode]||"mensuel";
@@ -1665,7 +1693,7 @@
     $("catdet-suppr-selection").style.display=n>0?"inline-block":"none";
     const cases=[...document.querySelectorAll("#catdet-liste .gestion-case")];
     const boutonTout=$("catdet-tout");
-    if(modeGestionCat && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); }
+    if(modeGestionCat && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); preparerGifIcones(boutonTout); }
     else boutonTout.style.display="none";
   }
   $("catdet-tout").onclick=()=>{
@@ -2405,7 +2433,7 @@
     $("btn-suppr-selection").style.display=n>0?"inline-block":"none";
     const cases=[...document.querySelectorAll("#liste .gestion-case")];
     const boutonTout=$("btn-tout-selection");
-    if(modeGestion && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); }
+    if(modeGestion && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); preparerGifIcones(boutonTout); }
     else boutonTout.style.display="none";
   }
   $("btn-tout-selection").onclick=()=>{
@@ -3605,7 +3633,18 @@
     // Devise
     rendreDeviseListeReglages();
     majIconeRevenu();
-
+    const blocGestion=$("bloc-gestion");
+    if(blocGestion){
+      blocGestion.addEventListener("toggle",()=>{
+        const img=document.querySelector('[data-ico="gestion"] .gif-ico');
+        if(!img) return;
+        const nomAnim=blocGestion.open ? "menu.gif" : "menu-close.gif";
+        const nomRepos=blocGestion.open ? "menu-close.gif" : "menu.gif";
+        img.dataset.gif=gifPath(nomRepos);
+        img.dataset.still=gifStill(nomRepos);
+        jouerGifIcone(img,gifPath(nomAnim));
+      });
+    }
     const meta=session.user.user_metadata||{};
     appliquerFondPerso(meta.fond_url || null);
     if($("btn-fond-retirer")) $("btn-fond-retirer").style.display = meta.fond_url ? "inline-block" : "none";
@@ -3633,3 +3672,10 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+

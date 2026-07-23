@@ -1,5 +1,5 @@
-// IMPORTANT : incrÃ©mente ce numÃ©ro Ã  chaque dÃ©ploiement (gf-v32 -> gf-v7...).
-const CACHE = "gf-v1.16.3";
+﻿// IMPORTANT : incrÃ©mente ce numÃ©ro Ã  chaque dÃ©ploiement (gf-v32 -> gf-v7...).
+const CACHE = "gf-v1.16.4";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
@@ -13,7 +13,19 @@ const FICHIERS = [
   "assets/animated-icons/dollar.gif", "assets/animated-icons/tools.gif",
   "assets/animated-icons/order.gif", "assets/animated-icons/save.gif",
   "assets/animated-icons/cash.gif", "assets/animated-icons/receipt.gif",
-  "assets/animated-icons/card.gif", "assets/animated-icons/menu-big.gif"
+  "assets/animated-icons/card.gif", "assets/animated-icons/menu-big.gif",
+  "assets/animated-icons/menu-close.gif",
+  "assets/animated-icons/admin.png", "assets/animated-icons/card.png",
+  "assets/animated-icons/cash.png", "assets/animated-icons/check-all.png",
+  "assets/animated-icons/check-off.png", "assets/animated-icons/check-on.png",
+  "assets/animated-icons/dollar.png", "assets/animated-icons/edit.png",
+  "assets/animated-icons/file.png", "assets/animated-icons/folder.png",
+  "assets/animated-icons/home.png", "assets/animated-icons/image.png",
+  "assets/animated-icons/import.png", "assets/animated-icons/menu.png",
+  "assets/animated-icons/menu-big.png", "assets/animated-icons/menu-close.png",
+  "assets/animated-icons/order.png", "assets/animated-icons/receipt.png",
+  "assets/animated-icons/save.png", "assets/animated-icons/settings.png",
+  "assets/animated-icons/tools.png"
 ];
 
 self.addEventListener("install", e => {
@@ -46,3 +58,4 @@ self.addEventListener("fetch", e => {
     }).catch(() => caches.match(e.request))
   );
 });
+
