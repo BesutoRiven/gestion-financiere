@@ -160,12 +160,12 @@
     .dd-devise-msg.err{color:var(--danger);}
     .dd-devise-msg.ok{color:var(--accent);}
     .dd-devise-retour{font-size:12px; color:var(--papier-muted); cursor:pointer; text-align:center; margin-top:8px; text-decoration:underline;}
-    .gestion-case{-webkit-appearance:none; appearance:none; width:22px; height:22px; flex:0 0 auto; border:none; border-radius:6px; background:transparent url("assets/animated-icons/check-off.gif") center/22px 22px no-repeat; cursor:pointer; margin:0;}
-    .gestion-case:checked{background-image:url("assets/animated-icons/check-on.gif");}
-    .gif-ico{width:20px; height:20px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:normal; opacity:.94;}
-    .sum-ico .gif-ico{width:20px; height:20px; flex:0 0 auto;}
-    .btn-inline-ic .gif-ico{width:18px; height:18px;}
-    .btn-ligne .gif-ico{width:16px; height:16px; margin-right:6px;}
+    .gestion-case{-webkit-appearance:none; appearance:none; width:20px; height:20px; flex:0 0 auto; border:none; border-radius:5px; background:transparent url("assets/animated-icons/check-off.png") center/20px 20px no-repeat; cursor:pointer; margin:0;}
+    .gestion-case:checked{background-image:url("assets/animated-icons/check-on.png");}
+    .gif-ico{width:17px; height:17px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:normal; opacity:.94;}
+    .sum-ico .gif-ico{width:17px; height:17px; flex:0 0 auto;}
+    .btn-inline-ic .gif-ico{width:16px; height:16px;}
+    .btn-ligne .gif-ico{width:15px; height:15px; margin-right:6px;}
 
     /* Visionneuse photo */
     .lb-box{width:min(100%,980px); max-height:85vh; overflow:hidden;}
@@ -179,7 +179,7 @@
     .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
-    .nav-btn .gif-ico{width:21px; height:21px; object-fit:contain; display:block; mix-blend-mode:normal; opacity:.94;}
+    .nav-btn .gif-ico{width:18px; height:18px; object-fit:contain; display:block; mix-blend-mode:normal; opacity:.94;}
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
@@ -299,14 +299,14 @@
     details.det summary::after{content:"▾"; color:var(--muted); transition:transform .15s;}
     details.det[open] summary::after{transform:rotate(180deg);}
     details.det summary::-webkit-details-marker{display:none;}
-    details.det .det-corps{padding:0 16px 16px;}
+    details.det .det-corps{padding:0 16px 16px;} details.det[open] > .det-corps{animation:derouleCorps .18s ease-out;}
     details.det .det-corps h2{font-size:15px; margin:0 0 8px;}
     details.det-nested{border-top:1px solid var(--border);}
     details.det-nested summary{list-style:none; cursor:pointer; padding:14px 16px; font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:space-between; color:var(--text);}
     details.det-nested summary::after{content:"▾"; color:var(--muted); font-weight:400;}
     details.det-nested[open] summary::after{transform:rotate(180deg); display:inline-block;}
     details.det-nested summary::-webkit-details-marker{display:none;}
-    details.det-nested .det-corps{padding:0 16px 16px;}
+    details.det-nested .det-corps{padding:0 16px 16px;} details.det-nested[open] > .det-corps{animation:derouleCorps .18s ease-out;} @keyframes derouleCorps{from{opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);}}
     /* Import / Export : alignement identique aux sections voisines */
     #bloc-import-export > .det-corps{padding:0 16px;}
     #bloc-import-export .det-nested > summary{padding-left:0; padding-right:0;}
@@ -1165,11 +1165,16 @@
     img.src=gif+(gif.includes("?")?"&":"?")+"t="+Date.now();
     img._gifTimer=setTimeout(()=>{ img.src=still; }, parseInt(img.dataset.duration||"1170",10));
   }
+  function jouerCaseGestion(cb, cochee){
+    if(!cb) return;
+    const nom=cochee ? "check-on.gif" : "check-off.gif";
+    cb.style.backgroundImage='url("assets/animated-icons/'+nom+'?t='+Date.now()+'")';
+  }
   function preparerGifIcones(scope=document){
     scope.querySelectorAll(".gif-ico[data-gif]").forEach(img=>{
       if(img.dataset.gifReady==="1") return;
       img.dataset.gifReady="1";
-      img.addEventListener("click", ()=>{ jouerGifIcone(img); });
+      img.addEventListener("pointerdown", ()=>{ jouerGifIcone(img); });
     });
   }
   function majIconeGestion(){
@@ -1699,7 +1704,7 @@
   $("catdet-tout").onclick=()=>{
     const cases=[...document.querySelectorAll("#catdet-liste .gestion-case")]; if(!cases.length) return;
     const toutCoche=cases.every(cb=>cb.checked);
-    cases.forEach(cb=>{ cb.checked=!toutCoche; if(!toutCoche) catdetSelection.add(cb.dataset.cle); else catdetSelection.delete(cb.dataset.cle); });
+    cases.forEach(cb=>{ cb.checked=!toutCoche; jouerCaseGestion(cb, cb.checked); if(!toutCoche) catdetSelection.add(cb.dataset.cle); else catdetSelection.delete(cb.dataset.cle); });
     majBarreCatdet();
   };
   function catdetCase(cle, l){
@@ -1707,7 +1712,7 @@
     const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case"; cb.dataset.cle=cle;
     cb.checked=catdetSelection.has(cle);
     cb.onclick=e=>e.stopPropagation();
-    cb.onchange=()=>{ if(cb.checked) catdetSelection.add(cle); else catdetSelection.delete(cle); majBarreCatdet(); };
+    cb.onchange=()=>{ jouerCaseGestion(cb, cb.checked); if(cb.checked) catdetSelection.add(cle); else catdetSelection.delete(cle); majBarreCatdet(); };
     l.insertBefore(cb, l.firstChild);
   }
   $("catdet-suppr-selection").onclick=async()=>{
@@ -2439,7 +2444,7 @@
   $("btn-tout-selection").onclick=()=>{
     const cases=[...document.querySelectorAll("#liste .gestion-case")]; if(!cases.length) return;
     const toutCoche=cases.every(cb=>cb.checked);
-    cases.forEach(cb=>{ cb.checked=!toutCoche; if(!toutCoche) gestionSelection.add(cb.dataset.cle); else gestionSelection.delete(cb.dataset.cle); });
+    cases.forEach(cb=>{ cb.checked=!toutCoche; jouerCaseGestion(cb, cb.checked); if(!toutCoche) gestionSelection.add(cb.dataset.cle); else gestionSelection.delete(cb.dataset.cle); });
     majBarreGestion();
   };
   function ligneCase(cle, l){
@@ -2447,7 +2452,7 @@
     const cb=document.createElement("input"); cb.type="checkbox"; cb.className="gestion-case"; cb.dataset.cle=cle;
     cb.checked=gestionSelection.has(cle);
     cb.onclick=e=>e.stopPropagation();
-    cb.onchange=()=>{ if(cb.checked) gestionSelection.add(cle); else gestionSelection.delete(cle); majBarreGestion(); };
+    cb.onchange=()=>{ jouerCaseGestion(cb, cb.checked); if(cb.checked) gestionSelection.add(cle); else gestionSelection.delete(cle); majBarreGestion(); };
     l.insertBefore(cb, l.firstChild);
   }
   function rendreBudgetAccueil(){
@@ -3469,6 +3474,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Retirer les fonds blancs des icones":"v1.16.6",
                 "Corriger les icones et l historique":"v1.16.5",
         "Ajuster les icones animees des reglages":"v1.16.4",
         "Ajouter les icones animees dans les reglages":"v1.16.3",
@@ -3640,14 +3646,25 @@
     majIconeRevenu();
     const blocGestion=$("bloc-gestion");
     if(blocGestion){
+      const jouerMenuGestion=()=>{
+        const img=document.querySelector('[data-ico="gestion"] .gif-ico');
+        if(!img) return;
+        const nomAnim=blocGestion.open ? "menu-close.gif" : "menu.gif";
+        const nomRepos=blocGestion.open ? "menu.gif" : "menu-close.gif";
+        img.dataset.gif=gifPath(nomRepos);
+        img.dataset.still=gifStill(nomRepos);
+        img.dataset.gestionStart=String(Date.now());
+        jouerGifIcone(img,gifPath(nomAnim));
+      };
+      const summaryGestion=blocGestion.querySelector("summary");
+      if(summaryGestion) summaryGestion.addEventListener("pointerdown", jouerMenuGestion);
       blocGestion.addEventListener("toggle",()=>{
         const img=document.querySelector('[data-ico="gestion"] .gif-ico');
         if(!img) return;
-        const nomAnim=blocGestion.open ? "menu.gif" : "menu-close.gif";
         const nomRepos=blocGestion.open ? "menu-close.gif" : "menu.gif";
         img.dataset.gif=gifPath(nomRepos);
         img.dataset.still=gifStill(nomRepos);
-        jouerGifIcone(img,gifPath(nomAnim));
+        if(Date.now()-parseInt(img.dataset.gestionStart||"0",10)>350) jouerGifIcone(img,gifPath(nomRepos));
       });
     }
     const meta=session.user.user_metadata||{};
@@ -3677,6 +3694,10 @@
   </script>
 </body>
 </html>
+
+
+
+
 
 
 
