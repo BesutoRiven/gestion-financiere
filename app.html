@@ -1582,17 +1582,44 @@
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (perso ET/OU foyer partagé, jamais d'écriture croisée) ----
-  let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
+  let sauvTimer=null, foyerId=null, canalFoyer=null, canalDemandes=null, dernierSelfSave=0;
   let modeActif="perso"; // "perso" (table donnees) | "commun" (table foyers). Les deux coexistent, on n'écrit QUE la table du mode actif.
+  // --- État du partage (point refonte) ---
+  // membresPartage / demandesPartage vivent dans foyers.contenu (zéro SQL). foyer_membres sert au gating RLS.
+  let membresPartage={};          // { uid: {joinedAt, statut:"actif"|"attente", role} } — issu de contenu.membres
+  let demandesPartage={};          // { uid: {...} } — état d'admission, dans contenu.demandes
+  let communCachees={depenses:[], revenus:[]}; // transactions du commun antérieures à mon arrivée (jamais affichées, réécrites au save)
+  let membresRoles=[];             // lignes foyer_membres {user_id, role}
+  let monRolePartage=null;         // mon role dans foyer_membres ("proprietaire"|"ami"|"attente"|...)
+  let nbMembresActifs=0;           // nombre de membres role != "attente"
   const estDansPartage=()=> !!foyerId;
+  // Le partage est "né" quand au moins 2 membres actifs existent (pas de partage solo).
+  const partageActif=()=> nbMembresActifs>=2;
+  const jeSuisEnAttente=()=> monRolePartage==="attente";
+  // Puis-je basculer/écrire en commun ? Il faut un partage né et ne pas être en attente d'admission.
+  const peutAccederCommun=()=> !!foyerId && partageActif() && !!monRolePartage && !jeSuisEnAttente();
+  const maJoinedAt=()=> (membresPartage[uid] && membresPartage[uid].joinedAt) || 0;
   const cleCacheMode=()=> "gf_"+uid+(modeActif==="commun"?"_commun":"");
   function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
   // Requête d'upsert vers la table du mode actif UNIQUEMENT. Perso -> donnees ; commun -> foyers.
   function requeteSauvegarde(c){
     if(modeActif==="commun" && foyerId){
-      return sb.from("foyers").upsert({ id:foyerId, contenu:c, updated_at:new Date().toISOString() });
+      return sb.from("foyers").upsert({ id:foyerId, contenu:contenuCommunPourSave(), updated_at:new Date().toISOString() });
     }
     return sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() });
+  }
+  // Payload commun : stamp la date de création (visibilité temporelle) et réintègre les transactions
+  // antérieures à mon arrivée (communCachees) pour ne jamais écraser les données des autres membres.
+  function contenuCommunPourSave(){
+    const now=Date.now();
+    depenses.forEach(d=>{ if(!d.cree) d.cree=now; });
+    revenus.forEach(r=>{ if(!r.cree) r.cree=now; });
+    const c=contenuActuel();
+    c.depenses = depenses.concat(communCachees.depenses||[]);
+    c.revenus  = revenus.concat(communCachees.revenus||[]);
+    c.membres  = membresPartage;
+    c.demandes = demandesPartage;
+    return c;
   }
   function sauverCloud(){
     const c=contenuActuel();
@@ -1648,6 +1675,20 @@
     objectifsEpargne = c.objectifsEpargne || [];
     profilFinance = Object.assign({statut:"", revenusReguliers:true, onboardingFait:false}, c.profilFinance||{});
     enveloppes = Array.isArray(c.enveloppes) ? c.enveloppes.map(e=>Object.assign({montantFixe:0,pourcentage:0,solde:0,type:"repartition"},e)) : [];
+    membresPartage = c.membres || {};
+    demandesPartage = c.demandes || {};
+    communCachees = {depenses:[], revenus:[]};
+    // Visibilité temporelle : en commun, je ne vois que les transactions créées après mon arrivée.
+    // Les antérieures sont conservées (communCachees) pour être réécrites au save sans les écraser.
+    if(modeActif==="commun" && foyerId){
+      const seuil=maJoinedAt();
+      if(seuil>0){
+        communCachees.depenses = depenses.filter(d=> (d.cree||0) < seuil);
+        communCachees.revenus  = revenus.filter(r=> (r.cree||0) < seuil);
+        depenses = depenses.filter(d=> (d.cree||0) >= seuil);
+        revenus  = revenus.filter(r=> (r.cree||0) >= seuil);
+      }
+    }
     appliquerPeriodeParDefaut();
   }
   function rafraichirVueCourante(){
@@ -1666,6 +1707,52 @@
         }).subscribe();
     }catch(e){}
   }
+  // Notifie en direct des demandes d'admission (actif dès qu'on a un foyer, y compris en perso pour le créateur).
+  function abonnerDemandes(){
+    if(!foyerId || canalDemandes) return;
+    try{
+      canalDemandes = sb.channel("demandes-"+foyerId)
+        .on("postgres_changes", { event:"*", schema:"public", table:"foyer_demandes", filter:"foyer_id=eq."+foyerId }, ()=>{
+          verifierDemandesPourMoi();
+          rafraichirEtatPartage();
+        }).subscribe();
+    }catch(e){}
+  }
+  // Recharge mon rôle / le nombre d'actifs et met à jour l'UI (toggle, panneau Amis).
+  async function rafraichirEtatPartage(){
+    if(!foyerId) return;
+    const etaisEnAttente=jeSuisEnAttente();
+    await chargerEtatMembres();
+    if(typeof majBoutonMode==="function") majBoutonMode();
+    if($("amis-overlay") && $("amis-overlay").style.display==="flex"){ rendrePartage(); rendreMembres(); }
+    if(etaisEnAttente && !jeSuisEnAttente() && monRolePartage){ msgAmis("Tu as été accepté(e) ! Utilise l'interrupteur en haut pour basculer sur la sauvegarde commune.","ok"); }
+  }
+  // Admission acceptée par tous : active le membre et stampe sa date d'arrivée (visibilité temporelle).
+  async function promouvoirMembre(joinerUid){
+    try{ await sb.from("foyer_membres").update({role:"ami"}).eq("foyer_id",foyerId).eq("user_id",joinerUid); }catch(e){}
+    try{
+      const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle();
+      const c=(data && data.contenu) || {};
+      c.membres=c.membres||{};
+      c.membres[joinerUid]={ joinedAt:Date.now(), statut:"actif", role:"ami" };
+      dernierSelfSave=Date.now();
+      await sb.from("foyers").update({ contenu:c, updated_at:new Date().toISOString() }).eq("id",foyerId);
+    }catch(e){}
+    try{ await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); }catch(e){}
+  }
+  // Admission refusée : on retire le candidat et on solde ses demandes.
+  async function rejeterMembre(joinerUid){
+    try{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); }catch(e){}
+    try{ await sb.from("foyer_membres").delete().eq("foyer_id",foyerId).eq("user_id",joinerUid); }catch(e){}
+  }
+  // Mon vote d'admission ; le candidat n'est promu qu'à l'unanimité des membres actifs.
+  async function accepterAdmission(joinerUid){
+    try{ await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("cible_user_id",uid).eq("statut","en_attente"); }catch(e){}
+    let restantes=[];
+    try{ const { data }=await sb.from("foyer_demandes").select("id").eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); restantes=data||[]; }catch(e){}
+    if(!restantes.length) await promouvoirMembre(joinerUid);
+  }
+  async function refuserAdmission(joinerUid){ await rejeterMembre(joinerUid); }
   async function chargerTout(){
     foyerId=null; modeActif="perso";
     if(modeInvite){
@@ -1675,10 +1762,20 @@
       return;
     }
     try{ const { data:mem }=await sb.from("foyer_membres").select("foyer_id").eq("user_id",uid).maybeSingle(); if(mem && mem.foyer_id) foyerId=mem.foyer_id; }catch(e){}
-    // Mode par défaut : dernier choix mémorisé, sinon perso. Sans partage -> forcément perso.
+    if(foyerId){ await chargerEtatMembres(); abonnerDemandes(); }
+    // Mode par défaut : dernier choix mémorisé, sinon perso. Sans partage né (ou en attente) -> forcément perso.
     modeActif = localStorage.getItem("gf_mode_"+uid) || "perso";
-    if(!foyerId) modeActif="perso";
+    if(!peutAccederCommun()) modeActif="perso";
     await chargerModeActif({initial:true});
+  }
+  // Lit les membres du foyer (foyer_membres) : mon rôle + nombre d'actifs (base du gating commun).
+  async function chargerEtatMembres(){
+    if(!foyerId){ membresRoles=[]; monRolePartage=null; nbMembresActifs=0; return; }
+    try{ const { data }=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",foyerId); membresRoles=data||[]; }
+    catch(e){ membresRoles=[]; }
+    const moi=membresRoles.find(m=>m.user_id===uid);
+    monRolePartage = moi ? (moi.role||"proprietaire") : null;
+    nbMembresActifs = membresRoles.filter(m=>m.role!=="attente").length;
   }
   // Charge en mémoire les données du mode actif (perso = donnees, commun = foyers), sans jamais mélanger les deux.
   async function chargerModeActif(opts){
@@ -1701,7 +1798,7 @@
     const commun = modeActif==="commun";
     const track='<span class="tb-mode-track"><span class="tb-mode-ic ic-perso">'+SVG_PERSO+'</span><span class="tb-mode-ic ic-commun">'+SVG_COMMUN+'</span><span class="tb-mode-knob"></span></span>';
     document.querySelectorAll(".tb-mode").forEach(b=>{
-      b.style.display = estDansPartage() ? "inline-flex" : "none";
+      b.style.display = peutAccederCommun() ? "inline-flex" : "none";
       b.classList.toggle("commun", commun);
       b.setAttribute("role","switch");
       b.setAttribute("aria-checked", commun ? "true" : "false");
@@ -1712,7 +1809,7 @@
   // Bascule perso <-> commun : on sauve d'abord le mode courant, puis on recharge l'autre.
   async function basculerMode(nouveau){
     if(nouveau===modeActif) return;
-    if(nouveau==="commun" && !foyerId) return; // pas de partage : rien à afficher en commun
+    if(nouveau==="commun" && !peutAccederCommun()) return; // partage pas encore né, ou en attente d'admission
     await sauverMaintenant();
     modeActif=nouveau;
     localStorage.setItem("gf_mode_"+uid, modeActif);
@@ -1726,10 +1823,14 @@
   // ---- Partage du budget (foyer) ----
   async function creerPartage(){
     foyerId = (crypto.randomUUID? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)));
-    let r=await sb.from("foyers").insert({ id:foyerId, contenu:contenuActuel(), cree_par:uid, updated_at:new Date().toISOString() });
+    // Naissance VIDE : aucune reprise de l'historique du créateur. Le partage ne "vivra" qu'à l'arrivée d'un 2e membre.
+    const now=Date.now();
+    const contenuVide={ depenses:[], revenus:[], membres:{ [uid]:{joinedAt:now, statut:"actif", role:"proprietaire"} }, demandes:{} };
+    let r=await sb.from("foyers").insert({ id:foyerId, contenu:contenuVide, cree_par:uid, updated_at:new Date().toISOString() });
     if(r.error){ foyerId=null; return {ok:false, msg:messageErreur(r.error)}; }
     r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:foyerId, role:"proprietaire" });
     if(r.error){ return {ok:false, msg:messageErreur(r.error)}; }
+    await chargerEtatMembres(); abonnerDemandes();
     return {ok:true};
   }
   async function rejoindrePartage(code){
@@ -1737,9 +1838,23 @@
     const { data:invite, error } = await sb.from("foyer_invites").select("foyer_id,expires_at").eq("code",code).maybeSingle();
     if(error || !invite) return {ok:false, msg:"Code invalide ou expiré."};
     if(new Date(invite.expires_at) <= new Date()) return {ok:false, msg:"Ce code a expiré. Demande-en un nouveau à la personne."};
-    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:invite.foyer_id, role:"ami" });
+    const fid=invite.foyer_id;
+    // Membres actuels : ce sont les actifs qui devront tous m'accepter (accord unanime).
+    let membres=[]; try{ const { data }=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",fid); membres=data||[]; }catch(e){}
+    const actifs=membres.filter(m=>m.role!=="attente");
+    const dejaMembre=membres.find(m=>m.user_id===uid);
+    if(dejaMembre){ foyerId=fid; await chargerEtatMembres(); abonnerDemandes(); return {ok:true, enAttente:dejaMembre.role==="attente"}; }
+    // J'entre en ATTENTE (aucun accès au commun tant que non accepté par tous).
+    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:fid, role:"attente" });
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
-    return {ok:true};
+    foyerId=fid;
+    // Une demande d'admission par membre actif (groupe_id = mon uid).
+    for(const m of actifs){
+      try{ await sb.from("foyer_demandes").insert({ foyer_id:fid, cible_user_id:m.user_id, demandeur_user_id:uid, type:"admission", groupe_id:uid }); }
+      catch(e){ return {ok:false, msg:"Impossible d'envoyer la demande d'admission (droits Supabase ?)."}; }
+    }
+    await chargerEtatMembres(); abonnerDemandes();
+    return {ok:true, enAttente:true, nbAValider:actifs.length};
   }
   // Quitter le partage : on n'écrase JAMAIS la sauvegarde perso. Si nomPartage est fourni,
   // on copie les dépenses/revenus du commun dans le perso en LECTURE SEULE (tag arch).
@@ -1761,15 +1876,27 @@
     // 3) Écriture dans la table perso UNIQUEMENT.
     try{ const w=await sb.from("donnees").upsert({ user_id:uid, contenu:perso, updated_at:new Date().toISOString() }); if(w.error) return {ok:false, msg:messageErreur(w.error)}; }
     catch(e){ return {ok:false, msg:"Impossible d'enregistrer ta sauvegarde perso."}; }
-    // 4) Sortie du partage.
-    const r=await sb.from("foyer_membres").delete().eq("user_id",uid);
+    // 4) Retire aussi le membre du contenu du foyer : sans cela, il resterait
+    // compté comme actif et maintiendrait artificiellement le partage en vie.
+    if(commun){
+      commun.membres=commun.membres||{};
+      delete commun.membres[uid];
+      commun.demandes=commun.demandes||{};
+      delete commun.demandes[uid];
+      try{
+        const w=await sb.from("foyers").update({contenu:commun, updated_at:new Date().toISOString()}).eq("id",idFoyer);
+        if(w.error) return {ok:false, msg:messageErreur(w.error)};
+      }catch(e){ return {ok:false, msg:"Impossible de mettre à jour les membres du partage."}; }
+    }
+    // 5) Sortie du partage.
+    const r=await sb.from("foyer_membres").delete().eq("foyer_id",idFoyer).eq("user_id",uid);
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     foyerId=null; modeActif="perso"; localStorage.setItem("gf_mode_"+uid,"perso");
     return {ok:true};
   }
 
   // ---- Rôles et co-propriété du foyer partagé ----
-  const ROLES_LBL = {proprietaire:"Propriétaire", ami:"Ami", enfant:"Enfant", lecteur:"Lecteur"};
+  const ROLES_LBL = {proprietaire:"Propriétaire", ami:"Ami", enfant:"Enfant", lecteur:"Lecteur", attente:"En attente d'admission"};
   let foyerCreePar=null;
   async function syncProfil(){
     try{ await sb.from("profils").upsert({ id:uid, pseudo:monPseudo, tag:monTag, avatar_url:(document.querySelector(".avatar-slot img")||{}).src||null, updated_at:new Date().toISOString() }); }catch(e){}
@@ -1801,6 +1928,22 @@
       const span=document.createElement("span"); span.style.cssText="flex:1; font-size:14px; min-width:140px;";
       span.innerHTML='<b>'+m.pseudo+'</b><span style="color:var(--muted);">#'+m.tag+'</span>'+(admin?' <span style="color:var(--muted);">(admin)</span>':'')+(m.user_id===uid?' <span style="color:var(--accent);">(toi)</span>':'')+'<br><small style="color:var(--muted);">'+ROLES_LBL[m.role]+'</small>';
       l.appendChild(span);
+      if(m.role==="attente"){
+        // Candidat en attente : les membres actifs encore à voter peuvent accepter/refuser.
+        const monVote=demandes.find(d=>d.type==="admission" && d.groupe_id===m.user_id && d.cible_user_id===uid);
+        const restants=demandes.filter(d=>d.type==="admission" && d.groupe_id===m.user_id).length;
+        if(monVote){
+          const acc=document.createElement("button"); acc.className="btn-ligne"; acc.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--accent); border-color:var(--accent);"; acc.textContent="Accepter";
+          acc.onclick=async()=>{ await accepterAdmission(m.user_id); msgAmis("Vote enregistré.","ok"); rendreMembres(); rafraichirEtatPartage(); };
+          const ref=document.createElement("button"); ref.className="btn-ligne"; ref.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--danger); border-color:#e0b4b4;"; ref.textContent="Refuser";
+          ref.onclick=async()=>{ if(!confirm("Refuser l'accès à "+m.pseudo+" ?")) return; await refuserAdmission(m.user_id); msgAmis(m.pseudo+" refusé(e).","ok"); rendreMembres(); rafraichirEtatPartage(); };
+          l.appendChild(acc); l.appendChild(ref);
+        } else {
+          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent = restants>0 ? "En attente du vote des autres membres ("+restants+" restant"+(restants>1?"s":"")+")." : "Vote en cours…";
+          l.appendChild(info);
+        }
+        box.appendChild(l); return;
+      }
       if(jeSuisProprio && m.user_id!==uid){
         if(m.role==="proprietaire"){
           const demandeExistante=demandes.find(d=>d.cible_user_id===m.user_id && d.demandeur_user_id===uid);
@@ -1849,7 +1992,13 @@
     if(!pourMoi) return;
     let nomDemandeur="Un(e) propriétaire";
     try{ const r=await sb.from("profils").select("pseudo").eq("id",pourMoi.demandeur_user_id).maybeSingle(); if(r.data && r.data.pseudo) nomDemandeur=r.data.pseudo; }catch(e){}
-    if(pourMoi.type==="reset"){
+    if(pourMoi.type==="admission"){
+      const joiner=pourMoi.demandeur_user_id;
+      $("depart-titre").textContent="Demande d'accès au partage";
+      $("depart-texte").textContent=nomDemandeur+" souhaite rejoindre la sauvegarde commune. Il/elle n'aura accès qu'aux transactions créées après son arrivée, et seulement une fois que tous les membres actuels ont accepté.";
+      $("depart-refuser").onclick=async()=>{ await refuserAdmission(joiner); $("depart-overlay").style.display="none"; rafraichirEtatPartage(); };
+      $("depart-accepter").onclick=async()=>{ await accepterAdmission(joiner); $("depart-overlay").style.display="none"; rafraichirEtatPartage(); };
+    } else if(pourMoi.type==="reset"){
       $("depart-titre").textContent="Demande de réinitialisation";
       $("depart-texte").textContent=nomDemandeur+" souhaite réinitialiser complètement les données de ce partage commun (tout effacer). Es-tu d'accord ?";
       $("depart-refuser").onclick=async()=>{
@@ -4058,6 +4207,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Refondre le partage : admission unanime et visibilite depuis l arrivee":"v1.22.2",
         "Interrupteur perso/commun et texte du mode invite":"v1.22.1",
         "Mode invite, pages Donnees et Personnalisation, onglet Plus":"v1.22.0",
         "Sauvegarde perso et commune permutables avec archivage lecture seule a la sortie":"v1.21.0",
@@ -4168,7 +4318,7 @@
   if($("donnees-retour")) $("donnees-retour").onclick=()=>fermerPage("donnees-overlay");
   try{ if(new URLSearchParams(location.search).get("vue")==="donnees") ouvrirPage("donnees-overlay"); }catch(e){}
   document.querySelectorAll(".tb-mode").forEach(b=>b.onclick=async()=>{
-    if(!estDansPartage()) return;
+    if(!peutAccederCommun()) return;
     await basculerMode(modeActif==="commun"?"perso":"commun");
   });
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
@@ -4176,23 +4326,22 @@
   function msgAmis(t,ty){ $("amis-msg").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>'; }
 
   $("btn-creer-partage").onclick=async()=>{
-    if(!confirm("Créer un partage à partir de tes données actuelles ? Tu obtiendras un code à transmettre.")) return;
+    if(!confirm("Créer un partage ? Tu obtiendras un code à transmettre. La sauvegarde commune démarre VIDE (ton historique perso n'est pas copié) et ne s'ouvrira qu'à l'arrivée d'un 2e membre.")) return;
     msgAmis("Création du partage…","ok");
     const r=await creerPartage();
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
-    localStorage.setItem("gf_mode_"+uid,"commun");
-    msgAmis("Partage créé ! Transmets le code affiché. L'app va se recharger sur la sauvegarde commune (ta sauvegarde perso reste intacte).","ok");
-    setTimeout(()=>location.reload(),1400);
+    rendrePartage(); rendreMembres();
+    msgAmis("Partage prêt. Génère un code et transmets-le. Le mode commun apparaîtra une fois la personne acceptée.","ok");
   };
   $("btn-rejoindre").onclick=async()=>{
     const code=$("code-partage").value.trim();
-    if(!confirm("Rejoindre ce partage ? Tu obtiens une 2ᵉ sauvegarde commune — ta sauvegarde perso reste intacte, et tu pourras basculer entre les deux avec le bouton en haut.")) return;
-    msgAmis("Connexion au partage…","ok");
+    if(!confirm("Rejoindre ce partage ? Ta demande devra être acceptée par tou(te)s les membres actuels. Tu ne verras que les transactions créées après ton arrivée. Ta sauvegarde perso reste intacte.")) return;
+    msgAmis("Envoi de la demande…","ok");
     const r=await rejoindrePartage(code);
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
-    localStorage.setItem("gf_mode_"+uid,"commun");
-    msgAmis("Partage rejoint ! L'app va se recharger sur la sauvegarde commune.","ok");
-    setTimeout(()=>location.reload(),1400);
+    rendrePartage(); rendreMembres();
+    if(r.enAttente) msgAmis("Demande envoyée"+(r.nbAValider?" à "+r.nbAValider+" membre(s)":"")+". Tu accèderas à la sauvegarde commune dès que tou(te)s auront accepté.","ok");
+    else msgAmis("Partage rejoint.","ok");
   };
   $("btn-quitter-partage").onclick=async()=>{
     let monRole="proprietaire", creePar=null;
