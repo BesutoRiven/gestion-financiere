@@ -248,9 +248,16 @@
     .tb-actions{display:flex; align-items:center; gap:14px;}
     .tb-amis{border:none; background:transparent; cursor:pointer; color:var(--text); display:flex; padding:0;}
     .tb-amis svg{width:24px; height:24px;}
-    .tb-mode{border:none; background:transparent; cursor:pointer; color:var(--text); display:inline-flex; align-items:center; padding:0;}
-    .tb-mode svg{width:24px; height:24px;}
-    .tb-mode.commun{color:var(--accent);}
+    .tb-mode{border:none; background:transparent; cursor:pointer; padding:0; display:inline-flex; align-items:center;}
+    .tb-mode-track{position:relative; display:inline-flex; align-items:center; justify-content:space-between; width:54px; height:28px; border-radius:16px; background:var(--border); padding:0 6px; transition:background .2s;}
+    .tb-mode.commun .tb-mode-track{background:var(--accent-soft);}
+    .tb-mode-ic{width:16px; height:16px; display:inline-flex; color:var(--muted); position:relative; z-index:1;}
+    .tb-mode-ic svg{width:100%; height:100%;}
+    .tb-mode:not(.commun) .ic-perso{color:var(--text);}
+    .tb-mode.commun .ic-commun{color:var(--accent);}
+    .tb-mode-knob{position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.28); transition:transform .2s; z-index:2;}
+    .tb-mode:not(.commun) .tb-mode-knob{transform:translateX(26px);}
+    .tb-mode.commun .tb-mode-knob{transform:translateX(0);}
     .dep.archive{opacity:.72; background:var(--surface);}
     .dep.archive .titre,.dep.archive .sous,.dep.archive .mnt{color:var(--muted);}
     .arch-tag{display:inline-block; font-size:10px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1px 6px; margin-left:6px; vertical-align:middle;}
@@ -1692,11 +1699,14 @@
   const SVG_COMMUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg>';
   function majBoutonMode(){
     const commun = modeActif==="commun";
+    const track='<span class="tb-mode-track"><span class="tb-mode-ic ic-perso">'+SVG_PERSO+'</span><span class="tb-mode-ic ic-commun">'+SVG_COMMUN+'</span><span class="tb-mode-knob"></span></span>';
     document.querySelectorAll(".tb-mode").forEach(b=>{
       b.style.display = estDansPartage() ? "inline-flex" : "none";
-      b.innerHTML = commun ? SVG_COMMUN : SVG_PERSO;
-      b.title = commun ? "Sauvegarde commune (visible par les deux)" : "Sauvegarde perso (visible par toi seul)";
       b.classList.toggle("commun", commun);
+      b.setAttribute("role","switch");
+      b.setAttribute("aria-checked", commun ? "true" : "false");
+      b.title = commun ? "Sauvegarde commune (visible par les deux)" : "Sauvegarde perso (visible par toi seul)";
+      b.innerHTML = track;
     });
   }
   // Bascule perso <-> commun : on sauve d'abord le mode courant, puis on recharge l'autre.
@@ -4048,6 +4058,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Interrupteur perso/commun et texte du mode invite":"v1.22.1",
         "Mode invite, pages Donnees et Personnalisation, onglet Plus":"v1.22.0",
         "Sauvegarde perso et commune permutables avec archivage lecture seule a la sortie":"v1.21.0",
         "Compacter les boutons de gestion et personnaliser les icones d'objectifs":"v1.20.1",
@@ -4216,10 +4227,10 @@
   function afficherBandeauInvite(){
     if(document.getElementById("bandeau-invite")) return;
     const b=document.createElement("div"); b.id="bandeau-invite";
-    b.innerHTML='<span><strong>Mode invité</strong> — tes données restent sur cet appareil et ne sont pas sauvegardées.</span><button type="button" id="invite-creer">Créer un compte</button>';
+    b.innerHTML='<span><strong>Mode invité</strong> — tes données restent sur cet appareil et ne sont pas sauvegardées.</span><button type="button" id="invite-creer">Se connecter</button>';
     const app=document.querySelector(".app"); app.insertBefore(b, app.firstChild);
     document.getElementById("invite-creer").onclick=()=>{
-      if(confirm("Quitter le mode invité et créer un compte ? Les données de test de cet appareil seront effacées.")){
+      if(confirm("Quitter le mode invité pour te connecter ou créer un compte ? Les données de test de cet appareil seront effacées.")){
         localStorage.removeItem("gf_invite"); localStorage.removeItem("gf_invite_data");
         location.href="index.html";
       }
