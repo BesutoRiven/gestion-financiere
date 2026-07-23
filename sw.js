@@ -1,9 +1,19 @@
 // IMPORTANT : incrÃ©mente ce numÃ©ro Ã  chaque dÃ©ploiement (gf-v32 -> gf-v7...).
-const CACHE = "gf-v1.16.2";
+const CACHE = "gf-v1.16.3";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
-  "icon-192.png", "icon-512.png"
+  "icon-192.png", "icon-512.png",
+  "assets/animated-icons/check-on.gif", "assets/animated-icons/check-off.gif",
+  "assets/animated-icons/check-all.gif", "assets/animated-icons/home.gif",
+  "assets/animated-icons/settings.gif", "assets/animated-icons/file.gif",
+  "assets/animated-icons/folder.gif", "assets/animated-icons/admin.gif",
+  "assets/animated-icons/edit.gif", "assets/animated-icons/menu.gif",
+  "assets/animated-icons/image.gif", "assets/animated-icons/import.gif",
+  "assets/animated-icons/dollar.gif", "assets/animated-icons/tools.gif",
+  "assets/animated-icons/order.gif", "assets/animated-icons/save.gif",
+  "assets/animated-icons/cash.gif", "assets/animated-icons/receipt.gif",
+  "assets/animated-icons/card.gif", "assets/animated-icons/menu-big.gif"
 ];
 
 self.addEventListener("install", e => {

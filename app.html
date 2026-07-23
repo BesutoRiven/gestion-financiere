@@ -160,9 +160,12 @@
     .dd-devise-msg.err{color:var(--danger);}
     .dd-devise-msg.ok{color:var(--accent);}
     .dd-devise-retour{font-size:12px; color:var(--papier-muted); cursor:pointer; text-align:center; margin-top:8px; text-decoration:underline;}
-    .gestion-case{-webkit-appearance:none; appearance:none; width:22px; height:22px; flex:0 0 auto; border:2px solid var(--border); border-radius:7px; background:var(--surface); cursor:pointer; position:relative; transition:background .15s,border-color .15s; margin:0;}
-    .gestion-case:checked{background:var(--accent); border-color:var(--accent);}
-    .gestion-case:checked::after{content:""; position:absolute; left:6px; top:2px; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);}
+    .gestion-case{-webkit-appearance:none; appearance:none; width:24px; height:24px; flex:0 0 auto; border:none; border-radius:6px; background:transparent url("assets/animated-icons/check-off.gif") center/24px 24px no-repeat; cursor:pointer; margin:0;}
+    .gestion-case:checked{background-image:url("assets/animated-icons/check-on.gif");}
+    .gif-ico{width:30px; height:30px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:multiply;}
+    .sum-ico .gif-ico{width:32px; height:32px; flex:0 0 auto;}
+    .btn-inline-ic .gif-ico{width:22px; height:22px;}
+    .btn-ligne .gif-ico{width:18px; height:18px; margin-right:6px;}
 
     /* Visionneuse photo */
     .lb-box{width:min(100%,980px); max-height:85vh; overflow:hidden;}
@@ -176,6 +179,7 @@
     .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
+    .nav-btn .gif-ico{width:24px; height:24px; object-fit:contain; display:block; mix-blend-mode:multiply; filter:var(--gif-filter,none);}
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
@@ -407,7 +411,7 @@
       </div>
 
       <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0; flex-wrap:wrap;">
-        <button id="btn-tout-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
+        <button id="btn-tout-selection" class="btn-ligne" style="display:none; align-items:center; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
         <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
         <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
         <button id="btn-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
@@ -510,7 +514,7 @@
             </div>
           </details>
           <details class="det-nested">
-            <summary><span class="sum-ico"><span data-ico="revenu"></span><span>Types de revenu</span></span></summary>
+            <summary><span class="sum-ico"><span data-ico="typesrevenu"></span><span>Types de revenu</span></span></summary>
             <div class="det-corps">
               <div id="revtypes-liste"></div>
               <div class="cat-ligne" style="margin-top:12px;">
@@ -928,10 +932,10 @@
     </section>
 
     <nav class="navbas">
-      <button class="nav-btn on" data-vue="depenses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil</button>
+      <button class="nav-btn on" data-vue="depenses"><img class="gif-ico" src="assets/animated-icons/home.gif" alt="Accueil">Accueil</button>
       <button class="nav-btn" data-vue="accueil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v4a1 1 0 0 0 1 1h4"/><path d="M8.5 12.5h7M8.5 15.5h7M8.5 18.5h4.5"/></svg>Résumé</button>
       <button class="nav-btn" data-vue="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Budget</button>
-      <button class="nav-btn" data-vue="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Réglages</button>
+      <button class="nav-btn" data-vue="reglages"><img class="gif-ico" src="assets/animated-icons/settings.gif" alt="Reglages">R&eacute;glages</button>
     </nav>
   </div>
 
@@ -1066,25 +1070,27 @@
   const fmt=n=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise();
   const fmtDev=(n,code)=>n.toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+symboleDevise(code);
   const MAX_PHOTOS=4;
+  const gifIcon=(nom, alt="")=>'<img class="gif-ico" src="assets/animated-icons/'+nom+'" alt="'+alt+'" loading="lazy" decoding="async">';
   const ICONES_UI={
     revenu:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/></svg>',
     depense:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>',
     remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
-    fond:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M20 16l-5-5-7 7"/><path d="M13 20l3-3 4 3"/></svg>',
-    devise:'<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8.5c0-1.9 2.2-3.5 5-3.5s5 1.2 5 3-1.6 2.7-5 3.4-5 1.5-5 3.6 2.2 4 5 4 5-1.6 5-3.5"/><path d="M3 8h3"/><path d="M18 16h3"/></svg>',
-    gestion:'<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></svg>',
-    categories:'<svg viewBox="0 0 24 24"><path d="M4 6h7v5H4z"/><path d="M13 6h7v5h-7z"/><path d="M4 13h7v5H4z"/><path d="M13 13h7v5h-7z"/></svg>',
-    souscat:'<svg viewBox="0 0 24 24"><path d="M4 7h6"/><path d="M4 12h10"/><path d="M4 17h14"/><circle cx="18" cy="7" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>',
-    paiement:'<svg viewBox="0 0 24 24"><path d="M3 7h18"/><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M16 15h2"/></svg>',
-    budgetcat:'<svg viewBox="0 0 24 24"><path d="M4 20V9"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
-    recurrent:'<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
-    importexport:'<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M5 20h14"/></svg>',
-    options:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5L5 11a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>',
-    sauvegarde:'<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4"/><path d="M9 17h6"/></svg>',
-    admin:'<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><circle cx="18" cy="17" r="2"/><path d="M18 13v2"/></svg>',
-    versions:'<svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="8"/></svg>',
-    bilan:'<svg viewBox="0 0 24 24"><path d="M5 19V9"/><path d="M10 19V5"/><path d="M15 19v-7"/><path d="M20 19v-4"/><path d="M3 19h18"/></svg>',
-    objectif:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v2"/><path d="M20 12h-2"/><path d="M12 20v-2"/><path d="M4 12h2"/></svg>'
+    fond:gifIcon('image.gif','Fond ecran'),
+    devise:gifIcon('dollar.gif','Devise'),
+    gestion:gifIcon('menu-big.gif','Gestion'),
+    categories:gifIcon('folder.gif','Categories'),
+    souscat:gifIcon('file.gif','Sous-categories'),
+    typesrevenu:gifIcon('cash.gif','Types de revenu'),
+    paiement:gifIcon('card.gif','Moyens de paiement'),
+    budgetcat:gifIcon('cash.gif','Budget personnalise'),
+    recurrent:gifIcon('order.gif','Transactions recurrentes'),
+    importexport:gifIcon('import.gif','Import Export'),
+    options:gifIcon('tools.gif','Options avancees'),
+    sauvegarde:gifIcon('save.gif','Sauvegarde'),
+    admin:gifIcon('admin.gif','Administration'),
+    versions:gifIcon('receipt.gif','Historique des versions'),
+    bilan:gifIcon('receipt.gif','Bilan'),
+    objectif:gifIcon('check-all.gif','Objectifs')
   };
   function normaliserTexte(texte){
     return (texte||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").trim();
@@ -1144,6 +1150,10 @@
     if(pct>=100) return "danger";
     if(pct>=85) return "warn";
     return "";
+  }
+
+  function iconeToutSelection(toutCoche){
+    return '<img class="gif-ico" src="assets/animated-icons/check-all.gif" alt="">'+(toutCoche?"Tout d&eacute;s&eacute;lectionner":"Tout s&eacute;lectionner");
   }
   function appliquerIconesUI(){
     document.querySelectorAll("[data-ico]").forEach(el=>{
@@ -1655,7 +1665,7 @@
     $("catdet-suppr-selection").style.display=n>0?"inline-block":"none";
     const cases=[...document.querySelectorAll("#catdet-liste .gestion-case")];
     const boutonTout=$("catdet-tout");
-    if(modeGestionCat && cases.length){ boutonTout.style.display="inline-block"; boutonTout.textContent=cases.every(cb=>cb.checked)?"Tout désélectionner":"Tout sélectionner"; }
+    if(modeGestionCat && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); }
     else boutonTout.style.display="none";
   }
   $("catdet-tout").onclick=()=>{
@@ -2395,7 +2405,7 @@
     $("btn-suppr-selection").style.display=n>0?"inline-block":"none";
     const cases=[...document.querySelectorAll("#liste .gestion-case")];
     const boutonTout=$("btn-tout-selection");
-    if(modeGestion && cases.length){ boutonTout.style.display="inline-block"; boutonTout.textContent=cases.every(cb=>cb.checked)?"Tout désélectionner":"Tout sélectionner"; }
+    if(modeGestion && cases.length){ boutonTout.style.display="inline-flex"; boutonTout.innerHTML=iconeToutSelection(cases.every(cb=>cb.checked)); }
     else boutonTout.style.display="none";
   }
   $("btn-tout-selection").onclick=()=>{
