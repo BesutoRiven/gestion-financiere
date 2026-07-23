@@ -588,6 +588,23 @@
               <small class="aide">L'ordre choisi ici est celui proposé dans le ticket de dépense.</small>
             </div>
           </details>
+          <details class="det-nested" id="bloc-repartition">
+            <summary><span class="sum-ico"><span data-ico="repartition"></span><span>Répartition de revenu</span></span></summary>
+            <div class="det-corps">
+              <small class="aide">À chaque revenu, l'argent s'écoule dans tes enveloppes : les obligations et minimums fixes d'abord, puis le reste réparti selon les pourcentages. Le solde de chaque enveloppe s'accumule dans l'onglet Budget.</small>
+              <button type="button" id="rep-questionnaire-btn" class="btn-ligne" style="margin-top:12px; color:var(--accent); border-color:var(--accent);"><span class="btn-inline-ic"><span data-ico="admin"></span><span>Lancer le questionnaire guidé</span></span></button>
+              <div id="rep-total-pct" style="font-size:12px; margin-top:12px;"></div>
+              <div id="rep-enveloppes-liste" style="margin-top:10px;"></div>
+              <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap; gap:8px;">
+                <input id="rep-nouvelle" type="text" placeholder="Nouvelle enveloppe" style="flex:2 1 140px;" />
+                <select id="rep-nouvelle-type" style="flex:1 1 110px; border:1px solid var(--border); border-radius:8px; padding:8px; font-family:inherit; background:var(--surface); color:var(--text);">
+                  <option value="repartition">Répartition</option>
+                  <option value="obligation">Obligation</option>
+                </select>
+                <button id="rep-ajouter" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+            </div>
+          </details>
           <details class="det-nested">
             <summary><span class="sum-ico"><span data-ico="budgetcat"></span><span>Budget personnalisé</span></span></summary>
             <div class="det-corps">
@@ -870,6 +887,28 @@
       </div>
     </div>
 
+    <!-- ============ VIGNETTE DE RÉPARTITION ============ -->
+    <div id="repartir-overlay" class="cal-overlay" style="display:none; z-index:96;">
+      <div class="cal-box" style="max-width:380px; max-height:85vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre" id="repartir-titre">Répartir ce revenu</span><button id="repartir-fermer" aria-label="Fermer">×</button></div>
+        <p id="repartir-sous" style="font-size:13px; color:var(--muted); margin:0 0 10px;"></p>
+        <div id="repartir-liste"></div>
+        <div id="repartir-reste" style="font-size:13px; text-align:right; margin-top:10px;"></div>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button id="repartir-plus-tard" class="btn-ligne" style="flex:1;">Plus tard</button>
+          <button id="repartir-valider" class="btn-plein" style="flex:2;">Répartir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ QUESTIONNAIRE GUIDÉ ============ -->
+    <div id="questionnaire-overlay" class="cal-overlay" style="display:none; z-index:97;">
+      <div class="cal-box" style="max-width:400px; max-height:88vh; overflow-y:auto;">
+        <div class="cal-tete"><span class="titre" id="quest-titre">Configuration rapide</span><button id="quest-fermer" aria-label="Fermer">×</button></div>
+        <div id="quest-corps"></div>
+      </div>
+    </div>
+
     <!-- ============ BILAN DU MOIS ============ -->
     <div id="bilan-overlay" class="cal-overlay" style="display:none;">
       <div class="cal-box" style="max-width:360px; max-height:80vh; overflow-y:auto;">
@@ -981,7 +1020,14 @@
         <button id="bud-ouvrir-remb"><span class="rond">&#8617;</span>Remboursement</button>
       </div>
       <div id="bud-alertes"></div>
-      <div class="bloc"><div id="bud-liste"></div></div>
+      <details class="bloc det" id="bud-env-details">
+        <summary><span class="sum-ico"><span data-ico="repartition"></span><span>Mes enveloppes</span></span></summary>
+        <div class="det-corps"><div id="bud-enveloppes-liste"></div></div>
+      </details>
+      <details class="bloc det" id="bud-cat-details">
+        <summary><span class="sum-ico"><span data-ico="budgetcat"></span><span>Budget par catégorie</span></span></summary>
+        <div class="det-corps"><div id="bud-liste"></div></div>
+      </details>
     </section>
 
     <nav class="navbas">
@@ -1113,6 +1159,18 @@
   let budgetParSousCat=false, budSousCat={}; // budSousCat: clé "Categorie|SousCat" -> {montant, unite}
   let optionsActivees={}; // options avancées facultatives, désactivées par défaut (ex. "recurRemb")
   let objectifsEpargne=[]; // {id, nom, montantCible, montantActuel}
+  // Répartition de revenu
+  let profilFinance={statut:"", revenusReguliers:true, onboardingFait:false}; // statut: salarie|auto|freelance|mixte|etudiant
+  let enveloppes=[]; // {id, nom, icone(clé ICONES_CAT), couleur, type:"obligation"|"repartition", montantFixe, pourcentage, solde, ordre}
+  const ENVELOPPES_DEFAUT=[
+    {id:"obl-logement", nom:"Logement", icone:"logement", couleur:"#712b13", type:"obligation", montantFixe:0, pourcentage:0, solde:0, ordre:0},
+    {id:"obl-factures", nom:"Factures & abonnements", icone:"telephone", couleur:"#0c447c", type:"obligation", montantFixe:0, pourcentage:0, solde:0, ordre:1},
+    {id:"rep-vivre", nom:"Vivre / plaisir", icone:"restaurant", couleur:"#854f0b", type:"repartition", montantFixe:0, pourcentage:40, solde:0, ordre:2},
+    {id:"rep-epargne", nom:"Épargne", icone:"banque", couleur:"#0f6e56", type:"repartition", montantFixe:0, pourcentage:25, solde:0, ordre:3},
+    {id:"rep-invest", nom:"Investissement", icone:"tendance", couleur:"#3c3489", type:"repartition", montantFixe:0, pourcentage:20, solde:0, ordre:4},
+    {id:"rep-souhaits", nom:"Liste de souhaits", icone:"cadeau", couleur:"#72243e", type:"repartition", montantFixe:0, pourcentage:15, solde:0, ordre:5}
+  ];
+  const enveloppesDefaut=()=> JSON.parse(JSON.stringify(ENVELOPPES_DEFAUT));
   const toutesDevises=()=> DEVISES.concat(devisesPerso);
   const symboleDevise=(code)=> (toutesDevises().find(d=>d.code===(code||deviseDefaut))||DEVISES[0]).sym;
   const iconeRevenu=()=> symboleDevise(deviseDefaut);
@@ -1138,6 +1196,7 @@
     typesrevenu:animIcon('wiggle','<path d="M6 3h12v18l-2.5-1.5L13 21l-1.5-1.5L10 21l-2.5-1.5L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>','Types de revenu'),
     paiement:animIcon('flip','<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6 15h4"/>','Moyens de paiement'),
     budgetcat:animIcon('pop','<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>','Budget personnalise'),
+    repartition:animIcon('pop','<circle cx="6" cy="5" r="2.4"/><path d="M6 7.4V13a2 2 0 0 0 2 2h8"/><circle cx="18" cy="7" r="2.4"/><circle cx="18" cy="15" r="2.4"/><path d="M18 9.4v3.2"/>','Repartition de revenu'),
     recurrent:animIcon('rotate','<path d="M4 12a8 8 0 0 1 13.6-5.7L20 8.5"/><path d="M20 4.5v4h-4"/><path d="M20 12a8 8 0 0 1-13.6 5.7L4 15.5"/><path d="M4 19.5v-4h4"/>','Transactions recurrentes'),
     importexport:animIcon('bounce','<path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>','Import Export'),
     excel:animIcon('nudge','<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M9.5 9.5v10.5"/><path d="M15.5 9.5v10.5"/>','Excel'),
@@ -1205,6 +1264,38 @@
     if(MIGRATION_EMOJI_CAT[val]) return MIGRATION_EMOJI_CAT[val];
     return "divers";
   }
+  // ===== Répartition de revenu =====
+  const enveloppesTriees=()=> enveloppes.slice().sort((a,b)=>(a.ordre||0)-(b.ordre||0));
+  function repartitionActive(){ return profilFinance.onboardingFait && enveloppes.length>0; }
+  // Calcule la ventilation d'un montant : obligations + minimums fixes d'abord (par ordre), puis le reste au prorata des pourcentages.
+  function calculerRepartition(montant){
+    const parts={}; let reste=Math.max(0, montant);
+    const liste=enveloppesTriees();
+    liste.forEach(e=>{ parts[e.id]=0; });
+    // 1 & 2 : montants fixes prioritaires (obligations puis répartition, dans l'ordre)
+    liste.forEach(e=>{
+      const fixe=Math.max(0, +e.montantFixe||0);
+      if(fixe>0 && reste>0){ const m=Math.min(fixe, reste); parts[e.id]+=m; reste-=m; }
+    });
+    // 3 : le reste réparti au prorata des pourcentages
+    const pourcent=liste.filter(e=>(+e.pourcentage||0)>0);
+    const totalPct=pourcent.reduce((s,e)=>s+(+e.pourcentage||0),0);
+    if(reste>0 && totalPct>0){
+      let cumul=0;
+      pourcent.forEach((e,i)=>{
+        let m;
+        if(i===pourcent.length-1) m=reste-cumul;            // la dernière absorbe l'arrondi
+        else { m=Math.round(reste*(+e.pourcentage)/totalPct*100)/100; cumul+=m; }
+        parts[e.id]+=m;
+      });
+    }
+    return parts; // {enveloppeId: montant}
+  }
+  function appliquerRepartition(parts){
+    enveloppes.forEach(e=>{ if(parts[e.id]) e.solde=Math.round(((e.solde||0)+parts[e.id])*100)/100; });
+    sauverCloud();
+  }
+  function totalPourcentages(){ return enveloppes.reduce((s,e)=>s+(+e.pourcentage||0),0); }
   function normaliserTexte(texte){
     return (texte||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").trim();
   }
@@ -1446,7 +1537,7 @@
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
   // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
   function sauverCloud(){
     const c=contenuActuel();
     try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
@@ -1492,10 +1583,12 @@
     budSousCat = c.budSousCat || {};
     optionsActivees = c.optionsActivees || {};
     objectifsEpargne = c.objectifsEpargne || [];
+    profilFinance = Object.assign({statut:"", revenusReguliers:true, onboardingFait:false}, c.profilFinance||{});
+    enveloppes = Array.isArray(c.enveloppes) ? c.enveloppes.map(e=>Object.assign({montantFixe:0,pourcentage:0,solde:0,type:"repartition"},e)) : [];
     appliquerPeriodeParDefaut();
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions();
+    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -2058,7 +2151,35 @@
       }
     }
   }
+  function rendreEnveloppesBudget(){
+    const bloc=$("bud-env-details"), box=$("bud-enveloppes-liste");
+    if(!bloc || !box) return;
+    if(!repartitionActive()){ bloc.style.display="none"; return; }
+    bloc.style.display="";
+    box.innerHTML="";
+    const total=enveloppes.reduce((s,e)=>s+(+e.solde||0),0);
+    const entete=document.createElement("div");
+    entete.style.cssText="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;";
+    entete.innerHTML='<span style="font-size:13px; color:var(--muted);">Total accumulé</span><span style="font-size:20px; font-weight:700;">'+fmt(total)+'</span>';
+    box.appendChild(entete);
+    enveloppesTriees().forEach(env=>{
+      const carte=document.createElement("div");
+      carte.style.cssText="display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--border);";
+      carte.innerHTML='<span class="cat-ico-badge" style="width:22px;height:22px;color:'+(env.couleur||"var(--accent)")+';">'+iconeCatSvg(env.icone)+'</span>'
+        +'<div style="flex:1;"><div style="font-size:14px; font-weight:500;">'+env.nom+'</div>'
+        +'<div style="font-size:11px; color:var(--muted);">'+(env.type==="obligation"?"Obligation":( (+env.pourcentage||0)>0 ? Math.round(env.pourcentage)+"% du reste" : "" ))+((+env.montantFixe||0)>0?(" · "+fmt(env.montantFixe)+" min"):"")+'</div></div>'
+        +'<div style="font-weight:700; font-size:15px; color:'+(env.couleur||"var(--text)")+';">'+fmt(env.solde||0)+'</div>';
+      const actions=document.createElement("div"); actions.style.cssText="display:flex; gap:4px; margin-left:4px;";
+      const moins=document.createElement("button"); moins.textContent="−"; moins.setAttribute("aria-label","Retirer de l'enveloppe");
+      moins.style.cssText="border:1px solid var(--border); background:var(--surface); color:var(--text); width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:16px;";
+      moins.onclick=()=>{ const v=parseFloat((prompt("Combien retirer de « "+env.nom+" » ? (solde : "+fmt(env.solde||0)+")")||"").replace(",",".")); if(!v||v<=0) return; env.solde=Math.max(0, Math.round(((env.solde||0)-v)*100)/100); sauverCloud(); rendreEnveloppesBudget(); };
+      actions.appendChild(moins);
+      carte.appendChild(actions);
+      box.appendChild(carte);
+    });
+  }
   function rendreBudget(){
+    rendreEnveloppesBudget();
     rendreBudModes();
     const curB=estPeriodeCourante(budMode, budDate);
     $("bud-plus").style.visibility = curB ? "hidden" : "visible";
@@ -2992,19 +3113,72 @@
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
     setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
   }
-  function ouvrirIconePicker(cat, boutonIcone){
+  function ouvrirIconePicker(obj, boutonIcone, champ, apresChoix){
+    champ=champ||"emoji";
     document.querySelectorAll(".icon-panel").forEach(p=>p.remove());
     const panel=document.createElement("div"); panel.className="icon-panel";
     ICONES_CAT_ORDRE.forEach(cle=>{
-      const b=document.createElement("button"); b.type="button"; b.className="icon-chip"+(cat.emoji===cle?" on":"");
+      const b=document.createElement("button"); b.type="button"; b.className="icon-chip"+(obj[champ]===cle?" on":"");
       b.innerHTML=iconeCatSvg(cle); b.setAttribute("aria-label",cle);
-      b.onclick=()=>{ cat.emoji=cle; sauverCat(); rendreCategories(); rendreDepenses(); rendreBudget&&rendreBudget(); rendreBudGestion&&rendreBudGestion(); panel.remove(); };
+      b.onclick=()=>{
+        obj[champ]=cle;
+        if(apresChoix){ apresChoix(); }
+        else { sauverCat(); rendreCategories(); rendreDepenses(); rendreBudget&&rendreBudget(); rendreBudGestion&&rendreBudGestion(); }
+        panel.remove();
+      };
       panel.appendChild(b);
     });
     document.body.appendChild(panel);
     const r=boutonIcone.getBoundingClientRect();
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
     setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
+  }
+  function rendreEnveloppesConfig(){
+    const box=$("rep-enveloppes-liste"); if(!box) return; box.innerHTML="";
+    const zoneTotal=$("rep-total-pct");
+    enveloppesTriees().forEach(env=>{
+      const ligne=document.createElement("div"); ligne.className="cat-ligne glisser-ligne env-ligne";
+      const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
+      const emo=document.createElement("button"); emo.type="button"; emo.className="emoji-in";
+      emo.innerHTML='<span class="cat-ico-badge" style="width:20px;height:20px;color:'+(env.couleur||"currentColor")+';">'+iconeCatSvg(env.icone)+'</span>';
+      emo.setAttribute("aria-label","Choisir une icône");
+      emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); ouvrirIconePicker(env, emo, "icone", ()=>{ sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget(); }); };
+      const coul=document.createElement("input"); coul.type="color"; coul.className="color-in"; coul.value=env.couleur||"#0f6e56";
+      coul.oninput=()=>{ env.couleur=coul.value; sauverCloud(); rendreBudget&&rendreBudget(); };
+      coul.onchange=()=>{ env.couleur=coul.value; sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget(); };
+      const inp=document.createElement("input"); inp.type="text"; inp.value=env.nom; inp.style.flex="2 1 90px";
+      inp.onchange=()=>{ env.nom=inp.value.trim()||env.nom; sauverCloud(); rendreBudget&&rendreBudget(); };
+      const champs=document.createElement("div"); champs.style.cssText="display:flex; gap:6px; flex:1 1 100%; margin-top:6px; align-items:center; flex-wrap:wrap;";
+      const badge=document.createElement("span"); badge.textContent=env.type==="obligation"?"Obligation":"Répartition";
+      badge.style.cssText="font-size:11px; padding:3px 8px; border-radius:8px; background:"+(env.type==="obligation"?"var(--accent-soft)":"var(--surface)")+"; color:"+(env.type==="obligation"?"var(--accent)":"var(--muted)")+"; border:1px solid var(--border);";
+      const fixeWrap=document.createElement("label"); fixeWrap.style.cssText="font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:4px;";
+      const fixe=document.createElement("input"); fixe.type="text"; fixe.inputMode="decimal"; fixe.value=env.montantFixe?String(env.montantFixe).replace(".",","):""; fixe.placeholder="0"; fixe.style.width="64px";
+      fixe.onchange=()=>{ env.montantFixe=Math.max(0, parseFloat((fixe.value||"0").replace(",","."))||0); sauverCloud(); rendreBudget&&rendreBudget(); };
+      fixeWrap.appendChild(fixe); fixeWrap.appendChild(document.createTextNode("€ min"));
+      champs.appendChild(badge); champs.appendChild(fixeWrap);
+      if(env.type!=="obligation"){
+        const pctWrap=document.createElement("label"); pctWrap.style.cssText="font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:4px;";
+        const pct=document.createElement("input"); pct.type="text"; pct.inputMode="decimal"; pct.value=env.pourcentage?String(env.pourcentage).replace(".",","):""; pct.placeholder="0"; pct.style.width="52px";
+        pct.onchange=()=>{ env.pourcentage=Math.max(0, parseFloat((pct.value||"0").replace(",","."))||0); sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget(); };
+        pctWrap.appendChild(pct); pctWrap.appendChild(document.createTextNode("% du reste"));
+        champs.appendChild(pctWrap);
+      }
+      const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
+      del.onclick=()=>{ if(!confirm("Supprimer l'enveloppe « "+env.nom+" » ? Son solde sera perdu.")) return; enveloppes=enveloppes.filter(x=>x.id!==env.id); sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget(); };
+      ligne.appendChild(poignee); ligne.appendChild(emo); ligne.appendChild(coul); ligne.appendChild(inp); ligne.appendChild(del); ligne.appendChild(champs);
+      box.appendChild(ligne);
+    });
+    activerGlisser(box, enveloppes, ()=>{ enveloppes.forEach((e,i)=>e.ordre=i); sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget(); });
+    if(zoneTotal){
+      const tot=totalPourcentages();
+      const ok=Math.abs(tot-100)<0.5;
+      zoneTotal.innerHTML='<span style="color:'+(ok?"var(--accent)":"var(--danger)")+';">Total des pourcentages : '+Math.round(tot)+' %'+(ok?" ✓":" — vise 100 % pour tout répartir")+'</span>';
+    }
+  }
+  function ajouterEnveloppe(nom, type){
+    nom=(nom||"").trim(); if(!nom) return;
+    enveloppes.push({id:"env-"+Date.now(), nom, icone:type==="obligation"?"logement":"star", couleur:type==="obligation"?"#712b13":"#0f6e56", type, montantFixe:0, pourcentage:0, solde:0, ordre:enveloppes.length});
+    sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget();
   }
   function activerGlisser(container, arr, sauvegarder){
     container.querySelectorAll(".glisser-poignee").forEach(poignee=>{
@@ -3222,6 +3396,132 @@
     $("objectif-nom").value=""; $("objectif-montant").value="";
     sauverCloud(); rendreObjectifs();
   };
+  // ===== Vignette de répartition =====
+  let repartitionCourante=null; // {parts:{id:montant}, total}
+  function proposerRepartition(montant){
+    if(!repartitionActive() || !(montant>0)) return;
+    const parts=calculerRepartition(montant);
+    repartitionCourante={total:montant};
+    $("repartir-titre").textContent="Répartir "+fmt(montant);
+    $("repartir-sous").textContent="Tu viens de recevoir "+fmt(montant)+". Voici la répartition proposée — ajuste si tu veux, ou remets à plus tard.";
+    const box=$("repartir-liste"); box.innerHTML="";
+    enveloppesTriees().forEach(env=>{
+      const ligne=document.createElement("div"); ligne.style.cssText="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border);";
+      ligne.innerHTML='<span class="cat-ico-badge" style="width:20px;height:20px;color:'+(env.couleur||"var(--accent)")+';">'+iconeCatSvg(env.icone)+'</span>'
+        +'<span style="flex:1; font-size:14px;">'+env.nom+(env.type==="obligation"?' <small style="color:var(--muted);">(obligation)</small>':'')+'</span>';
+      const inp=document.createElement("input"); inp.type="text"; inp.inputMode="decimal"; inp.dataset.env=env.id;
+      inp.value=String(Math.round((parts[env.id]||0)*100)/100).replace(".",","); inp.style.cssText="width:88px; text-align:right;";
+      inp.oninput=majResteRepartition;
+      ligne.appendChild(inp);
+      box.appendChild(ligne);
+    });
+    majResteRepartition();
+    ouvrirOverlayBox("repartir-overlay");
+  }
+  function lireRepartitionSaisie(){
+    const parts={}; let somme=0;
+    $("repartir-liste").querySelectorAll("input[data-env]").forEach(inp=>{
+      const v=Math.max(0, parseFloat((inp.value||"0").replace(",","."))||0);
+      parts[inp.dataset.env]=v; somme+=v;
+    });
+    return {parts, somme:Math.round(somme*100)/100};
+  }
+  function majResteRepartition(){
+    if(!repartitionCourante) return;
+    const {somme}=lireRepartitionSaisie();
+    const reste=Math.round((repartitionCourante.total-somme)*100)/100;
+    const zone=$("repartir-reste");
+    if(Math.abs(reste)<0.01) zone.innerHTML='<span style="color:var(--accent);">Tout est réparti ✓</span>';
+    else if(reste>0) zone.innerHTML='<span style="color:var(--muted);">Reste à placer : '+fmt(reste)+'</span>';
+    else zone.innerHTML='<span style="color:var(--danger);">Dépassement de '+fmt(-reste)+'</span>';
+  }
+  function ouvrirOverlayBox(id){
+    const o=$(id); if(!o) return; o.style.display="flex";
+  }
+  if($("repartir-valider")) $("repartir-valider").onclick=()=>{
+    const {parts}=lireRepartitionSaisie();
+    appliquerRepartition(parts);
+    $("repartir-overlay").style.display="none"; repartitionCourante=null;
+    rendreBudget&&rendreBudget();
+  };
+  if($("repartir-plus-tard")) $("repartir-plus-tard").onclick=()=>{ $("repartir-overlay").style.display="none"; repartitionCourante=null; };
+  if($("repartir-fermer")) $("repartir-fermer").onclick=()=>{ $("repartir-overlay").style.display="none"; repartitionCourante=null; };
+  if($("repartir-overlay")) $("repartir-overlay").onclick=e=>{ if(e.target===$("repartir-overlay")){ $("repartir-overlay").style.display="none"; repartitionCourante=null; } };
+  // ===== Questionnaire guidé =====
+  const PRESETS_OBJECTIF={
+    equilibre:{vivre:40,epargne:25,invest:20,souhaits:15},
+    epargner:{vivre:30,epargne:40,invest:15,souhaits:15},
+    investir:{vivre:30,epargne:20,invest:35,souhaits:15},
+    plaisir:{vivre:50,epargne:20,invest:10,souhaits:20}
+  };
+  let questState=null;
+  function ouvrirQuestionnaire(){
+    questState={etape:0, statut:"", reguliers:true, logement:0, factures:0, objectif:"equilibre", minEpargne:0, minInvest:0};
+    ouvrirOverlayBox("questionnaire-overlay");
+    rendreQuestionnaire();
+  }
+  function boutonsChoix(options, champ, suite){
+    return options.map(o=>'<button type="button" class="quest-choix btn-ligne" data-champ="'+champ+'" data-val="'+o.v+'" data-suite="'+(suite?1:0)+'" style="width:100%; margin-top:8px; justify-content:flex-start;'+(questState[champ]===o.v?' border-color:var(--accent); color:var(--accent);':'')+'">'+o.l+'</button>').join("");
+  }
+  function rendreQuestionnaire(){
+    const c=$("quest-corps"); if(!c) return;
+    const etapes=[
+      ()=>'<p style="font-size:14px; margin:0 0 6px;">Quel est ton statut ?</p><small class="aide">Ça adapte les types de revenu et la manière de répartir.</small>'
+        +boutonsChoix([{v:"salarie",l:"Salarié (CDI / CDD)"},{v:"auto",l:"Auto-entrepreneur"},{v:"freelance",l:"Freelance"},{v:"mixte",l:"Mixte (salaire + activité)"},{v:"etudiant",l:"Étudiant"}],"statut",true),
+      ()=>'<p style="font-size:14px; margin:0 0 6px;">Tes revenus sont-ils réguliers ou variables ?</p><small class="aide">Un salaire fixe est régulier ; des missions ou ventes sont plutôt variables.</small>'
+        +boutonsChoix([{v:"1",l:"Réguliers (même montant chaque mois)"},{v:"0",l:"Variables (ça change selon les mois)"}],"reguliers",true),
+      ()=>'<p style="font-size:14px; margin:0 0 6px;">Tes charges fixes mensuelles</p><small class="aide">Ce qui doit être payé en priorité chaque mois. Tu pourras affiner après.</small>'
+        +'<div class="cat-ligne" style="margin-top:10px;"><span style="flex:1;">Logement / loyer</span><input id="q-logement" type="text" inputmode="decimal" value="'+(questState.logement||"")+'" placeholder="0" style="width:90px;"> €</div>'
+        +'<div class="cat-ligne" style="margin-top:8px;"><span style="flex:1;">Factures & abonnements</span><input id="q-factures" type="text" inputmode="decimal" value="'+(questState.factures||"")+'" placeholder="0" style="width:90px;"> €</div>'
+        +'<button type="button" id="q-suite-charges" class="btn-plein" style="margin-top:14px;">Continuer</button>',
+      ()=>'<p style="font-size:14px; margin:0 0 6px;">Ton objectif du moment ?</p><small class="aide">On te propose une répartition de départ, modifiable ensuite.</small>'
+        +boutonsChoix([{v:"equilibre",l:"Équilibre (un peu de tout)"},{v:"epargner",l:"Épargner en priorité"},{v:"investir",l:"Investir pour le futur"},{v:"plaisir",l:"Me faire plaisir"}],"objectif",true),
+      ()=>{ const p=PRESETS_OBJECTIF[questState.objectif]; return '<p style="font-size:14px; margin:0 0 6px;">Des minimums garantis ? (facultatif)</p><small class="aide">Un montant fixe mis de côté en priorité, avant le partage en pourcentages.</small>'
+        +'<div class="cat-ligne" style="margin-top:10px;"><span style="flex:1;">Épargne minimum</span><input id="q-min-epargne" type="text" inputmode="decimal" value="'+(questState.minEpargne||"")+'" placeholder="0" style="width:90px;"> €</div>'
+        +'<div class="cat-ligne" style="margin-top:8px;"><span style="flex:1;">Investissement minimum</span><input id="q-min-invest" type="text" inputmode="decimal" value="'+(questState.minInvest||"")+'" placeholder="0" style="width:90px;"> €</div>'
+        +'<div style="margin-top:14px; padding:12px; background:var(--accent-soft); border-radius:12px; font-size:13px; color:var(--accent);">Répartition proposée : Vivre '+p.vivre+'% · Épargne '+p.epargne+'% · Invest '+p.invest+'% · Souhaits '+p.souhaits+'%</div>'
+        +'<button type="button" id="q-terminer" class="btn-plein" style="margin-top:14px;">Créer mes enveloppes</button>'; }
+    ];
+    $("quest-titre").textContent="Configuration ("+(questState.etape+1)+"/"+etapes.length+")";
+    c.innerHTML=etapes[questState.etape]();
+    c.querySelectorAll(".quest-choix").forEach(b=>{
+      b.onclick=()=>{
+        const champ=b.dataset.champ; let val=b.dataset.val;
+        if(champ==="reguliers") questState.reguliers = val==="1";
+        else questState[champ]=val;
+        if(b.dataset.suite==="1") questState.etape++;
+        rendreQuestionnaire();
+      };
+    });
+    if($("q-suite-charges")) $("q-suite-charges").onclick=()=>{
+      questState.logement=parseFloat(($("q-logement").value||"0").replace(",","."))||0;
+      questState.factures=parseFloat(($("q-factures").value||"0").replace(",","."))||0;
+      questState.etape++; rendreQuestionnaire();
+    };
+    if($("q-terminer")) $("q-terminer").onclick=()=>{
+      questState.minEpargne=parseFloat(($("q-min-epargne").value||"0").replace(",","."))||0;
+      questState.minInvest=parseFloat(($("q-min-invest").value||"0").replace(",","."))||0;
+      finaliserQuestionnaire();
+    };
+  }
+  function finaliserQuestionnaire(){
+    const p=PRESETS_OBJECTIF[questState.objectif]||PRESETS_OBJECTIF.equilibre;
+    profilFinance={statut:questState.statut||"salarie", revenusReguliers:!!questState.reguliers, onboardingFait:true};
+    enveloppes=[
+      {id:"obl-logement", nom:"Logement", icone:"logement", couleur:"#712b13", type:"obligation", montantFixe:questState.logement||0, pourcentage:0, solde:0, ordre:0},
+      {id:"obl-factures", nom:"Factures & abonnements", icone:"telephone", couleur:"#0c447c", type:"obligation", montantFixe:questState.factures||0, pourcentage:0, solde:0, ordre:1},
+      {id:"rep-vivre", nom:"Vivre / plaisir", icone:"restaurant", couleur:"#854f0b", type:"repartition", montantFixe:0, pourcentage:p.vivre, solde:0, ordre:2},
+      {id:"rep-epargne", nom:"Épargne", icone:"banque", couleur:"#0f6e56", type:"repartition", montantFixe:questState.minEpargne||0, pourcentage:p.epargne, solde:0, ordre:3},
+      {id:"rep-invest", nom:"Investissement", icone:"tendance", couleur:"#3c3489", type:"repartition", montantFixe:questState.minInvest||0, pourcentage:p.invest, solde:0, ordre:4},
+      {id:"rep-souhaits", nom:"Liste de souhaits", icone:"cadeau", couleur:"#72243e", type:"repartition", montantFixe:0, pourcentage:p.souhaits, solde:0, ordre:5}
+    ];
+    sauverCloud();
+    $("questionnaire-overlay").style.display="none";
+    rendreEnveloppesConfig(); rendreBudget&&rendreBudget();
+    const bloc=$("bloc-repartition"); if(bloc) bloc.open=true;
+  }
+  if($("quest-fermer")) $("quest-fermer").onclick=()=>{ $("questionnaire-overlay").style.display="none"; };
+  if($("questionnaire-overlay")) $("questionnaire-overlay").onclick=e=>{ if(e.target===$("questionnaire-overlay")) $("questionnaire-overlay").style.display="none"; };
   function duMoisCourant(){return depenses.filter(d=>{const dd=depDate(d);return dd&&dd.slice(0,7)===moisEnCours();});}
   function exportTexte(){const e="Date\tCatégorie\tSous-catégorie\tCommentaire\tMontant";
     const l=duMoisCourant().map(d=>[d.dateAffichee||"",d.categorie,d.sousCat||"",d.commentaire||"",String(d.montant).replace(".",",")].join("\t"));return [e].concat(l).join("\n");}
@@ -3439,7 +3739,9 @@
     const net=brut*(1-rCotCourante/100); const isoJour=iso(revDate); const desc=$("rev-desc").value.trim();
     if(editionRev){ const r=revenus.find(x=>x.id===editionRev); Object.assign(r,{montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
     else { revenus.push({id:Date.now(),montant:brut,cotisation:rCotCourante,net,type:rType,devise:revDeviseTicket,description:desc,date:isoJour}); }
+    const estNouveau=!editionRev;
     sauverRev(); $("rev-overlay").style.display="none"; rendreDepenses(); rendreAccueil(); rendreBudget(); fermerTicketRetourCatdet();
+    if(estNouveau) proposerRepartition(net);
   };
 
   // ---- Remboursement ----
@@ -3595,6 +3897,8 @@
     if(moyensPaiement.some(m=>m.toLowerCase()===v.toLowerCase())){alert("Ce moyen de paiement existe déjà.");return;}
     moyensPaiement.push(v); $("nouveau-moyen").value=""; sauverCloud(); rendreMoyens();
   };
+  if($("rep-ajouter")) $("rep-ajouter").onclick=()=>{ ajouterEnveloppe($("rep-nouvelle").value, $("rep-nouvelle-type").value); $("rep-nouvelle").value=""; };
+  if($("rep-questionnaire-btn")) $("rep-questionnaire-btn").onclick=()=>ouvrirQuestionnaire();
 
   // ================= Historique des versions (admin, en direct depuis GitHub) =================
   async function rendreVersions(){
@@ -3606,6 +3910,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Ajouter la repartition de revenu par enveloppes (cascade, vignette, questionnaire)":"v1.20.0",
         "Remplacer les emojis de categories par un catalogue d'icones et ajouter des animations d'ouverture":"v1.19.0",
         "Varier les animations et generaliser le morph chevron aux menus":"v1.18.0",
         "Fiabiliser les animations d'icones et ajouter les icones manquantes":"v1.17.1",
@@ -3756,6 +4061,11 @@
     await verrouillerEcran();
     await chargerTout();
     verifierRappelSaisie();
+    // Questionnaire de répartition au premier lancement (une seule fois en auto ; relançable depuis Réglages)
+    if(!profilFinance.onboardingFait && !localStorage.getItem("gf_quest_vu_"+uid)){
+      localStorage.setItem("gf_quest_vu_"+uid,"1");
+      setTimeout(()=>{ if(!profilFinance.onboardingFait) ouvrirQuestionnaire(); }, 900);
+    }
 
     // Menus déroulants du reçu (la catégorie « Dépense » est toujours proposée)
     ddCat=initDD("dd-cat",()=>[DEP_SIMPLE.nom].concat(categories.map(c=>c.nom)),v=>{rCat=v;rSous=null;ddSous.set(null); majEtatSousCategorie(); rendreBudgetSelectionTicket();});
@@ -3767,7 +4077,7 @@
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
     majBudgetPrefSelect();
     $("budget-pref-select").onchange=e=>{ setHomeBudgetMode(e.target.value); rendreAccueil(); rendreBudget(); rendreDepenses(); rendreBudgetSelectionTicket(); };
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); majEtatSousCategorie();
+    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig(); majEtatSousCategorie();
     // Fond d'écran
     function majPastilles(){
       const actuel=themeActuel();
