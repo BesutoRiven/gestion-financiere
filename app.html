@@ -464,8 +464,8 @@
       </div>
 
       <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0; flex-wrap:wrap;">
-        <button id="btn-tout-selection" class="btn-ligne" style="display:none; align-items:center; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
-        <button id="btn-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
+        <button id="btn-tout-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; align-items:center; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
+        <button id="btn-suppr-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
         <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
         <button id="btn-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
       </div>
@@ -876,11 +876,12 @@
     <!-- ============ OBJECTIFS D'ÉPARGNE ============ -->
     <div id="objectifs-overlay" class="cal-overlay" style="display:none;">
       <div class="cal-box" style="max-width:360px; max-height:82vh; overflow-y:auto;">
-        <div class="cal-tete"><span class="titre">Objectifs d'épargne</span><button id="objectifs-fermer" aria-label="Fermer">×</button></div>
+        <div class="cal-tete"><span class="titre" style="text-transform:none;">Objectifs d'épargne</span><button id="objectifs-fermer" aria-label="Fermer">×</button></div>
         <div id="objectifs-liste"></div>
         <hr class="sep" />
         <div class="cat-ligne" style="flex-wrap:wrap;">
-          <input id="objectif-nom" type="text" placeholder="Nom (ex. Nouveau PC)" style="flex:2 1 120px;" />
+          <button type="button" id="objectif-icone-btn" class="emoji-in" aria-label="Choisir une icône"></button>
+          <input id="objectif-nom" type="text" placeholder="Nom (ex. Nouveau PC)" style="flex:2 1 110px;" />
           <input id="objectif-montant" type="text" inputmode="decimal" placeholder="Montant cible" style="flex:1 1 90px;" />
         </div>
         <button id="ajouter-objectif" class="btn-plein" style="margin-top:10px;">＋ Créer un objectif</button>
@@ -979,8 +980,8 @@
         <div class="cal-tete"><span class="titre" id="catdet-titre">Détail</span><button id="catdet-fermer" aria-label="Fermer">×</button></div>
         <div id="catdet-filtre" class="perso" style="padding:0 0 6px;"></div>
         <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:4px 0 10px; flex-wrap:wrap;">
-          <button id="catdet-tout" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
-          <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="catdet-compte">0</span>)</button>
+          <button id="catdet-tout" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; height:28px; padding:0 12px; border-radius:14px; font-size:12px; align-items:center;">Tout sélectionner</button>
+          <button id="catdet-suppr-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="catdet-compte">0</span>)</button>
           <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
           <button id="catdet-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
         </div>
@@ -1204,7 +1205,7 @@
     sauvegarde:animIcon('bounce','<path d="M5 3h11l3 3v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v6h8V3"/><path d="M7 13h10v8H7z"/>','Sauvegarde'),
     admin:animIcon('wiggle','<path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>','Administration'),
     bilan:animIcon('swing','<path d="M6 3h12v18l-2.5-1.5L13 21l-1.5-1.5L10 21l-2.5-1.5L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>','Bilan'),
-    objectif:animIcon('draw','<path d="M9 6h11M9 12h11M9 18h11"/><path class="draw" d="M4 6l1.5 1.5L8 5"/><path class="draw" d="M4 12l1.5 1.5L8 11"/><path class="draw" d="M4 18l1.5 1.5L8 16"/>','Objectifs')
+    objectif:animIcon('pop','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>','Objectifs')
   };
   function svgCat(inner){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
@@ -1357,7 +1358,7 @@
   }
 
   function iconeToutSelection(toutCoche){
-    return animIcon('draw','<path d="M9 6h11M9 12h11M9 18h11"/><path class="draw" d="M4 6l1.5 1.5L8 5"/><path class="draw" d="M4 12l1.5 1.5L8 11"/><path class="draw" d="M4 18l1.5 1.5L8 16"/>','')+(toutCoche?"Tout d&eacute;s&eacute;lectionner":"Tout s&eacute;lectionner");
+    return animIcon('draw','<rect x="3" y="3" width="18" height="18" rx="5"/><path class="draw" d="M7.5 12.3l3 3 6-6.6"/>','')+(toutCoche?"Tout d&eacute;s&eacute;lectionner":"Tout s&eacute;lectionner");
   }
   function jouerIcone(el){
     if(!el) return;
@@ -3361,16 +3362,25 @@
   $("bilan-overlay").onclick=e=>{if(e.target===$("bilan-overlay"))$("bilan-overlay").style.display="none";};
 
   // ---- Objectifs d'épargne ----
+  let nouvelObjectifIcone="cible";
+  function iconeObjectif(o){
+    const atteint=o.montantActuel>=o.montantCible;
+    if(o.icone && ICONES_CAT[o.icone]) return iconeCatSvg(o.icone);
+    return svgCat(atteint?ICONES_CAT.trophee:ICONES_CAT.cible);
+  }
   function rendreObjectifs(){
+    const btnIco=$("objectif-icone-btn");
+    if(btnIco) btnIco.innerHTML='<span class="cat-ico-badge" style="width:20px;height:20px; color:var(--accent);">'+iconeCatSvg(nouvelObjectifIcone)+'</span>';
     const box=$("objectifs-liste"); box.innerHTML="";
     if(!objectifsEpargne.length){ box.innerHTML='<p class="vide" style="padding:16px 0; text-align:center;">Aucun objectif pour l\'instant. Crée-en un ci-dessous !</p>'; return; }
     objectifsEpargne.forEach(o=>{
       const pct=o.montantCible>0?Math.min(100, o.montantActuel/o.montantCible*100):0;
       const atteint=o.montantActuel>=o.montantCible;
       const carte=document.createElement("div"); carte.style.cssText="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px;";
-      carte.innerHTML='<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-weight:600; display:inline-flex; align-items:center; gap:6px;"><span class="cat-ico-badge" style="width:16px;height:16px; color:var(--accent);">'+svgCat(atteint?ICONES_CAT.trophee:ICONES_CAT.cible)+'</span>'+o.nom+'</span><span style="font-size:12px; color:var(--muted);">'+fmt(o.montantActuel)+' / '+fmt(o.montantCible)+'</span></div>'+
+      carte.innerHTML='<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-weight:600; display:inline-flex; align-items:center; gap:6px;"><button type="button" class="obj-ico-btn" aria-label="Changer l\'icône" style="border:none; background:none; padding:0; cursor:pointer;"><span class="cat-ico-badge" style="width:18px;height:18px; color:var(--accent);">'+iconeObjectif(o)+'</span></button>'+o.nom+'</span><span style="font-size:12px; color:var(--muted);">'+fmt(o.montantActuel)+' / '+fmt(o.montantCible)+'</span></div>'+
         '<div class="bud-barre" style="margin-top:8px;"><span class="'+(atteint?"":"")+'" style="width:'+pct+'%; background:'+(atteint?"var(--accent)":"var(--accent)")+';"></span></div>'+
         '<div style="font-size:12px; color:var(--muted); margin-top:4px;">'+Math.round(pct)+'%</div>';
+      carte.querySelector(".obj-ico-btn").onclick=(e)=>{ e.stopPropagation(); ouvrirIconePicker(o, carte.querySelector(".obj-ico-btn"), "icone", ()=>{ sauverCloud(); rendreObjectifs(); }); };
       const actions=document.createElement("div"); actions.style.cssText="display:flex; gap:6px; margin-top:8px;";
       const ajouter=document.createElement("button"); ajouter.textContent="＋ Ajouter une contribution"; ajouter.style.cssText="flex:1; height:34px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:12px; cursor:pointer;";
       ajouter.onclick=()=>{
@@ -3388,12 +3398,18 @@
   $("btn-objectifs").onclick=()=>{ rendreObjectifs(); $("objectifs-overlay").style.display="flex"; };
   $("objectifs-fermer").onclick=()=>$("objectifs-overlay").style.display="none";
   $("objectifs-overlay").onclick=e=>{if(e.target===$("objectifs-overlay"))$("objectifs-overlay").style.display="none";};
+  // Sélection d'icône pour le nouvel objectif (via un objet tampon)
+  if($("objectif-icone-btn")) $("objectif-icone-btn").onclick=(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const tampon={icone:nouvelObjectifIcone};
+    ouvrirIconePicker(tampon, $("objectif-icone-btn"), "icone", ()=>{ nouvelObjectifIcone=tampon.icone; rendreObjectifs(); });
+  };
   $("ajouter-objectif").onclick=()=>{
     const nom=$("objectif-nom").value.trim();
     const montant=parseFloat(($("objectif-montant").value||"").replace(",","."));
     if(!nom||!montant||montant<=0){ alert("Renseigne un nom et un montant cible valide."); return; }
-    objectifsEpargne.push({id:Date.now(), nom, montantCible:montant, montantActuel:0});
-    $("objectif-nom").value=""; $("objectif-montant").value="";
+    objectifsEpargne.push({id:Date.now(), nom, montantCible:montant, montantActuel:0, icone:nouvelObjectifIcone});
+    $("objectif-nom").value=""; $("objectif-montant").value=""; nouvelObjectifIcone="cible";
     sauverCloud(); rendreObjectifs();
   };
   // ===== Vignette de répartition =====
@@ -3910,6 +3926,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Compacter les boutons de gestion et personnaliser les icones d'objectifs":"v1.20.1",
         "Ajouter la repartition de revenu par enveloppes (cascade, vignette, questionnaire)":"v1.20.0",
         "Remplacer les emojis de categories par un catalogue d'icones et ajouter des animations d'ouverture":"v1.19.0",
         "Varier les animations et generaliser le morph chevron aux menus":"v1.18.0",
