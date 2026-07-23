@@ -93,8 +93,14 @@
 
     /* Calendrier */
     .recu-overlay,.lb-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:70; padding:16px;}
+    .recu-overlay{perspective:900px;}
+    .recu-overlay .recu{transform-origin:top center;}
+    @keyframes papierDeplier{0%{transform:rotateX(-92deg) scaleY(.3); opacity:0;}55%{transform:rotateX(6deg) scaleY(1.02); opacity:1;}100%{transform:rotateX(0deg) scaleY(1); opacity:1;}}
+    .recu-overlay .recu.papier-anim{animation:papierDeplier .45s cubic-bezier(.22,.7,.32,1);}
     .cal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:95; padding:16px;}
-    .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px; position:relative;}
+    .cal-box{background:var(--surface); border-radius:18px; padding:16px; width:100%; max-width:340px; position:relative; animation:boxPopIn .22s cubic-bezier(.22,.7,.32,1);}
+    @keyframes boxPopIn{0%{transform:scale(.88); opacity:0;}100%{transform:scale(1); opacity:1;}}
+    @keyframes fadeSlideUp{0%{transform:translateY(10px); opacity:0;}100%{transform:translateY(0); opacity:1;}}
     .cal-tete{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
     .cal-tete button{border:none; background:transparent; font-size:20px; cursor:pointer; color:var(--text); width:34px; height:34px; border-radius:8px;}
     .cal-tete .titre{font-size:16px; font-weight:600; text-transform:capitalize;}
@@ -167,6 +173,13 @@
     .gestion-case:checked::after{opacity:1; transform:scale(1);}
     .gestion-case.case-pop{animation:caseBounce .32s ease;}
 
+    .cat-ico-badge{display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; vertical-align:middle;}
+    .cat-ico-badge svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+    .icon-panel{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:10px; width:220px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:260px; overflow-y:auto; animation:fadeSlideUp .18s ease;}
+    .icon-chip{width:34px; height:34px; border-radius:10px; border:2px solid var(--border); background:var(--bg); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:6px;}
+    .icon-chip svg{width:100%; height:100%;}
+    .icon-chip.on{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+
     /* Icones animees (SVG, remplace les GIF) */
     .icon-anim{width:17px; height:17px; object-fit:contain; display:inline-block; vertical-align:middle; flex:0 0 auto; color:var(--text);}
     .icon-anim.playing{color:var(--accent);}
@@ -208,7 +221,7 @@
     #bloc-gestion[open] [data-ico="gestion"] .menu-morph{color:var(--accent);}
 
     /* Visionneuse photo */
-    .lb-box{width:min(100%,980px); max-height:85vh; overflow:hidden;}
+    .lb-box{width:min(100%,980px); max-height:85vh; overflow:hidden; animation:boxPopIn .22s cubic-bezier(.22,.7,.32,1);}
     .lb-track{display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 8px;}
     .lb-track::-webkit-scrollbar{height:8px;}
     .lb-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28); border-radius:999px;}
@@ -354,9 +367,9 @@
     #bloc-import-export .det-nested:last-child .impexp{padding-bottom:0;}
     #zone-import-rev{min-height:130px;}
 
-    .cat-ligne .emoji-in{width:38px; text-align:center; flex:0 0 auto; border:1px solid var(--border); border-radius:8px; padding:8px 4px; font-size:16px; background:var(--surface); color:var(--text);}
+    .cat-ligne .emoji-in{width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; border:1px solid var(--border); border-radius:8px; padding:4px; background:var(--surface); color:var(--text); cursor:pointer;}
     .cat-ligne .color-in{width:34px; height:34px; flex:0 0 auto; border:none; padding:0; border-radius:8px; overflow:hidden; background:none; cursor:pointer;}
-    .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14);}
+    .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); animation:fadeSlideUp .18s ease;}
     .swatch-chip{width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer;}
     .swatch-custom{width:100%; height:34px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
     .color-advanced-panel{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92vw,360px); z-index:120; background:#352422; color:#f4eeee; border-radius:20px; padding:22px; box-shadow:0 18px 55px rgba(0,0,0,.45);}
@@ -984,11 +997,11 @@
   <script>
   // ================= Données =================
   const CATS_DEFAUT = [
-    {nom:"Logement",bg:"#faece7",fg:"#712b13",emoji:"⌂"},{nom:"Alim. & Courses",bg:"#faeeda",fg:"#854f0b",emoji:"◫"},
-    {nom:"Déplacements",bg:"#e6f1fb",fg:"#0c447c",emoji:"⇄"},{nom:"Santé",bg:"#eaf3de",fg:"#27500a",emoji:"✚"},
-    {nom:"Animaux",bg:"#e1f5ee",fg:"#085041",emoji:"○"},{nom:"Numér. & Tech.",bg:"#eeedfe",fg:"#3c3489",emoji:"⌘"},
-    {nom:"Shopping",bg:"#fbeaf0",fg:"#72243e",emoji:"◇"},{nom:"Loisirs",bg:"#fcebeb",fg:"#a32d2d",emoji:"◈"},
-    {nom:"Voyages",bg:"#fef0da",fg:"#9a6a00",emoji:"△"},{nom:"Divers",bg:"#f1efe8",fg:"#444441",emoji:"•"},
+    {nom:"Logement",bg:"#faece7",fg:"#712b13",emoji:"logement"},{nom:"Alim. & Courses",bg:"#faeeda",fg:"#854f0b",emoji:"alimentation"},
+    {nom:"Déplacements",bg:"#e6f1fb",fg:"#0c447c",emoji:"transport"},{nom:"Santé",bg:"#eaf3de",fg:"#27500a",emoji:"sante"},
+    {nom:"Animaux",bg:"#e1f5ee",fg:"#085041",emoji:"animaux"},{nom:"Numér. & Tech.",bg:"#eeedfe",fg:"#3c3489",emoji:"tech"},
+    {nom:"Shopping",bg:"#fbeaf0",fg:"#72243e",emoji:"shopping"},{nom:"Loisirs",bg:"#fcebeb",fg:"#a32d2d",emoji:"loisirs"},
+    {nom:"Voyages",bg:"#fef0da",fg:"#9a6a00",emoji:"voyages"},{nom:"Divers",bg:"#f1efe8",fg:"#444441",emoji:"divers"},
   ];
   const PARTICIPANTS_DEFAUT = ["Moi","Nous deux"];
   // Sous-catégories par catégorie (d'après le tableau Excel)
@@ -1006,7 +1019,7 @@
   };
   const MOYENS_DEFAUT = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
   // Catégorie spéciale "Dépense" : toujours disponible, invisible dans les réglages
-  const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"◧"};
+  const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"divers"};
   const REVTYPES_DEFAUT = [{nom:"Auto-entrep.",cotisation:0},{nom:"Salaire",cotisation:0},{nom:"Freelance",cotisation:0},{nom:"Prime",cotisation:0},{nom:"Autre",cotisation:0}];
 
   // Comptes administrateurs (emails). Tu peux en ajouter/retirer ici.
@@ -1119,7 +1132,7 @@
     remboursement:'<svg viewBox="0 0 24 24"><path d="M8 7H4v4"/><path d="M4 11a8 8 0 1 0 2.3-5.7L4 7"/></svg>',
     fond:animIcon('pop','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5a1.5 1.5 0 0 0-2.1 0L5 19"/>','Fond ecran'),
     devise:animIcon('flip','<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11"/><path d="M15 9c0-1.4-1.5-2.3-3-2.3S9 7.6 9 9s1.2 1.9 3 2.3 3 .9 3 2.4-1.5 2.3-3 2.3-3-.9-3-2.3"/>','Devise'),
-    gestion:'<svg class="icon-anim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Gestion"><g class="menu-morph"><g class="menu-bars"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g><path class="menu-chevron" d="M5 9l7 7 7-7"/></g></svg>',
+    gestion:'<svg class="icon-anim" data-anim="pop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Gestion"><g class="menu-morph"><g class="menu-bars"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g><path class="menu-chevron" d="M5 9l7 7 7-7"/></g></svg>',
     categories:animIcon('swing','<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>','Categories'),
     souscat:animIcon('nudge','<path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/>','Sous-categories'),
     typesrevenu:animIcon('wiggle','<path d="M6 3h12v18l-2.5-1.5L13 21l-1.5-1.5L10 21l-2.5-1.5L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>','Types de revenu'),
@@ -1134,6 +1147,64 @@
     bilan:animIcon('swing','<path d="M6 3h12v18l-2.5-1.5L13 21l-1.5-1.5L10 21l-2.5-1.5L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/>','Bilan'),
     objectif:animIcon('draw','<path d="M9 6h11M9 12h11M9 18h11"/><path class="draw" d="M4 6l1.5 1.5L8 5"/><path class="draw" d="M4 12l1.5 1.5L8 11"/><path class="draw" d="M4 18l1.5 1.5L8 16"/>','Objectifs')
   };
+  function svgCat(inner){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
+  }
+  const ICONES_CAT={
+    logement:'<path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/>',
+    alimentation:'<path d="M6 8h12l-1 12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    transport:'<rect x="3" y="10" width="18" height="7" rx="2"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/><path d="M5 10l1.5-4h11L19 10"/>',
+    sante:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+    animaux:'<circle cx="7" cy="8" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="17" cy="8" r="1.6"/><path d="M12 12c-3 0-5.5 2.2-5.5 4.6 0 1.6 1.3 2.6 2.9 2.1 1-.3 1.7-.9 2.6-.9s1.6.6 2.6.9c1.6.5 2.9-.5 2.9-2.1 0-2.4-2.5-4.6-5.5-4.6z"/>',
+    tech:'<rect x="4" y="4" width="16" height="11" rx="2"/><path d="M9 20h6M12 15v5"/>',
+    shopping:'<path d="M6 8h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9 11v2M15 11v2"/>',
+    loisirs:'<rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/>',
+    voyages:'<path d="M2 12l19-8-6 19-3-7-7-3z"/><path d="M12 15l4-4"/>',
+    divers:'<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3-4.8-4.3 6.4-.6L12 3z"/>',
+    restaurant:'<path d="M6 2v8a2 2 0 0 0 4 0V2M8 10v12"/><path d="M17 2c-1.4 1-2 3-2 5s.6 4 2 5v10"/>',
+    education:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M20 18H6.5A2.5 2.5 0 0 0 4 20.5"/>',
+    sport:'<path d="M4 9v6M2 10v4M20 9v6M22 10v4"/><path d="M7 12h10"/><path d="M6 9v6M18 9v6"/>',
+    cadeau:'<rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 9h18M12 9v12"/><path d="M12 9C9.5 9 7 7.5 7 5.5A2.5 2.5 0 0 1 9.5 3C11.5 3 12 6 12 9zM12 9c2.5 0 5-1.5 5-3.5A2.5 2.5 0 0 0 14.5 3C12.5 3 12 6 12 9z"/>',
+    travail:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+    banque:'<path d="M4 13a5 5 0 0 1 5-5h5a5 5 0 0 1 5 5v1a2 2 0 0 1-2 2h-1l-1 3H9l-1-3H7a3 3 0 0 1-3-3z"/><circle cx="9" cy="12" r=".9" fill="currentColor" stroke="none"/><path d="M17 10l2-2"/>',
+    telephone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    carburant:'<path d="M4 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M4 11h8"/><path d="M14 8l3 2v7a1.5 1.5 0 0 0 3 0v-4l-2-2"/>',
+    cible:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>',
+    trophee:'<path d="M8 4h8v4a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 5M16 5h3a3 3 0 0 1-3 5"/><path d="M12 13v3M9 20h6M9 16.5c0 1.9 1.3 3.5 3 3.5s3-1.6 3-3.5"/>',
+    calculatrice:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/>',
+    dossier:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
+    tendance:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/>',
+    calendrier:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>'
+  };
+  const ICONES_CAT_ORDRE=["logement","alimentation","transport","sante","animaux","tech","shopping","loisirs","voyages","restaurant","education","sport","cadeau","travail","banque","telephone","carburant","divers"];
+  function iconeCatSvg(cle){ return svgCat(ICONES_CAT[cle]||ICONES_CAT.divers); }
+  function badgeIconeCat(catObj, taille){
+    taille=taille||18;
+    const couleur=(catObj&&catObj.fg)?catObj.fg:"currentColor";
+    return '<span class="cat-ico-badge" style="width:'+taille+'px;height:'+taille+'px;color:'+couleur+';">'+iconeCatSvg(catObj&&catObj.emoji)+'</span>';
+  }
+  const MIGRATION_EMOJI_CAT={
+    "⌂":"logement","◫":"alimentation","⇄":"transport","✚":"sante","○":"animaux","⌘":"tech","◇":"shopping","◈":"loisirs","△":"voyages","•":"divers","◧":"divers",
+    "🏠":"logement","🏡":"logement","🏢":"logement",
+    "🍔":"alimentation","🍕":"alimentation","🍟":"alimentation","🌭":"alimentation","🥗":"alimentation","🍎":"alimentation","🛒":"alimentation","🧺":"alimentation","🍴":"restaurant","🍽️":"restaurant","🍽":"restaurant",
+    "🚗":"transport","🚕":"transport","🚌":"transport","🚉":"transport","🚲":"transport","🚙":"transport",
+    "🏥":"sante","💊":"sante","💉":"sante","⚕️":"sante","⚕":"sante",
+    "🐶":"animaux","🐱":"animaux","🐾":"animaux",
+    "💻":"tech","📱":"tech","🖥️":"tech","🖥":"tech","🔌":"tech",
+    "🛍️":"shopping","🛍":"shopping","👗":"shopping","👟":"shopping","👜":"shopping",
+    "🎮":"loisirs","🎬":"loisirs","🎨":"loisirs","🎧":"loisirs","🎵":"loisirs",
+    "✈️":"voyages","✈":"voyages","🧳":"voyages","🗺️":"voyages","🗺":"voyages",
+    "🎁":"cadeau","💼":"travail","👔":"travail","🏦":"banque","💰":"banque","🐷":"banque",
+    "📞":"telephone","☎️":"telephone","☎":"telephone","⛽":"carburant",
+    "📚":"education","🎓":"education","🏋️":"sport","🏋":"sport","⚽":"sport","🏀":"sport"
+  };
+  function migrerIconeCat(val){
+    val=(val||"").trim();
+    if(!val) return "divers";
+    if(ICONES_CAT[val]) return val;
+    if(MIGRATION_EMOJI_CAT[val]) return MIGRATION_EMOJI_CAT[val];
+    return "divers";
+  }
   function normaliserTexte(texte){
     return (texte||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").trim();
   }
@@ -1212,6 +1283,16 @@
     cb.classList.add("case-pop");
     clearTimeout(cb._popTimer);
     cb._popTimer=setTimeout(()=>{ cb.classList.remove("case-pop"); }, 350);
+  }
+  function ouvrirOverlayPapier(idOverlay){
+    const overlay=$(idOverlay); if(!overlay) return;
+    overlay.style.display="flex";
+    const feuille=overlay.querySelector(".recu");
+    if(feuille){
+      feuille.classList.remove("papier-anim");
+      void feuille.offsetWidth;
+      feuille.classList.add("papier-anim");
+    }
   }
   function preparerGifIcones(){}
   let _delegationIconesPrete=false;
@@ -1397,7 +1478,7 @@
     depenses = c.depenses || [];
     revenus  = c.revenus  || [];
     categories = c.categories || CATS_DEFAUT.slice();
-    categories.forEach(cat=>{ if(!cat.emoji) cat.emoji=""; });
+    categories.forEach(cat=>{ cat.emoji=migrerIconeCat(cat.emoji); });
     souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
     revtypes   = (c.revtypes || REVTYPES_DEFAUT.slice()).map(t=> typeof t==="string" ? {nom:t, cotisation:0} : t);
     budCat     = c.budCat || {};
@@ -1693,7 +1774,7 @@
       const noms=Object.keys(parCat).sort((a,c)=>parCat[c]-parCat[a]);
       $("rep-vide").style.display=(noms.length||totalRemb)?"none":"block";
       noms.forEach(n=>{ const col=couleursDe(n), catObj=categories.find(c=>c.nom===n)||DEP_SIMPLE, existeEncore=categories.some(c=>c.nom===n); const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
-        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj.emoji?catObj.emoji+" ":"")+n+(existeEncore?'':' <small style="color:var(--muted);">(supprimée)</small>')+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
+        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom" style="display:inline-flex; align-items:center; gap:6px;">'+badgeIconeCat(catObj,16)+n+(existeEncore?'':' <small style="color:var(--muted);">(supprimée)</small>')+'</span><span class="mt">'+fmt(parCat[n])+'</span>';
         l.onclick=()=>ouvrirDetailCat(n); box.appendChild(l); });
       if(totalRemb>0){ const l=document.createElement("div"); l.className="rep-ligne";
         l.innerHTML='<span class="pt" style="background:var(--remb-fg)"></span><span class="nom">↩ Remboursements</span><span class="mt">-'+fmt(totalRemb)+'</span>'; box.appendChild(l); }
@@ -1716,7 +1797,7 @@
       lignes.sort((a,c)=>Math.abs(c.v)-Math.abs(a.v));
       $("rep-vide").style.display=lignes.length?"none":"block";
       lignes.forEach(x=>{ const col=x.remb?{fg:"var(--remb-fg)"}:(x.dep?couleursDe(x.n):{fg:"var(--accent)"}); const catObj=x.dep?(categories.find(c=>c.nom===x.n)||DEP_SIMPLE):null; const l=document.createElement("div"); l.className="rep-ligne"; if(x.dep||x.remb||x.typeBrut) l.style.cursor="pointer";
-        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom">'+(catObj&&catObj.emoji?catObj.emoji+" ":"")+x.n+'</span><span class="mt">'+(x.v<0?'-':'')+fmt(Math.abs(x.v))+'</span>';
+        l.innerHTML='<span class="pt" style="background:'+col.fg+'"></span><span class="nom" style="display:inline-flex; align-items:center; gap:6px;">'+(catObj?badgeIconeCat(catObj,16):'')+x.n+'</span><span class="mt">'+(x.v<0?'-':'')+fmt(Math.abs(x.v))+'</span>';
         if(x.dep) l.onclick=()=>ouvrirDetailCat(x.n); else if(x.typeBrut) l.onclick=()=>ouvrirDetailRevType(x.typeBrut); else if(x.remb) l.onclick=()=>ouvrirDetailRemb(false); box.appendChild(l); });
     }
   }
@@ -2011,13 +2092,13 @@
       const depassees=alertes.filter(a=>a.grave);
       const proches=alertes.filter(a=>!a.grave);
       if(depassees.length){
-        const resume=depassees.map(a=>(a.emoji?a.emoji+" ":"")+a.cat).join(" · ");
+        const resume=depassees.map(a=>badgeIconeCat({emoji:a.emoji},14)+a.cat).join(" &middot; ");
         const d=document.createElement("div"); d.className="bud-alerte grave";
         d.innerHTML='<div style="display:flex; flex-direction:column; gap:4px;"><strong>'+depassees.length+' catégorie(s) dépassée(s)</strong><small style="color:inherit; opacity:.82;">'+resume+'</small></div>';
         boxAlertes.appendChild(d);
       }
       if(proches.length){
-        const resume=proches.map(a=>(a.emoji?a.emoji+" ":"")+a.cat).join(" · ");
+        const resume=proches.map(a=>badgeIconeCat({emoji:a.emoji},14)+a.cat).join(" &middot; ");
         const d=document.createElement("div"); d.className="bud-alerte";
         d.innerHTML='<div style="display:flex; flex-direction:column; gap:4px;"><strong>'+proches.length+' catégorie(s) à surveiller</strong><small style="color:inherit; opacity:.82;">'+resume+'</small></div>';
         boxAlertes.appendChild(d);
@@ -2037,12 +2118,11 @@
       totPrevu+=prevu; totReel+=r;
       const pct=prevu>0?Math.min(100, r/prevu*100):(r>0?100:0);
       const over=prevu>0 && r>prevu;
-      const emoji=cat.emoji?cat.emoji+" ":"";
       const sousAAfficher = budgetParSousCat ? (souscats[cat.nom]||[]).filter(sous=>budgetSousCatPourPeriode(cat.nom+"|"+sous,budMode)>0) : [];
       const ouvertB=budgetOuvertSet.has(cat.nom);
       const row=document.createElement("div"); row.className="bud-row"; row.style.cursor="pointer";
       row.innerHTML=
-        '<div class="bud-tete"><span class="nom">'+emoji+cat.nom+'</span>'+
+        '<div class="bud-tete"><span class="nom" style="display:inline-flex; align-items:center; gap:6px;">'+badgeIconeCat(cat,16)+cat.nom+'</span>'+
         (prevu>0?'<span class="bud-ecart" style="color:'+(ecart>=0?'var(--accent)':'var(--danger)')+'">'+(ecart>=0?'reste ':'d&eacute;pass&eacute; ')+fmt(Math.abs(ecart))+'</span>':'<span class="bud-ecart" style="color:var(--muted);">non d&eacute;fini</span>')+
         (sousAAfficher.length?'<button class="bud-chevron" aria-label="Déplier">'+(ouvertB?"▲":"▼")+'</button>':'')+'</div>'+
         '<div class="bud-det">Prévu '+fmt(prevu)+'<span style="margin-left:auto;">Réel '+fmt(r)+'</span></div>'+
@@ -2095,7 +2175,7 @@
       const sousArr=budgetParSousCat?(souscats[cat.nom]||[]):[];
       const ouvert=budGestionOuvert.has(cat.nom);
       const row=document.createElement("div"); row.className="bud-row";
-      row.innerHTML='<div class="bud-tete"><span class="nom">'+(cat.emoji?cat.emoji+" ":"")+cat.nom+'</span>'+
+      row.innerHTML='<div class="bud-tete"><span class="nom" style="display:inline-flex; align-items:center; gap:6px;">'+badgeIconeCat(cat,16)+cat.nom+'</span>'+
         (sousArr.length?'<button class="bud-chevron" aria-label="Déplier">'+(ouvert?"▲":"▼")+'</button>':'')+'</div>'+
         '<div class="bud-det"><input type="text" inputmode="decimal" data-bcat="'+cat.nom.replace(/"/g,'&quot;')+'" value="'+(b.montant?String(b.montant).replace(".",","):"")+'" placeholder="0" style="width:90px;" /> € par <select data-bunit="'+cat.nom.replace(/"/g,'&quot;')+'" style="border:1px solid var(--border); border-radius:8px; padding:6px; font-family:inherit;"><option value="jour"'+(b.unite==="jour"?" selected":"")+'>jour</option><option value="semaine"'+(b.unite==="semaine"?" selected":"")+'>semaine</option><option value="mois"'+((!b.unite||b.unite==="mois")?" selected":"")+'>mois</option><option value="annee"'+(b.unite==="annee"?" selected":"")+'>année</option></select></div>';
       if(sousArr.length){
@@ -2135,11 +2215,11 @@
     recurrentes.forEach((r,idx)=>{
       const estRev=r.type==="revenu", estRemb=r.type==="remboursement";
       const catObj=(!estRev&&!estRemb)?categories.find(c=>c.nom===r.categorie):null;
-      const icone=estRemb?"↩ ":(estRev?"💰 ":(catObj&&catObj.emoji?catObj.emoji+" ":""));
+      const icone='<span class="cat-ico-badge" style="width:16px;height:16px;">'+(estRemb?ICONES_UI.remboursement:(estRev?ICONES_UI.revenu:iconeCatSvg(catObj&&catObj.emoji)))+'</span>';
       const couleur=estRemb?"var(--remb-fg)":(estRev?"var(--accent)":"var(--text)");
       const signe=estRemb?"↩ ":(estRev?"+":"−");
       const l=document.createElement("div"); l.className="recur-carte glisser-ligne";
-      l.innerHTML='<div class="recur-tete"><span class="recur-nom">'+icone+r.nom+'</span><span class="recur-mnt" style="color:'+couleur+';">'+signe+fmt(r.montant)+'</span></div>'+
+      l.innerHTML='<div class="recur-tete"><span class="recur-nom" style="display:inline-flex; align-items:center; gap:6px;">'+icone+r.nom+'</span><span class="recur-mnt" style="color:'+couleur+';">'+signe+fmt(r.montant)+'</span></div>'+
         '<div class="recur-sub">Le '+r.jour+' de chaque mois'+(estRemb?'':(' · '+(r.categorie||"?")))+'</div>';
       const actions=document.createElement("div"); actions.className="recur-actions";
       const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
@@ -2522,7 +2602,7 @@
         const col=teinteAdaptee(couleursDe(cat)),st=groupes[cat].reduce((s,d)=>s+d.montant,0);
         const catObj=categories.find(c=>c.nom===cat)||DEP_SIMPLE;
         const e=document.createElement("div");e.className="cat-entete";e.style.background=col.bg;e.style.color=col.fg;
-        e.innerHTML="<span>"+(catObj.emoji?catObj.emoji+" ":"")+cat+"</span><span>"+fmt(st)+"</span>";liste.appendChild(e);
+        e.innerHTML="<span style=\"display:inline-flex; align-items:center; gap:6px;\"><span class=\"cat-ico-badge\" style=\"width:16px;height:16px;\">"+iconeCatSvg(catObj.emoji)+"</span>"+cat+"</span><span>"+fmt(st)+"</span>";liste.appendChild(e);
         groupes[cat].forEach(d=>{
           const l=document.createElement("div");l.className="dep";
           const sous=[d.sousCat,d.paiement].filter(Boolean).join(" · ");
@@ -2697,7 +2777,7 @@
     majRDateAff();
     majEtatSousCategorie();
     rendreBudgetSelectionTicket();
-    $("recu-overlay").style.display="flex";
+    ouvrirOverlayPapier("recu-overlay");
   }
   $("ouvrir-recu").onclick=()=>ouvrirRecu(null);
   $("res-ouvrir-recu").onclick=()=>ouvrirRecu(null);
@@ -2912,6 +2992,20 @@
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
     setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
   }
+  function ouvrirIconePicker(cat, boutonIcone){
+    document.querySelectorAll(".icon-panel").forEach(p=>p.remove());
+    const panel=document.createElement("div"); panel.className="icon-panel";
+    ICONES_CAT_ORDRE.forEach(cle=>{
+      const b=document.createElement("button"); b.type="button"; b.className="icon-chip"+(cat.emoji===cle?" on":"");
+      b.innerHTML=iconeCatSvg(cle); b.setAttribute("aria-label",cle);
+      b.onclick=()=>{ cat.emoji=cle; sauverCat(); rendreCategories(); rendreDepenses(); rendreBudget&&rendreBudget(); rendreBudGestion&&rendreBudGestion(); panel.remove(); };
+      panel.appendChild(b);
+    });
+    document.body.appendChild(panel);
+    const r=boutonIcone.getBoundingClientRect();
+    panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
+    setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
+  }
   function activerGlisser(container, arr, sauvegarder){
     container.querySelectorAll(".glisser-poignee").forEach(poignee=>{
       poignee.style.touchAction="none";
@@ -2947,8 +3041,8 @@
     categories.forEach((cat,idx)=>{
       const ligne=document.createElement("div");ligne.className="cat-ligne glisser-ligne";
       const poignee=document.createElement("span");poignee.className="glisser-poignee";poignee.textContent="⠿";
-      const emo=document.createElement("input");emo.type="text";emo.className="emoji-in";emo.value=cat.emoji||"";emo.maxLength=2;emo.placeholder="＋";
-      emo.onchange=()=>{ cat.emoji=emo.value.trim(); sauverCat(); rendreDepenses(); rendreBudget&&rendreBudget(); };
+      const emo=document.createElement("button");emo.type="button";emo.className="emoji-in";emo.innerHTML=badgeIconeCat(cat,20);emo.setAttribute("aria-label","Choisir une icone");
+      emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); ouvrirIconePicker(cat, emo); };
       const coul=document.createElement("input");coul.type="color";coul.className="color-in";coul.value=cat.fg||"#888888";
       coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
       coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
@@ -3073,16 +3167,16 @@
     Object.keys(parCatPeriode).forEach(c=>{ const delta=parCatPeriode[c]-(parCatPrec[c]||0); if(delta>hausseMax){ hausseMax=delta; catHausse=c; } });
     const joursActifs=new Set(depPeriode.map(d=>d.date)).size;
     const lignes=[];
-    lignes.push({emoji:"💸", titre:"Dépensé sur la période", val:fmt(totDep)});
-    if(totRev) lignes.push({emoji:iconeRevenu(), titre:"Revenus nets", val:fmt(totRev)});
-    lignes.push({emoji:"🧮", titre:"Solde net", val:fmt(totRev-totDep)});
-    if(plusGrosse) lignes.push({emoji:"🛒", titre:"Plus grosse dépense", val:fmt(plusGrosse.montant)+" · "+(plusGrosse.commentaire||plusGrosse.categorie)});
-    if(catTop) lignes.push({emoji:"📂", titre:"Catégorie la plus dépensière", val:catTop+" ("+fmt(catTopMontant)+")"});
-    if(catHausse) lignes.push({emoji:"📈", titre:"En plus forte hausse vs période précédente", val:catHausse+" (+"+fmt(hausseMax)+")"});
-    lignes.push({emoji:"📅", titre:"Jours avec au moins une dépense", val:joursActifs+" jour(s)"});
+    lignes.push({icone:ICONES_UI.depense, titre:"Dépensé sur la période", val:fmt(totDep)});
+    if(totRev) lignes.push({icone:ICONES_UI.revenu, titre:"Revenus nets", val:fmt(totRev)});
+    lignes.push({icone:svgCat(ICONES_CAT.calculatrice), titre:"Solde net", val:fmt(totRev-totDep)});
+    if(plusGrosse) lignes.push({icone:svgCat(ICONES_CAT.shopping), titre:"Plus grosse dépense", val:fmt(plusGrosse.montant)+" · "+(plusGrosse.commentaire||plusGrosse.categorie)});
+    if(catTop) lignes.push({icone:svgCat(ICONES_CAT.dossier), titre:"Catégorie la plus dépensière", val:catTop+" ("+fmt(catTopMontant)+")"});
+    if(catHausse) lignes.push({icone:svgCat(ICONES_CAT.tendance), titre:"En plus forte hausse vs période précédente", val:catHausse+" (+"+fmt(hausseMax)+")"});
+    lignes.push({icone:svgCat(ICONES_CAT.calendrier), titre:"Jours avec au moins une dépense", val:joursActifs+" jour(s)"});
     $("bilan-corps").innerHTML=lignes.map(l=>
       '<div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">'+
-        '<span style="font-size:24px;">'+l.emoji+'</span>'+
+        '<span class="cat-ico-badge" style="width:22px;height:22px; color:var(--accent);">'+l.icone+'</span>'+
         '<div><div style="font-size:12px; color:var(--muted);">'+l.titre+'</div><div style="font-weight:700; font-size:15px;">'+l.val+'</div></div>'+
       '</div>'
     ).join("");
@@ -3100,7 +3194,7 @@
       const pct=o.montantCible>0?Math.min(100, o.montantActuel/o.montantCible*100):0;
       const atteint=o.montantActuel>=o.montantCible;
       const carte=document.createElement("div"); carte.style.cssText="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px;";
-      carte.innerHTML='<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-weight:600;">'+(atteint?"🎉 ":"🎯 ")+o.nom+'</span><span style="font-size:12px; color:var(--muted);">'+fmt(o.montantActuel)+' / '+fmt(o.montantCible)+'</span></div>'+
+      carte.innerHTML='<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-weight:600; display:inline-flex; align-items:center; gap:6px;"><span class="cat-ico-badge" style="width:16px;height:16px; color:var(--accent);">'+svgCat(atteint?ICONES_CAT.trophee:ICONES_CAT.cible)+'</span>'+o.nom+'</span><span style="font-size:12px; color:var(--muted);">'+fmt(o.montantActuel)+' / '+fmt(o.montantCible)+'</span></div>'+
         '<div class="bud-barre" style="margin-top:8px;"><span class="'+(atteint?"":"")+'" style="width:'+pct+'%; background:'+(atteint?"var(--accent)":"var(--accent)")+';"></span></div>'+
         '<div style="font-size:12px; color:var(--muted); margin-top:4px;">'+Math.round(pct)+'%</div>';
       const actions=document.createElement("div"); actions.style.cssText="display:flex; gap:6px; margin-top:8px;";
@@ -3329,7 +3423,7 @@
       rCotCourante = cotisationDuType(rType);
       revDate=new Date(selDate);
     }
-    majRevDate(); rendreCotAffichage(); calcNet(); $("rev-overlay").style.display="flex";
+    majRevDate(); rendreCotAffichage(); calcNet(); ouvrirOverlayPapier("rev-overlay");
   }
   $("ouvrir-rev").onclick=()=>ouvrirRev(null);
   $("res-ouvrir-rev").onclick=()=>ouvrirRev(null);
@@ -3436,7 +3530,7 @@
       rembDateTicket = new Date(selDate);
     }
     majRembDateAff();
-    $("remb-overlay").style.display="flex";
+    ouvrirOverlayPapier("remb-overlay");
   }
   $("ouvrir-remb").onclick=()=>ouvrirRemb(null);
   $("res-ouvrir-remb").onclick=()=>ouvrirRemb(null);
@@ -3512,6 +3606,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Remplacer les emojis de categories par un catalogue d'icones et ajouter des animations d'ouverture":"v1.19.0",
         "Varier les animations et generaliser le morph chevron aux menus":"v1.18.0",
         "Fiabiliser les animations d'icones et ajouter les icones manquantes":"v1.17.1",
         "Remplacer les icones GIF par des animations vectorielles":"v1.17.0",
