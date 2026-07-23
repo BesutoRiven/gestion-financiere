@@ -1,5 +1,5 @@
 ﻿// IMPORTANT : incrÃ©mente ce numÃ©ro Ã  chaque dÃ©ploiement (gf-v32 -> gf-v7...).
-const CACHE = "gf-v1.16.4";
+const CACHE = "gf-v1.16.5";
 const FICHIERS = [
   "index.html", "app.html", "profil.html",
   "styles.css", "config.js", "manifest.json",
@@ -58,4 +58,5 @@ self.addEventListener("fetch", e => {
     }).catch(() => caches.match(e.request))
   );
 });
+
 

@@ -162,7 +162,7 @@
     .dd-devise-retour{font-size:12px; color:var(--papier-muted); cursor:pointer; text-align:center; margin-top:8px; text-decoration:underline;}
     .gestion-case{-webkit-appearance:none; appearance:none; width:22px; height:22px; flex:0 0 auto; border:none; border-radius:6px; background:transparent url("assets/animated-icons/check-off.gif") center/22px 22px no-repeat; cursor:pointer; margin:0;}
     .gestion-case:checked{background-image:url("assets/animated-icons/check-on.gif");}
-    .gif-ico{width:20px; height:20px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:normal; filter:brightness(0) invert(1); opacity:.94;}
+    .gif-ico{width:20px; height:20px; object-fit:contain; display:inline-block; vertical-align:middle; mix-blend-mode:normal; opacity:.94;}
     .sum-ico .gif-ico{width:20px; height:20px; flex:0 0 auto;}
     .btn-inline-ic .gif-ico{width:18px; height:18px;}
     .btn-ligne .gif-ico{width:16px; height:16px; margin-right:6px;}
@@ -179,7 +179,7 @@
     .navbas{position:fixed; bottom:0; left:0; right:0; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); z-index:40;}
     .nav-btn{flex:1; border:none; background:transparent; padding:10px 0 8px; cursor:pointer; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;}
     .nav-btn svg{width:22px; height:22px;}
-    .nav-btn .gif-ico{width:21px; height:21px; object-fit:contain; display:block; mix-blend-mode:normal; filter:brightness(0) invert(1); opacity:.94;}
+    .nav-btn .gif-ico{width:21px; height:21px; object-fit:contain; display:block; mix-blend-mode:normal; opacity:.94;}
     .nav-btn.on{color:var(--accent);}
 
     .vcard{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
@@ -213,14 +213,14 @@
     .listen-btn.scan .listen-ico{background:rgba(47,111,176,.10); color:#6f94b8;}
     .recu-action-single{display:flex; justify-content:center; margin-top:10px;}
     .recu-action-single .listen-btn{width:min(216px,100%);}
-    .recu-budget-card{border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:10px 12px; background:rgba(100,105,104,.20); margin-top:10px; box-shadow:none;}
+    .recu-budget-card{border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:12px 14px; background:rgba(100,105,104,.20); margin-top:10px; box-shadow:none;}
     .recu-budget-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; font-size:12px; color:var(--papier-muted);}
     .recu-budget-top strong{color:var(--papier-txt); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:44%;}
     .recu-budget-top span{flex:1; text-align:right;}
-    .recu-budget-meta{font-size:12px; color:var(--papier-txt); white-space:nowrap; text-align:left; width:108px; flex:0 0 108px;}
-    .recu-budget-bottom{display:flex; align-items:center; gap:10px; margin-top:6px;}
+    .recu-budget-meta{font-size:12px; color:var(--papier-txt); white-space:nowrap; text-align:left; width:116px; flex:0 0 116px;}
+    .recu-budget-bottom{display:flex; align-items:center; gap:12px; margin-top:8px;}
     .recu-budget-label{font-size:12px; color:var(--papier-muted); white-space:nowrap;}
-    .recu-budget-track{flex:0 1 94%; margin-top:0; height:8px; border-radius:999px; background:rgba(255,255,255,.28); overflow:hidden;}
+    .recu-budget-track{flex:1 1 auto; min-width:0; margin-top:0; height:7px; border-radius:999px; background:rgba(255,255,255,.28); overflow:hidden;}
     .budget-track{margin-top:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.4); overflow:hidden;}
     .budget-fill{height:100%; border-radius:inherit; background:linear-gradient(90deg,#2aa36b,#72c55a);}
     .budget-fill.warn{background:linear-gradient(90deg,#d4a017,#f0b53c);}
@@ -994,7 +994,7 @@
   const MOIS_L=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const MOIS_C=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
   const JSEM=["L","M","M","J","V","S","D"];
-  const LBL_AUJ={jour:"Aujourd'hui", semaine:"Cette semaine", mois:"Ce mois", annee:"Cette année"};
+  const LBL_AUJ={jour:"Aujourd'hui", semaine:"Retour au jour J", mois:"Ce mois", annee:"Cette année"};
 
   const $ = id => document.getElementById(id);
 
@@ -3469,7 +3469,12 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
-        "Corriger le s\u00e9lecteur couleur et les accents":"v1.15.12",
+                "Corriger les icones et l historique":"v1.16.5",
+        "Ajuster les icones animees des reglages":"v1.16.4",
+        "Ajouter les icones animees dans les reglages":"v1.16.3",
+        "Ameliorer les boutons et la saisie simple":"v1.16.2",
+        "Ameliorer les boutons d'ecoute et de scan":"v1.16.1",
+        "Afficher correctement les versions":"v1.16.0","Corriger le s\u00e9lecteur couleur et les accents":"v1.15.12",
         "Restaurer l'\u00e9l\u00e9ment de visionneuse photo":"v1.15.11",
         "Forcer le rechargement du cache applicatif":"v1.15.10",
         "R\u00e9parer le script et restaurer les boutons principaux":"v1.15.9",
@@ -3672,6 +3677,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
