@@ -248,6 +248,12 @@
     .tb-actions{display:flex; align-items:center; gap:14px;}
     .tb-amis{border:none; background:transparent; cursor:pointer; color:var(--text); display:flex; padding:0;}
     .tb-amis svg{width:24px; height:24px;}
+    .tb-mode{border:none; background:transparent; cursor:pointer; color:var(--text); display:inline-flex; align-items:center; padding:0;}
+    .tb-mode svg{width:24px; height:24px;}
+    .tb-mode.commun{color:var(--accent);}
+    .dep.archive{opacity:.72; background:var(--surface);}
+    .dep.archive .titre,.dep.archive .sous,.dep.archive .mnt{color:var(--muted);}
+    .arch-tag{display:inline-block; font-size:10px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1px 6px; margin-left:6px; vertical-align:middle;}
     .amis-lbl{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin:0 0 6px;}
     .amis-pseudo{font-size:22px; font-weight:700; margin:0;}
     .amis-pseudo .tag{color:var(--muted); font-weight:600;}
@@ -432,7 +438,7 @@
 
     <!-- ============ DEPENSES (page d'accueil) ============ -->
     <section id="vue-depenses" class="vue">
-      <div class="topbar"><h1>Accueil</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
+      <div class="topbar"><h1>Accueil</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
       <div class="jour-nav">
         <button class="fleche" id="jour-moins" aria-label="Jour précédent">‹</button>
@@ -482,7 +488,7 @@
 
     <!-- ============ RESUME ============ -->
     <section id="vue-accueil" class="vue" style="display:none;">
-      <div class="topbar"><h1>Résumé</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
+      <div class="topbar"><h1>Résumé</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
       <div class="perso" id="perso-chips"></div>
       <div class="jour-nav" id="res-nav">
         <button class="fleche" id="res-moins" aria-label="Période précédente">‹</button>
@@ -513,7 +519,7 @@
 
     <!-- ============ REGLAGES ============ -->
     <section id="vue-reglages" class="vue" style="display:none;">
-      <div class="topbar"><h1>Réglages</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
+      <div class="topbar"><h1>Réglages</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
       <div class="bloc">
         <span class="sum-ico" style="font-weight:600;"><span data-ico="fond"></span><span>Fond décran</span></span>
@@ -836,7 +842,7 @@
 
         <p class="amis-lbl">Partage du budget</p>
         <div id="partage-inactif">
-          <small class="aide">Partage tes dépenses et revenus avec quelqu'un (ex. Louise) : vous aurez exactement les mêmes données, comme un Excel commun.</small>
+          <small class="aide">Partage tes dépenses et revenus avec quelqu'un (ex. Louise) : ça crée une <strong>sauvegarde commune</strong>, comme un Excel partagé. Ta <strong>sauvegarde perso reste intacte</strong> — tu bascules entre les deux avec le bouton bonhomme(s) en haut de l'écran.</small>
           <button id="btn-creer-partage" class="btn-plein" style="height:44px; margin-top:12px;">Créer un partage</button>
           <div style="margin-top:14px;">
             <input id="code-partage" class="champ" type="text" placeholder="Coller un code de partage reçu" />
@@ -1002,7 +1008,7 @@
 
     <!-- ============ BUDGET ============ -->
     <section id="vue-budget" class="vue" style="display:none;">
-      <div class="topbar"><h1>Budget</h1><div class="tb-actions"><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
+      <div class="topbar"><h1>Budget</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
       <div class="perso" id="bud-modes"></div>
       <div class="jour-nav" id="bud-nav">
         <button class="fleche" id="bud-moins" aria-label="Période précédente">‹</button>
@@ -1536,20 +1542,35 @@
   const couleursDe=nom=> nom==="Dépense"?DEP_SIMPLE : (categories.find(c=>c.nom===nom)||{bg:"#f1efe8",fg:"#444441"});
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   const depDate=d=>d.date||(d.mois?d.mois+"-15":null);
-  // ---- Sauvegarde : cache local + cloud (personnel OU foyer partagé) ----
+  // ---- Sauvegarde : cache local + cloud (perso ET/OU foyer partagé, jamais d'écriture croisée) ----
   let sauvTimer=null, foyerId=null, canalFoyer=null, dernierSelfSave=0;
+  let modeActif="perso"; // "perso" (table donnees) | "commun" (table foyers). Les deux coexistent, on n'écrit QUE la table du mode actif.
+  const estDansPartage=()=> !!foyerId;
+  const cleCacheMode=()=> "gf_"+uid+(modeActif==="commun"?"_commun":"");
   function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
+  // Requête d'upsert vers la table du mode actif UNIQUEMENT. Perso -> donnees ; commun -> foyers.
+  function requeteSauvegarde(c){
+    if(modeActif==="commun" && foyerId){
+      return sb.from("foyers").upsert({ id:foyerId, contenu:c, updated_at:new Date().toISOString() });
+    }
+    return sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() });
+  }
   function sauverCloud(){
     const c=contenuActuel();
-    try{ localStorage.setItem("gf_"+uid, JSON.stringify(c)); }catch(e){}
+    try{ localStorage.setItem(cleCacheMode(), JSON.stringify(c)); }catch(e){}
     clearTimeout(sauvTimer);
     sauvTimer=setTimeout(()=>{
       dernierSelfSave=Date.now();
-      const req = foyerId
-        ? sb.from("foyers").upsert({ id:foyerId, contenu:c, updated_at:new Date().toISOString() })
-        : sb.from("donnees").upsert({ user_id:uid, contenu:c, updated_at:new Date().toISOString() });
-      req.then(({error})=>{ if(error) console.warn("Sync Supabase:", error.message); });
+      requeteSauvegarde(c).then(({error})=>{ if(error) console.warn("Sync Supabase:", error.message); });
     }, 400);
+  }
+  // Sauvegarde immédiate (sans debounce), utilisée avant de basculer de mode pour ne rien perdre.
+  async function sauverMaintenant(){
+    clearTimeout(sauvTimer);
+    const c=contenuActuel();
+    try{ localStorage.setItem(cleCacheMode(), JSON.stringify(c)); }catch(e){}
+    dernierSelfSave=Date.now();
+    try{ await requeteSauvegarde(c); }catch(e){ console.warn("Sync Supabase:", e); }
   }
   const sauverDep=sauverCloud, sauverCat=sauverCloud, sauverSous=sauverCloud, sauverRev=sauverCloud, sauverRevType=sauverCloud;
 
@@ -1598,6 +1619,7 @@
     try{
       canalFoyer = sb.channel("foyer-"+foyerId)
         .on("postgres_changes", { event:"UPDATE", schema:"public", table:"foyers", filter:"id=eq."+foyerId }, payload=>{
+          if(modeActif!=="commun") return;                            // en mode perso, on n'applique jamais le contenu partagé
           if(Date.now()-dernierSelfSave < 1500) return;               // ignore l'écho de ma propre sauvegarde
           if(payload.new && payload.new.contenu){ appliquerContenu(payload.new.contenu); rafraichirVueCourante(); }
         }).subscribe();
@@ -1606,16 +1628,49 @@
   async function chargerTout(){
     foyerId=null;
     try{ const { data:mem }=await sb.from("foyer_membres").select("foyer_id").eq("user_id",uid).maybeSingle(); if(mem && mem.foyer_id) foyerId=mem.foyer_id; }catch(e){}
-    if(foyerId){
-      let c=null;
-      try{ const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle(); if(data && data.contenu) c=data.contenu; }catch(e){}
-      appliquerContenu(c); genererRecurrentes(); abonnerFoyer(); return; // données partagées en place
-    }
+    // Mode par défaut : dernier choix mémorisé, sinon perso. Sans partage -> forcément perso.
+    modeActif = localStorage.getItem("gf_mode_"+uid) || "perso";
+    if(!foyerId) modeActif="perso";
+    await chargerModeActif({initial:true});
+  }
+  // Charge en mémoire les données du mode actif (perso = donnees, commun = foyers), sans jamais mélanger les deux.
+  async function chargerModeActif(opts){
+    opts=opts||{};
     let c=null;
-    try{ const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle(); if(!error && data && data.contenu) c=data.contenu; }catch(e){ console.warn("Chargement cloud:", e); }
-    if(!c) c=migrerDepuisLocal();
-    if(!c){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} }
-    appliquerContenu(c); genererRecurrentes(); sauverCloud();
+    if(modeActif==="commun" && foyerId){
+      try{ const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle(); if(data && data.contenu) c=data.contenu; }catch(e){ console.warn("Chargement partage:", e); }
+      appliquerContenu(c); genererRecurrentes(); abonnerFoyer();
+    } else {
+      try{ const { data, error }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle(); if(!error && data && data.contenu) c=data.contenu; }catch(e){ console.warn("Chargement cloud:", e); }
+      if(!c && opts.initial) c=migrerDepuisLocal();
+      if(!c && opts.initial){ try{ const cache=localStorage.getItem("gf_"+uid); if(cache) c=JSON.parse(cache); }catch(e){} }
+      appliquerContenu(c); genererRecurrentes();
+      if(opts.initial) sauverCloud(); // garantit l'existence de la ligne perso
+    }
+  }
+  const SVG_PERSO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>';
+  const SVG_COMMUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg>';
+  function majBoutonMode(){
+    const commun = modeActif==="commun";
+    document.querySelectorAll(".tb-mode").forEach(b=>{
+      b.style.display = estDansPartage() ? "inline-flex" : "none";
+      b.innerHTML = commun ? SVG_COMMUN : SVG_PERSO;
+      b.title = commun ? "Sauvegarde commune (visible par les deux)" : "Sauvegarde perso (visible par toi seul)";
+      b.classList.toggle("commun", commun);
+    });
+  }
+  // Bascule perso <-> commun : on sauve d'abord le mode courant, puis on recharge l'autre.
+  async function basculerMode(nouveau){
+    if(nouveau===modeActif) return;
+    if(nouveau==="commun" && !foyerId) return; // pas de partage : rien à afficher en commun
+    await sauverMaintenant();
+    modeActif=nouveau;
+    localStorage.setItem("gf_mode_"+uid, modeActif);
+    await chargerModeActif({initial:false});
+    rafraichirVueCourante();
+    if($("vue-accueil") && $("vue-accueil").style.display!=="none") rendreAccueil();
+    if($("vue-budget") && $("vue-budget").style.display!=="none") rendreBudget();
+    majBoutonMode();
   }
 
   // ---- Partage du budget (foyer) ----
@@ -1636,13 +1691,31 @@
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     return {ok:true};
   }
-  async function quitterPartage(garderCopie){
-    if(garderCopie){
-      await sb.from("donnees").upsert({ user_id:uid, contenu:contenuActuel(), updated_at:new Date().toISOString() });
+  // Quitter le partage : on n'écrase JAMAIS la sauvegarde perso. Si nomPartage est fourni,
+  // on copie les dépenses/revenus du commun dans le perso en LECTURE SEULE (tag arch).
+  async function quitterPartage(nomPartage){
+    const idFoyer=foyerId;
+    // 1) Contenu commun (foyers) et perso (donnees), lus directement depuis la base.
+    let commun=null, perso=null;
+    try{ const { data }=await sb.from("foyers").select("contenu").eq("id",idFoyer).maybeSingle(); if(data && data.contenu) commun=data.contenu; }catch(e){}
+    try{ const { data }=await sb.from("donnees").select("contenu").eq("user_id",uid).maybeSingle(); if(data && data.contenu) perso=data.contenu; }catch(e){}
+    perso = perso || {};
+    perso.depenses = Array.isArray(perso.depenses) ? perso.depenses : [];
+    perso.revenus  = Array.isArray(perso.revenus)  ? perso.revenus  : [];
+    // 2) Archivage lecture seule du commun dans le perso.
+    if(nomPartage && commun){
+      const suffixe=Date.now();
+      (commun.depenses||[]).forEach((d,i)=>{ perso.depenses.push(Object.assign({}, d, {id:"arch-"+suffixe+"-d"+i, arch:nomPartage})); });
+      (commun.revenus||[]).forEach((r,i)=>{ perso.revenus.push(Object.assign({}, r, {id:"arch-"+suffixe+"-r"+i, arch:nomPartage})); });
     }
+    // 3) Écriture dans la table perso UNIQUEMENT.
+    try{ const w=await sb.from("donnees").upsert({ user_id:uid, contenu:perso, updated_at:new Date().toISOString() }); if(w.error) return {ok:false, msg:messageErreur(w.error)}; }
+    catch(e){ return {ok:false, msg:"Impossible d'enregistrer ta sauvegarde perso."}; }
+    // 4) Sortie du partage.
     const r=await sb.from("foyer_membres").delete().eq("user_id",uid);
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
-    foyerId=null; return {ok:true};
+    foyerId=null; modeActif="perso"; localStorage.setItem("gf_mode_"+uid,"perso");
+    return {ok:true};
   }
 
   // ---- Rôles et co-propriété du foyer partagé ----
@@ -2035,8 +2108,10 @@
     items.forEach(d=>{
       const infos=[d.sousCat,d.paiement].filter(Boolean).join(" · ");
       const l=document.createElement("div"); l.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);";
-      l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(d.commentaire||d.sousCat||cat)+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmtDev(d.montant,d.devise)+'</span></div>'+
+      const tagArchCd = d.arch ? ' <span class="arch-tag">Archivé · '+d.arch+'</span>' : "";
+      l.innerHTML='<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;">'+(d.commentaire||d.sousCat||cat)+tagArchCd+'</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">'+fmtDev(d.montant,d.devise)+'</span></div>'+
         '<div style="font-size:12px;color:var(--muted);">'+(d.dateAffichee||"")+(infos?' · '+infos:'')+'</div></div>';
+      if(d.arch){ l.style.opacity=".72"; box.appendChild(l); return; } // archivé : lecture seule
       if(rembLiees(d.id).length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.style.cssText="border:none;background:transparent;font-size:15px;cursor:pointer;padding:0 2px;"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
       const be=document.createElement("button"); be.className="act"; be.style.cssText="border:none;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;"; be.textContent="✎"; be.setAttribute("aria-label","Modifier cette dépense");
       be.onclick=()=>{ $("catdet-overlay").style.display="none"; selDate=new Date(d.date+"T12:00:00"); ouvrirRecu(d.id); venantCatdet=true; };
@@ -2731,7 +2806,9 @@
           const titre=d.commentaire||d.sousCat||cat;
           const partBadge = (d.participant && d.participant!=="Moi") ? '<span class="part-badge">'+d.participant+'</span>' : "";
           const liees=rembLiees(d.id);
-          l.innerHTML='<div class="info"><div class="titre">'+titre+partBadge+'</div>'+(sous?'<div class="sous">'+sous+'</div>':'')+'</div><div class="mnt">'+fmtDev(d.montant,d.devise)+'</div>';
+          const tagArch = d.arch ? '<span class="arch-tag">Archivé · '+d.arch+'</span>' : "";
+          l.innerHTML='<div class="info"><div class="titre">'+titre+partBadge+tagArch+'</div>'+(sous?'<div class="sous">'+sous+'</div>':'')+'</div><div class="mnt">'+fmtDev(d.montant,d.devise)+'</div>';
+          if(d.arch){ l.classList.add("archive"); liste.appendChild(l); return; } // lecture seule : ni édition, ni suppression, ni sélection
           if(liees.length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
           if(d.photo){const p=document.createElement("button");p.className="act photo-ic";p.innerHTML=ICONES_UI.fond;p.setAttribute("aria-label","Voir la photo");p.onclick=()=>voirPhoto(d.id);l.appendChild(p);}
           const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRecu(d.id);
@@ -2752,7 +2829,9 @@
       rev.forEach(r=>{
         const l=document.createElement("div");l.className="dep txn-revenu";
         const titre=r.description||r.type||"Revenu";
-        l.innerHTML='<div class="info"><div class="titre">'+titre+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
+        const tagArchR = r.arch ? '<span class="arch-tag">Archivé · '+r.arch+'</span>' : "";
+        l.innerHTML='<div class="info"><div class="titre">'+titre+tagArchR+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
+        if(r.arch){ l.classList.add("archive"); liste.appendChild(l); return; }
         const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRev(r.id);
         l.appendChild(be);
         if(modeGestion){
@@ -3926,6 +4005,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Sauvegarde perso et commune permutables avec archivage lecture seule a la sortie":"v1.21.0",
         "Compacter les boutons de gestion et personnaliser les icones d'objectifs":"v1.20.1",
         "Ajouter la repartition de revenu par enveloppes (cascade, vignette, questionnaire)":"v1.20.0",
         "Remplacer les emojis de categories par un catalogue d'icones et ajouter des animations d'ouverture":"v1.19.0",
@@ -4017,6 +4097,10 @@
   };
   function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; if(foyerId) rendreMembres(); }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
+  document.querySelectorAll(".tb-mode").forEach(b=>b.onclick=async()=>{
+    if(!estDansPartage()) return;
+    await basculerMode(modeActif==="commun"?"perso":"commun");
+  });
   $("amis-fermer").onclick=()=>$("amis-overlay").style.display="none";
   $("amis-overlay").onclick=e=>{if(e.target===$("amis-overlay"))$("amis-overlay").style.display="none";};
   function msgAmis(t,ty){ $("amis-msg").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>'; }
@@ -4026,36 +4110,35 @@
     msgAmis("Création du partage…","ok");
     const r=await creerPartage();
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
-    msgAmis("Partage créé ! Transmets le code affiché. L'app va se recharger.","ok");
-    setTimeout(()=>location.reload(),1200);
+    localStorage.setItem("gf_mode_"+uid,"commun");
+    msgAmis("Partage créé ! Transmets le code affiché. L'app va se recharger sur la sauvegarde commune (ta sauvegarde perso reste intacte).","ok");
+    setTimeout(()=>location.reload(),1400);
   };
   $("btn-rejoindre").onclick=async()=>{
     const code=$("code-partage").value.trim();
-    if(!confirm("Rejoindre ce partage ? Tu utiliseras les données partagées (tes données perso actuelles ne seront pas fusionnées).")) return;
+    if(!confirm("Rejoindre ce partage ? Tu obtiens une 2ᵉ sauvegarde commune — ta sauvegarde perso reste intacte, et tu pourras basculer entre les deux avec le bouton en haut.")) return;
     msgAmis("Connexion au partage…","ok");
     const r=await rejoindrePartage(code);
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
-    msgAmis("Partage rejoint ! L'app va se recharger avec les données communes.","ok");
-    setTimeout(()=>location.reload(),1200);
+    localStorage.setItem("gf_mode_"+uid,"commun");
+    msgAmis("Partage rejoint ! L'app va se recharger sur la sauvegarde commune.","ok");
+    setTimeout(()=>location.reload(),1400);
   };
   $("btn-quitter-partage").onclick=async()=>{
     let monRole="proprietaire", creePar=null;
     try{ const r=await sb.from("foyer_membres").select("role").eq("foyer_id",foyerId).eq("user_id",uid).maybeSingle(); if(r.data && r.data.role) monRole=r.data.role; }catch(e){}
     try{ const r=await sb.from("foyers").select("cree_par").eq("id",foyerId).maybeSingle(); creePar=r.data?r.data.cree_par:null; }catch(e){}
-    let garder=false;
-    if(uid===creePar){
-      if(!confirm("Quitter le partage ? Comme tu es à l'origine de sa création, une copie des données actuelles sera automatiquement gardée sur ton compte personnel.")) return;
-      garder=true;
-    } else if(monRole==="proprietaire"){
-      if(!confirm("Quitter le partage ?")) return;
-      garder=await confirmerOuiNon("Veux-tu garder une copie de ces données partagées sur ton compte personnel après ton départ ?");
-    } else {
-      if(!confirm("Quitter le partage ? Tu ne garderas aucune donnée de ce partage — tu repasseras sur ton propre compte, tel qu'il était avant.")) return;
+    if(!confirm("Quitter le partage ? Tu reviendras sur ta sauvegarde perso (elle est intacte). Tu peux garder les dépenses/revenus du partage en lecture seule dans ta perso.")) return;
+    let nomPartage=null;
+    const veutGarder=await confirmerOuiNon("Garder une copie des données de ce partage dans ta sauvegarde perso (en lecture seule) ?");
+    if(veutGarder){
+      const saisi=(prompt("Donne un nom à ce partage pour retrouver ces données (ex. « Partage Louise ») :","Partage")||"").trim();
+      nomPartage = saisi || "Partage";
     }
-    const r=await quitterPartage(garder);
+    const r=await quitterPartage(nomPartage);
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
-    msgAmis("Partage quitté. L'app va se recharger.","ok");
-    setTimeout(()=>location.reload(),1000);
+    msgAmis("Partage quitté. L'app va se recharger sur ta sauvegarde perso.","ok");
+    setTimeout(()=>location.reload(),1200);
   };
   $("btn-copier-code").onclick=async()=>{
     try{ await navigator.clipboard.writeText($("mon-code").value); msgAmis("Code copié !","ok"); }
@@ -4064,7 +4147,7 @@
 
   // Rafraîchir les données partagées en revenant sur l'app
   document.addEventListener("visibilitychange", async ()=>{
-    if(document.visibilityState!=="visible" || !foyerId) return;
+    if(document.visibilityState!=="visible" || !foyerId || modeActif!=="commun") return;
     const ouvert=[...document.querySelectorAll('.recu-overlay,.cal-overlay,.lb-overlay')].some(o=>o.style.display==="flex")
       || $("amis-overlay").style.display==="flex" || $("catdet-overlay").style.display==="flex" || $("version-overlay").style.display==="flex";
     if(ouvert) return;
@@ -4077,6 +4160,7 @@
     uid=session.user.id;
     await verrouillerEcran();
     await chargerTout();
+    majBoutonMode();
     verifierRappelSaisie();
     // Questionnaire de répartition au premier lancement (une seule fois en auto ; relançable depuis Réglages)
     if(!profilFinance.onboardingFait && !localStorage.getItem("gf_quest_vu_"+uid)){
