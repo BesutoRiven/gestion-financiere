@@ -1727,33 +1727,32 @@
     if($("amis-overlay") && $("amis-overlay").style.display==="flex"){ rendrePartage(); rendreMembres(); }
     if(etaisEnAttente && !jeSuisEnAttente() && monRolePartage){ msgAmis("Tu as été accepté(e) ! Utilise l'interrupteur en haut pour basculer sur la sauvegarde commune.","ok"); }
   }
-  // Admission acceptée par tous : active le membre et stampe sa date d'arrivée (visibilité temporelle).
-  async function promouvoirMembre(joinerUid){
-    try{ await sb.from("foyer_membres").update({role:"ami"}).eq("foyer_id",foyerId).eq("user_id",joinerUid); }catch(e){}
-    try{
-      const { data }=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle();
-      const c=(data && data.contenu) || {};
-      c.membres=c.membres||{};
-      c.membres[joinerUid]={ joinedAt:Date.now(), statut:"actif" };
-      dernierSelfSave=Date.now();
-      await sb.from("foyers").update({ contenu:c, updated_at:new Date().toISOString() }).eq("id",foyerId);
-    }catch(e){}
-    try{ await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); }catch(e){}
-  }
-  // Admission refusée : on retire le candidat et on solde ses demandes.
-  async function rejeterMembre(joinerUid){
-    try{ await sb.from("foyer_demandes").update({statut:"refusee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); }catch(e){}
-    try{ await sb.from("foyer_membres").delete().eq("foyer_id",foyerId).eq("user_id",joinerUid); }catch(e){}
-  }
-  // Mon vote d'admission ; le candidat n'est promu qu'à l'unanimité des membres actifs.
+  // Admission sans foyer_demandes : les votes vivent dans le JSON du foyer partagé.
   async function accepterAdmission(joinerUid){
-    try{ await sb.from("foyer_demandes").update({statut:"acceptee"}).eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("cible_user_id",uid).eq("statut","en_attente"); }catch(e){}
-    let restantes=[];
-    try{ const { data }=await sb.from("foyer_demandes").select("id").eq("foyer_id",foyerId).eq("groupe_id",joinerUid).eq("statut","en_attente"); restantes=data||[]; }catch(e){}
-    if(!restantes.length) await promouvoirMembre(joinerUid);
+    await chargerEtatMembres();
+    const votants=membresRoles.filter(m=>m.role!=="attente" && m.user_id!==joinerUid).map(m=>m.user_id);
+    try{
+      const {data}=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle();
+      const c=(data&&data.contenu)||{}; c.membres=c.membres||{};
+      const candidat=c.membres[joinerUid]||{statut:"attente",votes:{}};
+      candidat.votes=candidat.votes||{}; candidat.votes[uid]=true; c.membres[joinerUid]=candidat;
+      const accepte=votants.every(id=>candidat.votes[id]);
+      if(accepte) c.membres[joinerUid]={joinedAt:Date.now(),statut:"actif"};
+      const w=await sb.from("foyers").update({contenu:c,updated_at:new Date().toISOString()}).eq("id",foyerId);
+      if(w.error) return {ok:false,msg:messageErreur(w.error)};
+      if(accepte){ const r=await sb.from("foyer_membres").update({role:"ami"}).eq("foyer_id",foyerId).eq("user_id",joinerUid); if(r.error)return {ok:false,msg:messageErreur(r.error)}; }
+      return {ok:true,accepte};
+    }catch(e){ return {ok:false,msg:"Impossible d'enregistrer l'accord."}; }
   }
-  async function refuserAdmission(joinerUid){ await rejeterMembre(joinerUid); }
-  async function chargerTout(){
+  async function refuserAdmission(joinerUid){
+    try{
+      const {data}=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle();
+      const c=(data&&data.contenu)||{}; if(c.membres) delete c.membres[joinerUid];
+      await sb.from("foyers").update({contenu:c,updated_at:new Date().toISOString()}).eq("id",foyerId);
+      const r=await sb.from("foyer_membres").delete().eq("foyer_id",foyerId).eq("user_id",joinerUid);
+      return r.error?{ok:false,msg:messageErreur(r.error)}:{ok:true};
+    }catch(e){ return {ok:false,msg:"Impossible de refuser cette admission."}; }
+  }  async function chargerTout(){
     foyerId=null; modeActif="perso";
     if(modeInvite){
       let c=null;
@@ -1833,48 +1832,21 @@
     await chargerEtatMembres(); abonnerDemandes();
     return {ok:true};
   }
-  // Certains projets existants refusent une valeur de type inconnue. Une demande sans type
-  // reste reconnue comme admission par son groupe_id et ne nécessite pas de migration SQL.
-  const estDemandeAdmission=d=> d.type==="admission" || (!d.type && !!d.groupe_id && !!d.demandeur_user_id);
-  async function creerDemandesAdmission(idFoyer, joinerUid){
-    let membres=[];
-    try{ const r=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",idFoyer); membres=r.data||[]; }catch(e){ return {ok:false, msg:"Impossible de lire les membres du partage."}; }
-    const actifs=membres.filter(m=>m.role!=="attente" && m.user_id!==joinerUid);
-    let existantes=[];
-    try{ const r=await sb.from("foyer_demandes").select("cible_user_id,type,groupe_id,demandeur_user_id,statut").eq("foyer_id",idFoyer).eq("groupe_id",joinerUid).eq("statut","en_attente"); existantes=r.data||[]; }catch(e){}
-    for(const m of actifs){
-      if(existantes.some(d=>d.cible_user_id===m.user_id && estDemandeAdmission(d))) continue;
-      const base={ foyer_id:idFoyer, cible_user_id:m.user_id, demandeur_user_id:joinerUid, groupe_id:joinerUid };
-      let demande=await sb.from("foyer_demandes").insert(Object.assign({type:"admission"},base));
-      if(demande.error) demande=await sb.from("foyer_demandes").insert(base);
-      if(demande.error) return {ok:false, msg:messageErreur(demande.error)};
-    }
-    return {ok:true, nb:actifs.length};
-  }  async function rejoindrePartage(code){
-    code=(code||"").trim().toUpperCase(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
-    const { data:invite, error } = await sb.from("foyer_invites").select("foyer_id,expires_at").eq("code",code).maybeSingle();
-    if(error || !invite) return {ok:false, msg:"Code invalide ou expiré."};
-    if(new Date(invite.expires_at) <= new Date()) return {ok:false, msg:"Ce code a expiré. Demande-en un nouveau à la personne."};
+  async function rejoindrePartage(code){
+    code=(code||"").trim().toUpperCase(); if(!code) return {ok:false,msg:"Colle d'abord un code de partage."};
+    const {data:invite,error}=await sb.from("foyer_invites").select("foyer_id,expires_at").eq("code",code).maybeSingle();
+    if(error||!invite) return {ok:false,msg:"Code invalide ou expiré."};
+    if(new Date(invite.expires_at)<=new Date()) return {ok:false,msg:"Ce code a expiré. Demande-en un nouveau à la personne."};
     const fid=invite.foyer_id;
-    // Membres actuels : ce sont les actifs qui devront tous m'accepter (accord unanime).
-    let membres=[]; try{ const { data }=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",fid); membres=data||[]; }catch(e){}
+    let membres=[]; try{ const r=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",fid); membres=r.data||[]; }catch(e){}
     const actifs=membres.filter(m=>m.role!=="attente");
-    const dejaMembre=membres.find(m=>m.user_id===uid);
-    if(dejaMembre){ foyerId=fid; await chargerEtatMembres(); abonnerDemandes(); return {ok:true, enAttente:dejaMembre.role==="attente"}; }
-    // J'entre en ATTENTE (aucun accès au commun tant que non accepté par tous).
-    const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:fid, role:"attente" });
-    if(r.error) return {ok:false, msg:messageErreur(r.error)};
-    foyerId=fid;
-    const demandes=await creerDemandesAdmission(fid,uid);
-    if(!demandes.ok){
-      await sb.from("foyer_membres").delete().eq("foyer_id",fid).eq("user_id",uid);
-      foyerId=null;
-      return {ok:false, msg:"Impossible d'envoyer la demande d'admission : "+demandes.msg};
-    }
-    await chargerEtatMembres(); abonnerDemandes();
-    return {ok:true, enAttente:true, nbAValider:demandes.nb};
-  }
-  // Quitter le partage : on n'écrase JAMAIS la sauvegarde perso. Si nomPartage est fourni,
+    const deja=membres.find(m=>m.user_id===uid);
+    if(deja){ foyerId=fid; await chargerEtatMembres(); return {ok:true,enAttente:deja.role==="attente"}; }
+    const r=await sb.from("foyer_membres").upsert({user_id:uid,foyer_id:fid,role:"attente"});
+    if(r.error) return {ok:false,msg:messageErreur(r.error)};
+    foyerId=fid; await chargerEtatMembres();
+    return {ok:true,enAttente:true,nbAValider:actifs.length};
+  }  // Quitter le partage : on n'écrase JAMAIS la sauvegarde perso. Si nomPartage est fourni,
   // on copie les dépenses/revenus du commun dans le perso en LECTURE SEULE (tag arch).
   async function quitterPartage(nomPartage, annulerAdmission){
     const idFoyer=foyerId;
@@ -1927,46 +1899,27 @@
   }
   async function chargerMembres(){
     if(!foyerId) return [];
-    const { data:membres, error } = await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",foyerId);
-    if(error || !membres) return [];
-    const ids=membres.map(m=>m.user_id);
-    let profils=[];
-    try{ const r=await sb.from("profils").select("id,pseudo,tag").in("id",ids); profils=r.data||[]; }catch(e){}
-    return membres.map(m=>{ const p=profils.find(x=>x.id===m.user_id)||{}; return { user_id:m.user_id, enAttente:m.role==="attente", pseudo:p.pseudo||"Membre", tag:p.tag||"0000" }; })
-      .sort((a,b)=> (a.user_id===uid?-1:b.user_id===uid?1:0));
-  }
-  async function chargerDemandesEnCours(){
+    const {data:membres,error}=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",foyerId);
+    if(error||!membres)return [];
+    const ids=membres.map(m=>m.user_id); let profils=[],contenu={};
+    try{const r=await sb.from("profils").select("id,pseudo,tag").in("id",ids);profils=r.data||[];}catch(e){}
+    try{const r=await sb.from("foyers").select("contenu").eq("id",foyerId).maybeSingle();contenu=(r.data&&r.data.contenu)||{};}catch(e){}
+    return membres.map(m=>{const p=profils.find(x=>x.id===m.user_id)||{};const etat=(contenu.membres||{})[m.user_id]||{};return{user_id:m.user_id,enAttente:m.role==="attente",votes:etat.votes||{},pseudo:p.pseudo||"Membre",tag:p.tag||"0000"};}).sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0));
+  }  async function chargerDemandesEnCours(){
     if(!foyerId) return [];
     try{ const r=await sb.from("foyer_demandes").select("*").eq("foyer_id",foyerId).eq("statut","en_attente"); return r.data||[]; }catch(e){ return []; }
   }
   async function rendreMembres(){
-    const box=$("membres-liste"); if(!box) return; box.innerHTML='<small class="aide">Chargement…</small>';
-    const [membres, demandes] = await Promise.all([chargerMembres(), chargerDemandesEnCours()]);
-    box.innerHTML="";
+    const box=$("membres-liste");if(!box)return;box.innerHTML='<small class="aide">Chargement…</small>';
+    const membres=await chargerMembres();box.innerHTML="";
     membres.forEach(m=>{
-      const l=document.createElement("div"); l.className="cat-ligne"; l.style.flexWrap="wrap";
-      const span=document.createElement("span"); span.style.cssText="flex:1; font-size:14px; min-width:140px;";
-      span.innerHTML='<b>'+m.pseudo+'</b><span style="color:var(--muted);">#'+m.tag+'</span>'+(m.user_id===uid?' <span style="color:var(--accent);">(toi)</span>':'');
-      l.appendChild(span);
+      const l=document.createElement("div");l.className="cat-ligne";l.style.flexWrap="wrap";
+      const span=document.createElement("span");span.style.cssText="flex:1;font-size:14px;min-width:140px;";span.innerHTML='<b>'+m.pseudo+'</b><span style="color:var(--muted);">#'+m.tag+'</span>'+(m.user_id===uid?' <span style="color:var(--accent);">(toi)</span>':'');l.appendChild(span);
       if(m.enAttente){
-        const monVote=demandes.find(d=>estDemandeAdmission(d) && d.groupe_id===m.user_id && d.cible_user_id===uid);
-        const restants=demandes.filter(d=>estDemandeAdmission(d) && d.groupe_id===m.user_id).length;
-        if(monVote){
-          const acc=document.createElement("button"); acc.className="btn-ligne"; acc.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--accent); border-color:var(--accent);"; acc.textContent="Accepter";
-          acc.onclick=async()=>{ await accepterAdmission(m.user_id); msgAmis("Accord enregistré.","ok"); rendreMembres(); rafraichirEtatPartage(); };
-          const ref=document.createElement("button"); ref.className="btn-ligne"; ref.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--danger); border-color:#e0b4b4;"; ref.textContent="Refuser";
-          ref.onclick=async()=>{ if(!confirm("Refuser l'accès à "+m.pseudo+" ?")) return; await refuserAdmission(m.user_id); msgAmis(m.pseudo+" refusé(e).","ok"); rendreMembres(); rafraichirEtatPartage(); };
-          l.appendChild(acc); l.appendChild(ref);
-        } else if(m.user_id!==uid) {
-          const relancer=document.createElement("button"); relancer.className="btn-ligne"; relancer.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--accent); border-color:var(--accent);"; relancer.textContent="Relancer l'admission";
-          relancer.onclick=async()=>{ const r=await creerDemandesAdmission(foyerId,m.user_id); if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; } msgAmis("Demandes d'accord envoyées.","ok"); rendreMembres(); };
-          l.appendChild(relancer);
-          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent="Aucune demande d'accord n'a été trouvée.";
-          l.appendChild(info);
-        } else {
-          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent="En attente de l'accord des autres membres.";
-          l.appendChild(info);
-        }
+        if(m.user_id!==uid&&!m.votes[uid]){
+          const acc=document.createElement("button");acc.className="btn-ligne";acc.style.cssText="height:32px;padding:0 10px;font-size:12px;color:var(--accent);border-color:var(--accent);";acc.textContent="Accepter";acc.onclick=async()=>{const r=await accepterAdmission(m.user_id);if(!r.ok){msgAmis("Échec : "+r.msg,"err");return;}msgAmis(r.accepte?"Accès accordé.":"Accord enregistré.","ok");rendreMembres();rafraichirEtatPartage();};
+          const ref=document.createElement("button");ref.className="btn-ligne";ref.style.cssText="height:32px;padding:0 10px;font-size:12px;color:var(--danger);border-color:#e0b4b4;";ref.textContent="Refuser";ref.onclick=async()=>{if(!confirm("Refuser l'accès à "+m.pseudo+" ?"))return;const r=await refuserAdmission(m.user_id);if(!r.ok){msgAmis("Échec : "+r.msg,"err");return;}msgAmis(m.pseudo+" exclu(e). Il faudra l'inviter de nouveau.","ok");rendreMembres();rafraichirEtatPartage();};l.appendChild(acc);l.appendChild(ref);
+        }else{const info=document.createElement("small");info.style.cssText="color:var(--muted);flex:0 0 100%;";info.textContent=m.user_id===uid?"En attente de l'accord de tous les membres.":"Ton accord est enregistré. En attente des autres membres.";l.appendChild(info);}
       }
       box.appendChild(l);
     });
@@ -1974,17 +1927,11 @@
   async function verifierDemandesPourMoi(){
     if(!foyerId) return;
     const demandes=await chargerDemandesEnCours();
-    const pourMoi=demandes.find(d=>d.cible_user_id===uid);
+    const pourMoi=demandes.find(d=>d.cible_user_id===uid && d.type==="reset");
     if(!pourMoi) return;
     let nomDemandeur="Un membre";
     try{ const r=await sb.from("profils").select("pseudo").eq("id",pourMoi.demandeur_user_id).maybeSingle(); if(r.data && r.data.pseudo) nomDemandeur=r.data.pseudo; }catch(e){}
-    if(estDemandeAdmission(pourMoi)){
-      const joiner=pourMoi.demandeur_user_id;
-      $("depart-titre").textContent="Demande d'accès au partage";
-      $("depart-texte").textContent=nomDemandeur+" souhaite rejoindre la sauvegarde commune. Il/elle n'aura accès qu'aux transactions créées après son arrivée, et seulement une fois que tous les membres actuels ont accepté.";
-      $("depart-refuser").onclick=async()=>{ await refuserAdmission(joiner); $("depart-overlay").style.display="none"; rafraichirEtatPartage(); };
-      $("depart-accepter").onclick=async()=>{ await accepterAdmission(joiner); $("depart-overlay").style.display="none"; rafraichirEtatPartage(); };
-    } else if(pourMoi.type==="reset"){
+    if(pourMoi.type==="reset"){
       $("depart-titre").textContent="Demande de réinitialisation";
       $("depart-texte").textContent=nomDemandeur+" souhaite réinitialiser complètement les données de ce partage commun (tout effacer). Es-tu d'accord ?";
       $("depart-refuser").onclick=async()=>{
@@ -4178,6 +4125,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Retirer foyer_demandes du parcours admission":"v1.22.6",
         "Autoriser la suppression des archives de partage":"v1.22.5",
         "Fiabiliser les admissions et annuler sans copie avant acces":"v1.22.4",
         "Supprimer la hierarchie des membres du partage":"v1.22.3",
