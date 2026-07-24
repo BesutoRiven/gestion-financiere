@@ -391,6 +391,11 @@
 
     .cat-ligne .emoji-in{width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; border:1px solid var(--border); border-radius:8px; padding:4px; background:var(--surface); color:var(--text); cursor:pointer;}
     .cat-ligne .color-in{width:34px; height:34px; flex:0 0 auto; border:none; padding:0; border-radius:8px; overflow:hidden; background:none; cursor:pointer;}
+    .cat-bloc{border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:6px;}
+    .cat-bloc:last-child{border-bottom:none;}
+    .cat-groupe-sel{flex:0 0 auto; max-width:104px; border:1px solid var(--border); border-radius:8px; padding:6px 2px; font-size:11px; font-family:inherit; background:var(--surface); color:var(--text);}
+    .cat-sous-toggle{flex:0 0 auto; border:none; background:transparent; color:var(--muted); font-size:14px; cursor:pointer; padding:4px 6px;}
+    .cat-sous-panel{padding-left:30px;}
     .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); animation:fadeSlideUp .18s ease;}
     .swatch-chip{width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer;}
     .swatch-custom{width:100%; height:34px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
@@ -574,25 +579,45 @@
         <summary><span class="sum-ico"><span data-ico="gestion"></span><span>Gestion</span></span></summary>
         <div class="det-corps" style="padding:0;">
           <details class="det-nested">
-            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Catégories</span></span></summary>
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Investissement</span></span></summary>
             <div class="det-corps">
-              <div id="cats-liste"></div>
+              <div id="cats-liste-investissement"></div>
               <div class="cat-ligne" style="margin-top:12px;">
-                <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
-                <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
+                <input id="nouvelle-cat-investissement" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-investissement" style="color:var(--accent); font-size:22px;">＋</button>
               </div>
-              <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ». L'émoji et la couleur sont modifiables directement sur chaque ligne.</small>
+              <small class="aide">Glisse ⠿ pour réordonner dans ce groupe · le sélecteur change une catégorie de groupe · ▾ ouvre ses sous-catégories.</small>
             </div>
           </details>
           <details class="det-nested">
-            <summary><span class="sum-ico"><span data-ico="souscat"></span><span>Sous-catégories</span></span></summary>
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Dépenses fixes</span></span></summary>
             <div class="det-corps">
-              <div class="dd" id="dd-cat-sous"><button type="button" class="dd-btn vide">Choisir une catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
-              <div id="sous-liste" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
-              <div class="cat-ligne" style="margin-top:8px;">
-                <input id="nouvelle-sous" type="text" placeholder="Nouvelle sous-catégorie" />
-                <button id="ajouter-sous" style="color:var(--accent); font-size:22px;">＋</button>
+              <div id="cats-liste-fixe"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouvelle-cat-fixe" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-fixe" style="color:var(--accent); font-size:22px;">＋</button>
               </div>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Dépenses variables</span></span></summary>
+            <div class="det-corps">
+              <div id="cats-liste-variable"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouvelle-cat-variable" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-variable" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+            </div>
+          </details>
+          <details class="det-nested">
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Liste de souhaits</span></span></summary>
+            <div class="det-corps">
+              <div id="cats-liste-souhaits"></div>
+              <div class="cat-ligne" style="margin-top:12px;">
+                <input id="nouvelle-cat-souhaits" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-souhaits" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
+              <small class="aide">Renommer met à jour les dépenses existantes. Supprimer reclasse ses dépenses dans « Divers ».</small>
             </div>
           </details>
           <details class="det-nested">
@@ -1106,6 +1131,15 @@
     "Divers":["Virement banque","Administration","Bouquet de fleur","Remboursement","Urssaf","Investissement"],
   };
   const MOYENS_DEFAUT = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
+  // Groupes de catégories (Gestion > Investissement/Dépenses fixes/Dépenses variables/Liste de souhaits)
+  const GROUPES_CAT = ["investissement","fixe","variable","souhaits"];
+  const GROUPES_CAT_LABEL = {investissement:"Investissement", fixe:"Dépenses fixes", variable:"Dépenses variables", souhaits:"Liste de souhaits"};
+  const GROUPE_DEFAUT_CAT = {
+    "Logement":"fixe", "Alim. & Courses":"variable", "Déplacements":"variable", "Santé":"fixe",
+    "Animaux":"variable", "Numér. & Tech.":"fixe", "Shopping":"variable", "Loisirs":"variable",
+    "Voyages":"variable", "Divers":"variable"
+  };
+  const groupeCat = cat => cat.groupe || GROUPE_DEFAUT_CAT[cat.nom] || "variable";
   // Catégorie spéciale "Dépense" : toujours disponible, invisible dans les réglages
   const DEP_SIMPLE = {nom:"Dépense", bg:"#eef0ee", fg:"#5a6560", emoji:"divers"};
   const REVTYPES_DEFAUT = [{nom:"Auto-entrep.",cotisation:0},{nom:"Salaire",cotisation:0},{nom:"Freelance",cotisation:0},{nom:"Prime",cotisation:0},{nom:"Autre",cotisation:0}];
@@ -1185,7 +1219,7 @@
 
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let modeInvite=false; // true = utilisateur invité (données locales seulement, non synchronisées)
-  let depenses=[], categories=[], souscats={}, souscatSel=null, participants=[];
+  let depenses=[], categories=[], souscats={}, participants=[];
   let budCat={}, budMode="mois", budDate=new Date();
   let remboursements=[], filtreTxn="tout";
   let revenus=[], revtypes=[], revTypeSel=null;
@@ -1691,7 +1725,7 @@
     appliquerPeriodeParDefaut();
   }
   function rafraichirVueCourante(){
-    rendreDepenses(); rendreCategories(); rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig();
+    rendreDepenses(); rendreCategories(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreDeviseListeReglages(); majIconeRevenu(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig();
     if($("vue-accueil").style.display!=="none") rendreAccueil();
     if($("vue-budget").style.display!=="none") rendreBudget();
   }
@@ -3409,25 +3443,76 @@
       };
     });
   }
+  function construireSousPanel(nomCatRef){
+    const wrap=document.createElement("div"); wrap.className="cat-sous-panel";
+    const liste=document.createElement("div");
+    function rendre(){
+      liste.innerHTML="";
+      const arr=souscats[nomCatRef.nom]||[];
+      if(!arr.length){ liste.innerHTML='<small class="aide">Aucune sous-catégorie.</small>'; }
+      else {
+        arr.forEach((s,i)=>{
+          const l=document.createElement("div"); l.className="cat-ligne glisser-ligne";
+          const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
+          const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
+          const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
+          del.onclick=()=>{ souscats[nomCatRef.nom].splice(i,1); sauverSous(); rendre(); };
+          l.appendChild(poignee); l.appendChild(span); l.appendChild(del); liste.appendChild(l);
+        });
+        activerGlisser(liste, souscats[nomCatRef.nom], ()=>{ sauverSous(); rendre(); });
+      }
+    }
+    rendre();
+    const ligneAjout=document.createElement("div"); ligneAjout.className="cat-ligne"; ligneAjout.style.marginTop="6px";
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder="Nouvelle sous-catégorie";
+    const btn=document.createElement("button"); btn.textContent="＋"; btn.style.cssText="color:var(--accent); font-size:22px;";
+    btn.onclick=()=>{ const v=inp.value.trim(); if(!v) return;
+      souscats[nomCatRef.nom]=souscats[nomCatRef.nom]||[];
+      if(souscats[nomCatRef.nom].some(x=>x.toLowerCase()===v.toLowerCase())){ alert("Cette sous-catégorie existe déjà."); return; }
+      souscats[nomCatRef.nom].push(v); inp.value=""; sauverSous(); rendre();
+    };
+    ligneAjout.appendChild(inp); ligneAjout.appendChild(btn);
+    wrap.appendChild(liste); wrap.appendChild(ligneAjout);
+    wrap.rendre=rendre;
+    return wrap;
+  }
   function rendreCategories(){
-    const box=$("cats-liste");box.innerHTML="";
-    categories.forEach((cat,idx)=>{
-      const ligne=document.createElement("div");ligne.className="cat-ligne glisser-ligne";
-      const poignee=document.createElement("span");poignee.className="glisser-poignee";poignee.textContent="⠿";
-      const emo=document.createElement("button");emo.type="button";emo.className="emoji-in";emo.innerHTML=badgeIconeCat(cat,20);emo.setAttribute("aria-label","Choisir une icone");
-      emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); ouvrirIconePicker(cat, emo); };
-      const coul=document.createElement("input");coul.type="color";coul.className="color-in";coul.value=cat.fg||"#888888";
-      coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
-      coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
-      const inp=document.createElement("input");inp.type="text";inp.value=cat.nom;inp.onchange=()=>renommerCat(idx,inp.value.trim());
-      const del=document.createElement("button");del.textContent="×";del.onclick=()=>supprimerCat(idx);
-      ligne.appendChild(poignee);ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);ligne.appendChild(del);box.appendChild(ligne);});
-    activerGlisser(box, categories, ()=>{ sauverCat(); rendreCategories(); rendreBudGestion(); });
+    GROUPES_CAT.forEach(g=>{
+      const box=$("cats-liste-"+g); if(!box) return; box.innerHTML="";
+      const arr=categories.filter(c=>groupeCat(c)===g);
+      if(!arr.length){ box.innerHTML='<small class="aide">Aucune catégorie dans ce groupe pour l\'instant.</small>'; }
+      arr.forEach(cat=>{
+        const idxReel=categories.indexOf(cat);
+        const bloc=document.createElement("div"); bloc.className="cat-bloc glisser-ligne";
+        const ligne=document.createElement("div"); ligne.className="cat-ligne";
+        const poignee=document.createElement("span");poignee.className="glisser-poignee";poignee.textContent="⠿";
+        const emo=document.createElement("button");emo.type="button";emo.className="emoji-in";emo.innerHTML=badgeIconeCat(cat,20);emo.setAttribute("aria-label","Choisir une icone");
+        emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); ouvrirIconePicker(cat, emo); };
+        const coul=document.createElement("input");coul.type="color";coul.className="color-in";coul.value=cat.fg||"#888888";
+        coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
+        coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
+        const inp=document.createElement("input");inp.type="text";inp.value=cat.nom;inp.onchange=()=>renommerCat(categories.indexOf(cat),inp.value.trim());
+        const sel=document.createElement("select"); sel.className="cat-groupe-sel";
+        GROUPES_CAT.forEach(gg=>{ const o=document.createElement("option"); o.value=gg; o.textContent=GROUPES_CAT_LABEL[gg]; if(gg===g) o.selected=true; sel.appendChild(o); });
+        sel.onchange=()=>{ cat.groupe=sel.value; sauverCat(); rendreCategories(); };
+        const toggle=document.createElement("button"); toggle.type="button"; toggle.className="cat-sous-toggle"; toggle.textContent="▾"; toggle.setAttribute("aria-label","Sous-catégories");
+        const del=document.createElement("button");del.textContent="×";del.onclick=()=>supprimerCat(categories.indexOf(cat));
+        ligne.appendChild(poignee);ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);ligne.appendChild(sel);ligne.appendChild(toggle);ligne.appendChild(del);
+        bloc.appendChild(ligne);
+        const panel=construireSousPanel(cat); panel.style.display="none";
+        toggle.onclick=()=>{ const ouvert=panel.style.display!=="none"; panel.style.display=ouvert?"none":"block"; toggle.textContent=ouvert?"▾":"▴"; };
+        bloc.appendChild(panel);
+        box.appendChild(bloc);
+      });
+      activerGlisser(box, arr, ()=>{
+        const nouvelOrdre=[]; GROUPES_CAT.forEach(gr=> nouvelOrdre.push(...(gr===g? arr : categories.filter(c=>groupeCat(c)===gr))));
+        categories=nouvelOrdre; sauverCat(); rendreCategories(); rendreBudGestion();
+      });
+    });
   }
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
     categories[idx].nom=nv;
     if(souscats[anc]){souscats[nv]=souscats[anc];delete souscats[anc];sauverSous();}
-    if(souscatSel===anc){souscatSel=nv;rendreSousListe();}
     if(budCat[anc]){budCat[nv]=budCat[anc];delete budCat[anc];}
     sauverCat();rendreCategories();rendreBudGestion();rendreDepenses();rendreBudget();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
@@ -3437,11 +3522,15 @@
     categories.splice(idx,1);
     delete budCat[nom];
     sauverCat();rendreCategories();rendreDepenses();rendreBudget();rendreBudGestion();}
-  $("ajouter-cat").onclick=()=>{const nom=$("nouvelle-cat").value.trim();if(!nom)return;
-    if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){alert("Cette catégorie existe déjà.");return;}
-    const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom,bg:coul.bg,fg:coul.fg,emoji:""});
-    souscats[nom]=souscats[nom]||[];sauverSous();
-    $("nouvelle-cat").value="";sauverCat();rendreCategories();rendreBudGestion();};
+  GROUPES_CAT.forEach(g=>{
+    const btn=$("ajouter-cat-"+g), inp=$("nouvelle-cat-"+g);
+    if(!btn||!inp) return;
+    btn.onclick=()=>{const nom=inp.value.trim();if(!nom)return;
+      if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){alert("Cette catégorie existe déjà.");return;}
+      const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom,bg:coul.bg,fg:coul.fg,emoji:"",groupe:g});
+      souscats[nom]=souscats[nom]||[];sauverSous();
+      inp.value="";sauverCat();rendreCategories();rendreBudGestion();};
+  });
 
   // ---- Participants ----
   function rendreParticipants(){
@@ -3460,30 +3549,6 @@
     const nom=$("nouveau-part").value.trim(); if(!nom) return;
     if(participants.some(p=>p.toLowerCase()===nom.toLowerCase())){ alert("Ce participant existe déjà."); return; }
     participants.push(nom); $("nouveau-part").value=""; sauverCloud(); rendreParticipants();
-  };
-
-  // Sous-catégories
-  function rendreSousListe(){
-    const box=$("sous-liste"); box.innerHTML="";
-    if(!souscatSel){ box.innerHTML='<small class="aide">Choisis une catégorie ci-dessus pour voir/modifier ses sous-catégories.</small>'; return; }
-    const arr=souscats[souscatSel]||[];
-    if(!arr.length){ box.innerHTML='<small class="aide">Aucune sous-catégorie pour « '+souscatSel+' ».</small>'; return; }
-    arr.forEach((s,i)=>{
-      const l=document.createElement("div"); l.className="cat-ligne glisser-ligne";
-      const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
-      const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
-      const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
-      del.onclick=()=>{ souscats[souscatSel].splice(i,1); sauverSous(); rendreSousListe(); };
-      l.appendChild(poignee); l.appendChild(span); l.appendChild(del); box.appendChild(l);
-    });
-    activerGlisser(box, arr, ()=>{ sauverSous(); rendreSousListe(); });
-  }
-  $("ajouter-sous").onclick=()=>{
-    const v=$("nouvelle-sous").value.trim(); if(!v)return;
-    if(!souscatSel){ alert("Choisis d'abord une catégorie."); return; }
-    souscats[souscatSel]=souscats[souscatSel]||[];
-    if(souscats[souscatSel].some(x=>x.toLowerCase()===v.toLowerCase())){ alert("Cette sous-catégorie existe déjà."); return; }
-    souscats[souscatSel].push(v); $("nouvelle-sous").value=""; sauverSous(); rendreSousListe();
   };
 
   // ================= Sauvegarde complète (export/import de tout) =================
@@ -3818,7 +3883,7 @@
     sauverDep(); sauverSous();
     $("zone-import").value="";
     msgIE(n+" dépense(s) importée(s) avec leur date et catégorie.","ok");
-    rendreDepenses(); rendreCategories(); rendreSousListe();
+    rendreDepenses(); rendreCategories();
   };
   function msgIE(t,ty){$("msg-impexp").innerHTML='<div class="message '+ty+'" style="margin-top:10px;">'+t+'</div>';}
 
@@ -4124,6 +4189,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Regrouper les categories en Investissement/Fixes/Variables/Souhaits":"v1.22.8",
         "Ajuster la gestion des archives et les reglages Plus":"v1.22.7",
         "Retirer foyer_demandes du parcours admission":"v1.22.6",
         "Autoriser la suppression des archives de partage":"v1.22.5",
@@ -4343,11 +4409,10 @@
     ddSous=initDD("dd-sous",()=>souscats[rCat]||[],v=>{rSous=v; rendreBudgetSelectionTicket();});
     ddPay=initDD("dd-pay",()=>moyensPaiement,v=>{rPay=v;});
     ddPart=initDD("dd-part",()=>participants,v=>{rPart=v;});
-    initDD("dd-cat-sous",()=>categories.map(c=>c.nom),v=>{souscatSel=v;rendreSousListe();});
     ddRevType=initDD("dd-revtype",()=>revtypes.map(t=>t.nom),v=>{rType=v; rCotCourante=cotisationDuType(v); rendreCotAffichage(); calcNet();});
     majBudgetPrefSelect();
     $("budget-pref-select").onchange=e=>{ setHomeBudgetMode(e.target.value); rendreAccueil(); rendreBudget(); rendreDepenses(); rendreBudgetSelectionTicket(); };
-    rendreSousListe(); rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig(); majEtatSousCategorie();
+    rendreRevTypes(); rendreParticipants(); rendreBudGestion(); rendreMoyens(); rendreRecur(); rendreOptions(); rendreEnveloppesConfig(); majEtatSousCategorie();
     // Fond d'écran
     function majPastilles(){
       const actuel=themeActuel();
