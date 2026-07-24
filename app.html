@@ -2140,14 +2140,15 @@
     if(!tousNoms.length || total<=0){ wrap.style.display="none"; if(legende) legende.innerHTML=""; return; }
     const top5=tousNoms.slice(0,5);
     const totalTop5=top5.reduce((s,n)=>s+parCat[n],0);
-    const GAP=1.1; // % de la circonférence par séparation (~5px de blanc entre les parts)
+    const GAP=2.2; // % de la circonférence par séparation (~10px, bien visible même entre teintes pastel proches)
+    const coulFond=getComputedStyle(document.documentElement).getPropertyValue("--surface").trim()||"#1c2126";
     const dispo=top5.length>1 ? 100-GAP*top5.length : 100;
     let acc=0; const parts=[];
     top5.forEach(n=>{
       const col=couleursDe(n).fg||"#888";
       const part=totalTop5>0 ? parCat[n]/totalTop5*dispo : 0;
       parts.push(col+" "+acc+"% "+(acc+part)+"%"); acc+=part;
-      if(top5.length>1){ parts.push("transparent "+acc+"% "+(acc+GAP)+"%"); acc+=GAP; }
+      if(top5.length>1){ parts.push(coulFond+" "+acc+"% "+(acc+GAP)+"%"); acc+=GAP; }
     });
     $("rep-donut-cercle").style.background="conic-gradient("+parts.join(",")+")";
     $("rep-donut-total").textContent=fmt(total);
@@ -4378,6 +4379,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Separation du donut plus visible (couleur de fond opaque au lieu de transparent)":"v1.22.15",
         "Donut top 5 avec separation, legende indicative, retrait perso sous-categories":"v1.22.14",
         "Correction z-index pickers, icones/couleurs sous-categories, drag fluide, page Plus en grille, recurrentes avec limite":"v1.22.13",
         "Glisser categories entre groupes, toggle sous-categories deplace dans le menu Categorie":"v1.22.12",
