@@ -486,8 +486,8 @@
       </div>
 
       <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin:12px 12px 0; flex-wrap:wrap;">
-        <button id="btn-tout-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; align-items:center; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
         <button id="btn-suppr-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; height:28px; padding:0 12px; border-radius:14px; color:var(--danger); border-color:var(--danger); font-size:12px;">Supprimer (<span id="gestion-compte">0</span>)</button>
+        <button id="btn-tout-selection" class="btn-ligne" style="display:none; width:auto; margin-top:0; flex:0 0 auto; align-items:center; height:28px; padding:0 12px; border-radius:14px; font-size:12px;">Tout sélectionner</button>
         <span style="font-size:12px; color:var(--muted); font-weight:600;">Gérer</span>
         <button id="btn-gestion-toggle" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le mode gestion"><span class="knob"></span></button>
       </div>
@@ -543,7 +543,6 @@
       <div class="topbar"><h1>Plus</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><button class="tb-amis" aria-label="Amis"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6M17.5 19a5.5 5.5 0 0 0-3-4.9"/></svg></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
       <div class="bloc menu-lien" id="ouvrir-perso"><span class="sum-ico" style="font-weight:600;"><span data-ico="perso"></span><span>Personnalisation</span></span><span class="chev">›</span></div>
-      <div class="bloc menu-lien" id="ouvrir-donnees"><span class="sum-ico" style="font-weight:600;"><span data-ico="donnees"></span><span>Données</span></span><span class="chev">›</span></div>
 
       <div class="bloc" id="bloc-fond">
         <span class="sum-ico" style="font-weight:600;"><span data-ico="fond"></span><span>Fond décran</span></span>
@@ -562,7 +561,7 @@
         <input id="fichier-fond" type="file" accept="image/*" style="display:none;" />
         <div id="msg-fond"></div>
       </div>
-      <details class="bloc det">
+      <details class="bloc det" id="bloc-devise">
         <summary><span class="sum-ico"><span data-ico="devise"></span><span>Devise par défaut</span></span></summary>
         <div class="det-corps">
           <small class="aide">Utilisée dans le Résumé et le Budget. Une devise différente reste possible transaction par transaction.</small>
@@ -2927,7 +2926,7 @@
           const liees=rembLiees(d.id);
           const tagArch = d.arch ? '<span class="arch-tag">Archivé · '+d.arch+'</span>' : "";
           l.innerHTML='<div class="info"><div class="titre">'+titre+partBadge+tagArch+'</div>'+(sous?'<div class="sous">'+sous+'</div>':'')+'</div><div class="mnt">'+fmtDev(d.montant,d.devise)+'</div>';
-          if(d.arch){ l.classList.add("archive"); const bx=document.createElement("button"); bx.className="del"; bx.textContent="×"; bx.title="Supprimer cette archive"; bx.onclick=async()=>{ if(!confirmDouble("Supprimer définitivement cette dépense archivée ?")) return; if(d.photo)await photoDel(d.id); depenses=depenses.filter(x=>x.id!==d.id); sauverDep(); rendreDepenses(); }; l.appendChild(bx); liste.appendChild(l); return; } // archive : suppression autorisée, modification interdite
+          if(d.arch){ l.classList.add("archive"); if(modeGestion){ const bx=document.createElement("button"); bx.className="act"; bx.style.color="var(--danger)"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer cette archive"); bx.onclick=async()=>{ if(!confirmDouble("Supprimer définitivement cette dépense archivée ?")) return; if(d.photo)await photoDel(d.id); depenses=depenses.filter(x=>x.id!==d.id); sauverDep(); rendreDepenses(); }; l.appendChild(bx); } liste.appendChild(l); ligneCase("dep:"+d.id,l); return; } // archive : suppression en mode Gérer, modification interdite
           if(liees.length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
           if(d.photo){const p=document.createElement("button");p.className="act photo-ic";p.innerHTML=ICONES_UI.fond;p.setAttribute("aria-label","Voir la photo");p.onclick=()=>voirPhoto(d.id);l.appendChild(p);}
           const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRecu(d.id);
@@ -2950,7 +2949,7 @@
         const titre=r.description||r.type||"Revenu";
         const tagArchR = r.arch ? '<span class="arch-tag">Archivé · '+r.arch+'</span>' : "";
         l.innerHTML='<div class="info"><div class="titre">'+titre+tagArchR+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
-        if(r.arch){ l.classList.add("archive"); const bx=document.createElement("button"); bx.className="del"; bx.textContent="×"; bx.title="Supprimer cette archive"; bx.onclick=()=>{ if(!confirmDouble("Supprimer définitivement ce revenu archivé ?")) return; revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreDepenses(); }; l.appendChild(bx); liste.appendChild(l); return; }
+        if(r.arch){ l.classList.add("archive"); if(modeGestion){ const bx=document.createElement("button"); bx.className="act"; bx.style.color="var(--danger)"; bx.textContent="×"; bx.setAttribute("aria-label","Supprimer cette archive"); bx.onclick=()=>{ if(!confirmDouble("Supprimer définitivement ce revenu archivé ?")) return; revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreDepenses(); }; l.appendChild(bx); } liste.appendChild(l); ligneCase("rev:"+r.id,l); return; }
         const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRev(r.id);
         l.appendChild(be);
         if(modeGestion){
@@ -4125,6 +4124,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Ajuster la gestion des archives et les reglages Plus":"v1.22.7",
         "Retirer foyer_demandes du parcours admission":"v1.22.6",
         "Autoriser la suppression des archives de partage":"v1.22.5",
         "Fiabiliser les admissions et annuler sans copie avant acces":"v1.22.4",
@@ -4228,14 +4228,13 @@
   // ---- Pages Personnalisation / Données (sections déplacées hors de « Plus ») ----
   function relogerSectionsPlus(){
     const perso=$("perso-corps"), donnees=$("donnees-corps");
-    const fond=$("bloc-fond"); if(fond && perso) perso.appendChild(fond);
+    ["bloc-fond","bloc-devise"].forEach(id=>{ const el=$(id); if(el && perso) perso.appendChild(el); });
     ["bloc-import-export","bloc-sauvegarde","bloc-admin"].forEach(id=>{ const el=$(id); if(el && donnees) donnees.appendChild(el); });
   }
   function ouvrirPage(id){ const o=$(id); if(o){ o.classList.add("on"); window.scrollTo(0,0); } }
   function fermerPage(id){ const o=$(id); if(o) o.classList.remove("on"); }
   relogerSectionsPlus();
   if($("ouvrir-perso")) $("ouvrir-perso").onclick=()=>ouvrirPage("perso-overlay");
-  if($("ouvrir-donnees")) $("ouvrir-donnees").onclick=()=>ouvrirPage("donnees-overlay");
   if($("perso-retour")) $("perso-retour").onclick=()=>fermerPage("perso-overlay");
   if($("donnees-retour")) $("donnees-retour").onclick=()=>fermerPage("donnees-overlay");
   try{ if(new URLSearchParams(location.search).get("vue")==="donnees") ouvrirPage("donnees-overlay"); }catch(e){}
