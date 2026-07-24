@@ -219,12 +219,12 @@
     details.det[open] > summary .morph .ico-chevron, details.det-nested[open] > summary .morph .ico-chevron{opacity:1; transform:scale(1) rotate(0deg);}
     details.det[open] > summary .icon-anim, details.det-nested[open] > summary .icon-anim{color:var(--accent);}
 
-    /* Icone Gestion : morph hamburger <-> chevron bas, pilote par [open] */
+    /* Icone Gestion : morph hamburger <-> chevron bas, pilote par la classe .open (page plein ecran, pas un details) */
     .menu-morph .menu-bars{transform-origin:center; transition:opacity .22s ease, transform .22s ease;}
     .menu-morph .menu-chevron{transform-origin:center; opacity:0; transform:scale(.4) rotate(-90deg); transition:opacity .22s ease, transform .22s ease;}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .menu-bars{opacity:0; transform:scale(.4) rotate(90deg);}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph .menu-chevron{opacity:1; transform:scale(1) rotate(0deg);}
-    #bloc-gestion[open] [data-ico="gestion"] .menu-morph{color:var(--accent);}
+    #ouvrir-gestion.open [data-ico="gestion"] .menu-morph .menu-bars{opacity:0; transform:scale(.4) rotate(90deg);}
+    #ouvrir-gestion.open [data-ico="gestion"] .menu-morph .menu-chevron{opacity:1; transform:scale(1) rotate(0deg);}
+    #ouvrir-gestion.open [data-ico="gestion"] .menu-morph{color:var(--accent);}
 
     /* Icone Personnalisation : meme morph que Gestion, pilote par la classe .open (page plein ecran, pas un details) */
     #ouvrir-perso.open [data-ico="perso"] .morph .ico-shape{opacity:0; transform:scale(.4) rotate(90deg);}
@@ -408,7 +408,6 @@
     .cat-bloc{border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:6px;}
     .cat-bloc:last-child{border-bottom:none;}
     .cat-bloc > .cat-ligne{flex-wrap:wrap;}
-    .cat-groupe-sel{flex:1 1 100%; max-width:none; margin-top:2px; border:1px solid var(--border); border-radius:8px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--surface); color:var(--text);}
     .cat-sous-toggle{flex:0 0 auto; border:none; background:transparent; color:var(--muted); font-size:14px; cursor:pointer; padding:4px 6px;}
     .cat-sous-panel{padding-left:30px;}
     .env-ligne{flex-wrap:wrap;}
@@ -443,6 +442,7 @@
     .switch-sm{width:34px; height:20px;}
     .switch-sm .knob{width:16px; height:16px; top:2px; left:2px;}
     .switch-sm.on .knob{transform:translateX(14px);}
+    .switch.disabled{opacity:.4; cursor:not-allowed; pointer-events:none;}
 
     .actions3{display:flex; gap:10px; margin:14px 12px 0; justify-content:space-around;}
     .actions3 button{background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text); font-size:12px; flex:1;}
@@ -557,15 +557,19 @@
           <h2 id="rep-titre" style="margin:0;">Ce mois, par catégorie</h2>
           <button type="button" id="res-edit-categories" aria-label="Modifier les catégories" title="Modifier les catégories" style="border:none; background:var(--accent-soft); color:var(--accent); border-radius:10px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto; font-size:14px;">✎</button>
         </div>
-        <div class="donut-wrap" id="rep-donut" style="display:none;">
-          <div class="donut" id="rep-donut-cercle"></div>
-          <div class="donut-centre">
-            <div class="donut-total" id="rep-donut-total"></div>
-            <div class="donut-label">Dépenses</div>
+        <div style="display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+          <div class="donut-wrap" id="rep-donut" style="display:none; margin:6px 0;">
+            <div class="donut" id="rep-donut-cercle"></div>
+            <div class="donut-centre">
+              <div class="donut-total" id="rep-donut-total"></div>
+              <div class="donut-label">Dépenses</div>
+            </div>
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <div id="repartition"></div>
+            <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense sur cette période.</p>
           </div>
         </div>
-        <div id="repartition"></div>
-        <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense sur cette période.</p>
       </div>
     </section>
 
@@ -601,30 +605,42 @@
         </div>
       </details>
 
-      <details class="bloc det" id="bloc-gestion">
-        <summary><span class="sum-ico"><span data-ico="gestion"></span><span>Gestion</span></span></summary>
-        <div class="det-corps" style="padding:0;">
+      <div class="bloc menu-lien" id="ouvrir-gestion"><span class="sum-ico" style="font-weight:600;"><span data-ico="gestion"></span><span>Gestion</span></span><span class="chev">›</span></div>
+      <div class="det-corps" id="gestion-liste" style="padding:0;">
           <details class="det-nested" id="bloc-categories">
             <summary>
               <span class="sum-ico" style="flex:1;">
                 <span data-ico="categories"></span><span>Catégorie</span>
-                <button type="button" id="toggle-souscat-gestion" class="switch switch-sm on" role="switch" aria-checked="true" aria-label="Afficher les sous-catégories" title="Afficher les sous-catégories" style="margin-left:auto; margin-right:8px;"><span class="knob"></span></button>
+                <button type="button" id="toggle-souscat-gestion" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Afficher les sous-catégories" title="Afficher les sous-catégories" style="margin-left:auto; margin-right:8px;"><span class="knob"></span></button>
               </span>
             </summary>
             <div class="det-corps">
+              <small class="aide">Ce réglage affiche, pour chaque catégorie, un panneau ▾ où gérer ses sous-catégories. Désactivé par défaut.</small>
               <div class="cat-groupe-titre"><span data-ico="groupeinvest"></span><span>Investissement</span></div>
               <div id="cats-liste-investissement" class="cat-groupe"></div>
+              <div class="cat-ligne" style="margin-top:8px;">
+                <input id="nouvelle-cat-investissement" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-investissement" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
               <div class="cat-groupe-titre"><span data-ico="groupefixe"></span><span>Obligations</span></div>
               <div id="cats-liste-fixe" class="cat-groupe"></div>
+              <div class="cat-ligne" style="margin-top:8px;">
+                <input id="nouvelle-cat-fixe" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-fixe" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
               <div class="cat-groupe-titre"><span data-ico="groupevariable"></span><span>Flexibles</span></div>
               <div id="cats-liste-variable" class="cat-groupe"></div>
+              <div class="cat-ligne" style="margin-top:8px;">
+                <input id="nouvelle-cat-variable" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-variable" style="color:var(--accent); font-size:22px;">＋</button>
+              </div>
               <div class="cat-groupe-titre"><span data-ico="groupesouhaits"></span><span>Liste de souhaits</span></div>
               <div id="cats-liste-souhaits" class="cat-groupe"></div>
-              <div class="cat-ligne" style="margin-top:12px;">
-                <input id="nouvelle-cat" type="text" placeholder="Nouvelle catégorie" />
-                <button id="ajouter-cat" style="color:var(--accent); font-size:22px;">＋</button>
+              <div class="cat-ligne" style="margin-top:8px;">
+                <input id="nouvelle-cat-souhaits" type="text" placeholder="Nouvelle catégorie" />
+                <button id="ajouter-cat-souhaits" style="color:var(--accent); font-size:22px;">＋</button>
               </div>
-              <small class="aide">Glisse ⠿ pour réordonner · le sélecteur change une catégorie de groupe · ▾ ouvre ses sous-catégories · renommer met à jour les dépenses existantes · supprimer reclasse ses dépenses dans « Divers ».</small>
+              <small class="aide">Glisse ⠿ pour réordonner · ▾ ouvre ses sous-catégories · renommer met à jour les dépenses existantes · supprimer reclasse ses dépenses dans « Divers ».</small>
             </div>
           </details>
           <details class="det-nested">
@@ -683,11 +699,6 @@
                 <span style="font-size:13px; font-weight:600;">Détailler aussi par sous-catégorie</span>
                 <button id="toggle-bud-souscat" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le budget par sous-catégorie"><span class="knob"></span></button>
               </div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
-                <span style="font-size:13px; font-weight:600;">Sous-Catégories</span>
-                <button id="toggle-souscat-budget" class="switch switch-sm on" role="switch" aria-checked="true" aria-label="Afficher les sous-catégories dans Gestion"><span class="knob"></span></button>
-              </div>
-              <small class="aide">Active ou désactive l'affichage des sous-catégories dans Gestion &gt; Catégorie.</small>
               <div id="bud-gestion-liste" style="margin-top:10px;"></div>
             </div>
           </details>
@@ -713,8 +724,7 @@
               </div>
             </div>
           </details>
-        </div>
-      </details>
+      </div>
 
 
       <details class="bloc det" id="bloc-import-export">
@@ -1097,6 +1107,12 @@
       </details>
     </section>
 
+    <!-- ============ PAGE GESTION ============ -->
+    <div id="gestion-overlay" class="page-overlay">
+      <div class="page-tete"><button id="gestion-retour" aria-label="Retour">&#8249;</button><h1 style="font-size:18px; margin:0;">Gestion</h1></div>
+      <div class="page-corps" id="gestion-corps"></div>
+    </div>
+
     <!-- ============ PAGE PERSONNALISATION ============ -->
     <div id="perso-overlay" class="page-overlay">
       <div class="page-tete"><button id="perso-retour" aria-label="Retour">&#8249;</button><h1 style="font-size:18px; margin:0;">Personnalisation</h1></div>
@@ -1145,7 +1161,6 @@
   const MOYENS_DEFAUT = ["Carte / sans contact","Espèces","Chèque","Virement","Prélèvement","Autre"];
   // Groupes de catégories (Gestion > Investissement/Dépenses fixes/Dépenses variables/Liste de souhaits)
   const GROUPES_CAT = ["investissement","fixe","variable","souhaits"];
-  const GROUPES_CAT_LABEL = {investissement:"Investissement", fixe:"Obligations", variable:"Flexibles", souhaits:"Liste de souhaits"};
   const GROUPE_DEFAUT_CAT = {
     "Logement":"fixe", "Alim. & Courses":"variable", "Déplacements":"variable", "Santé":"fixe",
     "Animaux":"variable", "Numér. & Tech.":"fixe", "Shopping":"variable", "Loisirs":"variable",
@@ -2043,8 +2058,8 @@
   document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>changerVue(b.dataset.vue));
   function ouvrirGestionCategories(){
     changerVue("reglages");
-    const gestion=$("bloc-gestion"), cats=$("bloc-categories");
-    if(gestion) gestion.open=true;
+    ouvrirPage("gestion-overlay");
+    const cats=$("bloc-categories");
     if(cats) cats.open=true;
     requestAnimationFrame(()=>{ if(cats) cats.scrollIntoView({behavior:"smooth", block:"start"}); });
   }
@@ -2554,7 +2569,7 @@
     const box=$("bud-gestion-liste"); if(!box) return; box.innerHTML="";
     majBudgetPrefSelect();
     const sw=$("toggle-bud-souscat");
-    if(sw){ sw.classList.toggle("on",budgetParSousCat); sw.setAttribute("aria-checked",budgetParSousCat); }
+    if(sw){ sw.classList.toggle("on",budgetParSousCat); sw.setAttribute("aria-checked",budgetParSousCat); sw.classList.toggle("disabled",!sousCatGestionOn()); }
     categories.forEach(cat=>{
       const b=budCat[cat.nom]||{montant:0,unite:"mois"};
       const sousArr=budgetParSousCat?(souscats[cat.nom]||[]):[];
@@ -2731,14 +2746,18 @@
     if(swp){ swp.classList.toggle("on",actifPart); swp.setAttribute("aria-checked",actifPart); }
     $("champ-participant").style.display=actifPart?"block":"none";
     const sousCatOn=sousCatGestionOn();
-    [$("toggle-souscat-gestion"),$("toggle-souscat-budget")].forEach(sw=>{ if(sw){ sw.classList.toggle("on",sousCatOn); sw.setAttribute("aria-checked",sousCatOn); } });
+    const swSousCat=$("toggle-souscat-gestion");
+    if(swSousCat){ swSousCat.classList.toggle("on",sousCatOn); swSousCat.setAttribute("aria-checked",sousCatOn); }
     rendreBudgetSelectionTicket();
   }
   $("toggle-recur-remb").onclick=()=>{ optionsActivees.recurRemb=!optionsActivees.recurRemb; sauverCloud(); rendreOptions(); };
   $("toggle-participant").onclick=()=>{ optionsActivees.participant=!optionsActivees.participant; sauverCloud(); rendreOptions(); };
-  function basculerSousCatGestion(){ optionsActivees.sousCatVisibles=!sousCatGestionOn(); sauverCloud(); rendreOptions(); rendreCategories(); }
+  function basculerSousCatGestion(){
+    optionsActivees.sousCatVisibles=!sousCatGestionOn();
+    if(!optionsActivees.sousCatVisibles) budgetParSousCat=false;
+    sauverCloud(); rendreOptions(); rendreCategories(); rendreBudGestion(); rendreBudget(); rendreBudgetSelectionTicket();
+  }
   $("toggle-souscat-gestion").onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); basculerSousCatGestion(); };
-  $("toggle-souscat-budget").onclick=()=>{ basculerSousCatGestion(); };
 
   function basculerRecurType(type){
     recurTypeSel=type; recurCatSel=null;
@@ -3519,7 +3538,7 @@
     wrap.rendre=rendre;
     return wrap;
   }
-  function sousCatGestionOn(){ return optionsActivees.sousCatVisibles!==false; }
+  function sousCatGestionOn(){ return !!optionsActivees.sousCatVisibles; }
   function rendreCategories(){
     const sousCatOn=sousCatGestionOn();
     GROUPES_CAT.forEach(g=>{
@@ -3537,21 +3556,18 @@
         coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation(); ouvrirSwatchPicker(cat, coul); };
         coul.onchange=()=>{ cat.fg=coul.value; cat.bg=tintClair(coul.value); sauverCat(); rendreCategories(); rendreDepenses(); };
         const inp=document.createElement("input");inp.type="text";inp.value=cat.nom;inp.onchange=()=>renommerCat(categories.indexOf(cat),inp.value.trim());
-        const sel=document.createElement("select"); sel.className="cat-groupe-sel";
-        GROUPES_CAT.forEach(gg=>{ const o=document.createElement("option"); o.value=gg; o.textContent=GROUPES_CAT_LABEL[gg]; if(gg===g) o.selected=true; sel.appendChild(o); });
-        sel.onchange=()=>{ cat.groupe=sel.value; sauverCat(); rendreCategories(); };
         const del=document.createElement("button");del.textContent="×";del.onclick=()=>supprimerCat(categories.indexOf(cat));
         ligne.appendChild(poignee);ligne.appendChild(emo);ligne.appendChild(coul);ligne.appendChild(inp);
         if(sousCatOn){
           const toggle=document.createElement("button"); toggle.type="button"; toggle.className="cat-sous-toggle"; toggle.textContent="▾"; toggle.setAttribute("aria-label","Sous-catégories");
           ligne.appendChild(toggle);
-          ligne.appendChild(del);ligne.appendChild(sel);
+          ligne.appendChild(del);
           bloc.appendChild(ligne);
           const panel=construireSousPanel(cat); panel.style.display="none";
           toggle.onclick=()=>{ const ouvert=panel.style.display!=="none"; panel.style.display=ouvert?"none":"block"; toggle.textContent=ouvert?"▾":"▴"; };
           bloc.appendChild(panel);
         } else {
-          ligne.appendChild(del);ligne.appendChild(sel);
+          ligne.appendChild(del);
           bloc.appendChild(ligne);
         }
         box.appendChild(bloc);
@@ -3574,11 +3590,15 @@
     categories.splice(idx,1);
     delete budCat[nom];
     sauverCat();rendreCategories();rendreDepenses();rendreBudget();rendreBudGestion();}
-  $("ajouter-cat").onclick=()=>{const nom=$("nouvelle-cat").value.trim();if(!nom)return;
-    if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){alert("Cette catégorie existe déjà.");return;}
-    const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom,bg:coul.bg,fg:coul.fg,emoji:"",groupe:"variable"});
-    souscats[nom]=souscats[nom]||[];sauverSous();
-    $("nouvelle-cat").value="";sauverCat();rendreCategories();rendreBudGestion();};
+  GROUPES_CAT.forEach(g=>{
+    const btn=$("ajouter-cat-"+g), inp=$("nouvelle-cat-"+g);
+    if(!btn||!inp) return;
+    btn.onclick=()=>{const nom=inp.value.trim();if(!nom)return;
+      if(categories.some(c=>c.nom.toLowerCase()===nom.toLowerCase())){alert("Cette catégorie existe déjà.");return;}
+      const coul=PALETTE[categories.length%PALETTE.length];categories.push({nom,bg:coul.bg,fg:coul.fg,emoji:"",groupe:g});
+      souscats[nom]=souscats[nom]||[];sauverSous();
+      inp.value="";sauverCat();rendreCategories();rendreBudGestion();};
+  });
 
   // ---- Participants ----
   function rendreParticipants(){
@@ -4237,6 +4257,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Gestion en page pleine, ajout par groupe, toggle sous-categories clarifie, donut Resume a gauche":"v1.22.11",
         "Categorie unifiee avec groupes Investissement/Obligations/Flexibles/Souhaits et toggle sous-categories":"v1.22.10",
         "Corriger debordement categories, icones groupes, cercle depenses et deplacer Amis":"v1.22.9",
         "Regrouper les categories en Investissement/Fixes/Variables/Souhaits":"v1.22.8",
@@ -4343,17 +4364,20 @@
 
   // ---- Pages Personnalisation / Données (sections déplacées hors de « Plus ») ----
   function relogerSectionsPlus(){
-    const perso=$("perso-corps"), donnees=$("donnees-corps");
+    const perso=$("perso-corps"), donnees=$("donnees-corps"), gestion=$("gestion-corps");
     ["bloc-fond","bloc-devise"].forEach(id=>{ const el=$(id); if(el && perso) perso.appendChild(el); });
     ["bloc-import-export","bloc-sauvegarde","bloc-admin"].forEach(id=>{ const el=$(id); if(el && donnees) donnees.appendChild(el); });
+    if(gestion){ const el=$("gestion-liste"); if(el) gestion.appendChild(el); }
   }
-  const DECLENCHEUR_PAGE={"perso-overlay":"ouvrir-perso"};
+  const DECLENCHEUR_PAGE={"perso-overlay":"ouvrir-perso","gestion-overlay":"ouvrir-gestion"};
   function ouvrirPage(id){ const o=$(id); if(o){ o.classList.add("on"); window.scrollTo(0,0); } const t=DECLENCHEUR_PAGE[id]; if(t && $(t)) $(t).classList.add("open"); }
   function fermerPage(id){ const o=$(id); if(o) o.classList.remove("on"); const t=DECLENCHEUR_PAGE[id]; if(t && $(t)) $(t).classList.remove("open"); }
   relogerSectionsPlus();
   if($("ouvrir-perso")) $("ouvrir-perso").onclick=()=>ouvrirPage("perso-overlay");
   if($("perso-retour")) $("perso-retour").onclick=()=>fermerPage("perso-overlay");
   if($("donnees-retour")) $("donnees-retour").onclick=()=>fermerPage("donnees-overlay");
+  if($("ouvrir-gestion")) $("ouvrir-gestion").onclick=()=>ouvrirPage("gestion-overlay");
+  if($("gestion-retour")) $("gestion-retour").onclick=()=>fermerPage("gestion-overlay");
   try{ if(new URLSearchParams(location.search).get("vue")==="donnees") ouvrirPage("donnees-overlay"); }catch(e){}
   document.querySelectorAll(".tb-mode").forEach(b=>b.onclick=async()=>{
     if(!peutAccederCommun()) return;
@@ -4478,7 +4502,7 @@
     // Devise
     rendreDeviseListeReglages();
     majIconeRevenu();
-    // L'icone Gestion (hamburger <-> croix) est pilotee en CSS pur via [data-ico="gestion"] + #bloc-gestion[open]
+    // L'icone Gestion (hamburger <-> croix) est pilotee en CSS pur via [data-ico="gestion"] + #ouvrir-gestion.open
     const meta = session ? (session.user.user_metadata||{}) : {};
     appliquerFondPerso(meta.fond_url || null);
     if($("btn-fond-retirer")) $("btn-fond-retirer").style.display = meta.fond_url ? "inline-block" : "none";
