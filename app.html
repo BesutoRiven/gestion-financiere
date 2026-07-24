@@ -73,7 +73,7 @@
     .cat-move:hover{background:var(--border);}
     .cat-move:disabled{opacity:.25; cursor:default;}
     .glisser-poignee{color:var(--muted); font-size:18px; padding:2px 8px; flex:0 0 auto; cursor:grab; touch-action:none; user-select:none;}
-    .glisser-ligne.glisse-actif{opacity:.5; background:var(--accent-soft); border-radius:10px;}
+    .glisser-ligne.glisse-actif{opacity:.97; background:var(--accent-soft); border-radius:10px; box-shadow:0 10px 22px rgba(0,0,0,.22); position:relative; z-index:5;}
     .impexp textarea{width:100%; min-height:190px; border:1.5px solid var(--border); border-radius:14px; padding:14px; font-family:'Courier New',monospace; font-size:13.5px; line-height:1.6; margin-top:10px; background:var(--bg); color:var(--text); resize:vertical; transition:border-color .15s,box-shadow .15s;}
     .impexp textarea::placeholder{color:var(--muted);}
     .impexp textarea:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
@@ -92,7 +92,7 @@
     .dd-btn{width:100%; height:46px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text); font-size:15px; text-align:left; padding:0 40px 0 14px; cursor:pointer; position:relative; font-family:inherit; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .dd-btn.vide{color:var(--muted);}
     .dd-btn::after{content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--muted);}
-    .dd-panel{position:absolute; left:0; right:0; top:50px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:230px; overflow-y:auto; z-index:60;}
+    .dd-panel{position:absolute; left:0; right:0; top:50px; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:230px; overflow-y:auto; z-index:90;}
     .dd-opt{padding:11px 14px; font-size:15px; cursor:pointer;}
     .dd-opt:hover{background:var(--accent-soft);}
     .dd-opt.on{color:var(--accent); font-weight:600;}
@@ -181,7 +181,7 @@
 
     .cat-ico-badge{display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; vertical-align:middle;}
     .cat-ico-badge svg{width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
-    .icon-panel{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:10px; width:220px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:260px; overflow-y:auto; animation:fadeSlideUp .18s ease;}
+    .icon-panel{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:10px; width:220px; position:absolute; z-index:90; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); max-height:260px; overflow-y:auto; animation:fadeSlideUp .18s ease;}
     .icon-chip{width:34px; height:34px; border-radius:10px; border:2px solid var(--border); background:var(--bg); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:6px;}
     .icon-chip svg{width:100%; height:100%;}
     .icon-chip.on{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
@@ -281,6 +281,13 @@
     .page-corps{padding:4px 0 48px;}
     .menu-lien{display:flex; align-items:center; gap:10px; cursor:pointer;}
     .menu-lien .chev{margin-left:auto; color:var(--muted);}
+    .reglages-grille{display:grid; grid-template-columns:repeat(4,1fr); gap:18px 6px; padding:16px 14px 6px;}
+    .reglages-tuile{display:flex; flex-direction:column; align-items:center; gap:8px; background:none; border:none; cursor:pointer; color:var(--text); font:inherit; padding:0;}
+    .reglages-tuile .tuile-rond{width:56px; height:56px; border-radius:50%; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; transition:background .2s ease, border-color .2s ease;}
+    .reglages-tuile .tuile-rond .icon-anim{width:23px; height:23px;}
+    .reglages-tuile .tuile-label{font-size:11.5px; text-align:center; line-height:1.25; color:var(--text);}
+    .reglages-tuile.open .tuile-rond{background:var(--accent-soft); border-color:var(--accent);}
+    .reglages-tuile.open .tuile-rond .icon-anim{color:var(--accent);}
     .amis-lbl{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin:0 0 6px;}
     .amis-pseudo{font-size:22px; font-weight:700; margin:0;}
     .amis-pseudo .tag{color:var(--muted); font-weight:600;}
@@ -356,6 +363,7 @@
     #verrou-pave button:active{background:var(--accent-soft);}
     #verrou-pave button.verrou-suppr{font-size:16px; color:var(--danger); border:none; background:none;}
     .recur-carte{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin:8px 0;}
+    .recur-carte.recur-terminee{opacity:.55;}
     .recur-tete{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
     .recur-nom{font-weight:600; font-size:14px;}
     .recur-mnt{font-weight:700; font-variant-numeric:tabular-nums;}
@@ -411,7 +419,7 @@
     .cat-sous-toggle{flex:0 0 auto; border:none; background:transparent; color:var(--muted); font-size:14px; cursor:pointer; padding:4px 6px;}
     .cat-sous-panel{padding-left:30px;}
     .env-ligne{flex-wrap:wrap;}
-    .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:50; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); animation:fadeSlideUp .18s ease;}
+    .swatch-panel{display:flex; flex-wrap:wrap; gap:8px; padding:10px; width:186px; position:absolute; z-index:90; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.14); animation:fadeSlideUp .18s ease;}
     .swatch-chip{width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer;}
     .swatch-custom{width:100%; height:34px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
     .color-advanced-panel{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(92vw,360px); z-index:120; background:#352422; color:#f4eeee; border-radius:20px; padding:22px; box-shadow:0 18px 55px rgba(0,0,0,.45);}
@@ -577,7 +585,12 @@
     <section id="vue-reglages" class="vue" style="display:none;">
       <div class="topbar"><h1>Plus</h1><div class="tb-actions"><button class="tb-mode" aria-label="Basculer sauvegarde perso / commune" title="Sauvegarde perso" style="display:none;"></button><a href="profil.html" aria-label="Mon profil"><span class="avatar-mini avatar-slot">…</span></a></div></div>
 
-      <div class="bloc menu-lien" id="ouvrir-perso"><span class="sum-ico" style="font-weight:600;"><span data-ico="perso"></span><span>Personnalisation</span></span><span class="chev">›</span></div>
+      <div class="reglages-grille">
+        <button type="button" class="reglages-tuile" id="ouvrir-perso"><span class="tuile-rond"><span data-ico="perso"></span></span><span class="tuile-label">Personnalisation</span></button>
+        <button type="button" class="reglages-tuile" id="ouvrir-gestion"><span class="tuile-rond"><span data-ico="gestion"></span></span><span class="tuile-label">Gestion</span></button>
+        <button type="button" class="reglages-tuile" id="ouvrir-recurrentes"><span class="tuile-rond"><span data-ico="recurrent"></span></span><span class="tuile-label">Récurrentes</span></button>
+        <button type="button" class="reglages-tuile" id="ouvrir-options"><span class="tuile-rond"><span data-ico="options"></span></span><span class="tuile-label">Options</span></button>
+      </div>
 
       <div class="bloc" id="bloc-fond">
         <span class="sum-ico" style="font-weight:600;"><span data-ico="fond"></span><span>Fond décran</span></span>
@@ -605,7 +618,6 @@
         </div>
       </details>
 
-      <div class="bloc menu-lien" id="ouvrir-gestion"><span class="sum-ico" style="font-weight:600;"><span data-ico="gestion"></span><span>Gestion</span></span><span class="chev">›</span></div>
       <div class="det-corps" id="gestion-liste" style="padding:0;">
           <details class="det-nested" id="bloc-categories">
             <summary><span class="sum-ico"><span data-ico="categories"></span><span>Catégorie</span></span></summary>
@@ -701,28 +713,27 @@
               <div id="bud-gestion-liste" style="margin-top:10px;"></div>
             </div>
           </details>
-          <details class="det-nested">
-            <summary><span class="sum-ico"><span data-ico="recurrent"></span><span>Transactions récurrentes</span></span></summary>
-            <div class="det-corps">
-              <small class="aide">Une dépense ou un revenu de ce type est créé automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé).</small>
-              <div id="recur-liste" style="margin-top:10px;"></div>
-              <div class="recur-toggle">
-                <button type="button" id="recur-type-rev"><span class="recur-toggle-icon icone-revenu-rond">&#36;</span>Revenu</button>
-                <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon">+</span>Dépense</button>
-                <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon">&#8617;</span>Remboursement</button>
-              </div>
-              <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap;">
-                <input id="recur-nom" type="text" placeholder="Nom (ex. Loyer)" style="flex:2 1 120px;" />
-                <input id="recur-montant" type="text" inputmode="decimal" placeholder="Montant" style="flex:1 1 80px;" />
-                <input id="recur-jour" type="number" min="1" max="28" placeholder="Jour" style="flex:0 0 60px;" />
-              </div>
-              <div class="dd" id="dd-recur-cat" style="margin-top:8px;"><button type="button" class="dd-btn vide">Catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
-              <div class="rangee">
-                <button id="ajouter-recur" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">＋ Ajouter la récurrence</button>
-                <button id="recur-annuler-edit" style="display:none;">Annuler</button>
-              </div>
-            </div>
-          </details>
+      </div>
+
+      <div class="bloc" id="bloc-recurrentes">
+        <small class="aide">Une dépense ou un revenu de ce type est créé automatiquement une fois par mois, au jour indiqué (ou dès la prochaine ouverture de l'app si le jour est déjà passé). Le nombre de répétitions est optionnel (ex. 4 pour un paiement en 4 fois) — laisse vide pour une récurrence sans fin.</small>
+        <div id="recur-liste" style="margin-top:10px;"></div>
+        <div class="recur-toggle">
+          <button type="button" id="recur-type-rev"><span class="recur-toggle-icon icone-revenu-rond">&#36;</span>Revenu</button>
+          <button type="button" id="recur-type-dep" class="on"><span class="recur-toggle-icon">+</span>Dépense</button>
+          <button type="button" id="recur-type-remb" style="display:none;"><span class="recur-toggle-icon">&#8617;</span>Remboursement</button>
+        </div>
+        <div class="cat-ligne" style="margin-top:10px; flex-wrap:wrap;">
+          <input id="recur-nom" type="text" placeholder="Nom (ex. Loyer)" style="flex:2 1 120px;" />
+          <input id="recur-montant" type="text" inputmode="decimal" placeholder="Montant" style="flex:1 1 80px;" />
+          <input id="recur-jour" type="number" min="1" max="28" placeholder="Jour" style="flex:0 0 60px;" />
+          <input id="recur-limite" type="number" min="1" placeholder="Répétitions (∞)" style="flex:1 1 100px;" />
+        </div>
+        <div class="dd" id="dd-recur-cat" style="margin-top:8px;"><button type="button" class="dd-btn vide">Catégorie…</button><div class="dd-panel" style="display:none;"></div></div>
+        <div class="rangee">
+          <button id="ajouter-recur" style="background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600;">＋ Ajouter la récurrence</button>
+          <button id="recur-annuler-edit" style="display:none;">Annuler</button>
+        </div>
       </div>
 
 
@@ -751,20 +762,17 @@
         </div>
       </details>
 
-      <details class="bloc det">
-        <summary><span class="sum-ico"><span data-ico="options"></span><span>Options avancées</span></span></summary>
-        <div class="det-corps">
-          <small class="aide">Petites options facultatives, désactivées par défaut.</small>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
-            <span style="font-size:13px; font-weight:600;">Bouton "Remboursement" dans les transactions récurrentes</span>
-            <button id="toggle-recur-remb" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le bouton Remboursement dans les transactions récurrentes"><span class="knob"></span></button>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
-            <span style="font-size:13px; font-weight:600;">Champ "Participant" sur une dépense</span>
-            <button id="toggle-participant" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le champ Participant"><span class="knob"></span></button>
-          </div>
+      <div class="bloc" id="bloc-options">
+        <small class="aide">Petites options facultatives, désactivées par défaut.</small>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+          <span style="font-size:13px; font-weight:600;">Bouton "Remboursement" dans les transactions récurrentes</span>
+          <button id="toggle-recur-remb" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le bouton Remboursement dans les transactions récurrentes"><span class="knob"></span></button>
         </div>
-      </details>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+          <span style="font-size:13px; font-weight:600;">Champ "Participant" sur une dépense</span>
+          <button id="toggle-participant" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Activer le champ Participant"><span class="knob"></span></button>
+        </div>
+      </div>
 
       <details class="bloc det" id="bloc-sauvegarde">
         <summary><span class="sum-ico"><span data-ico="sauvegarde"></span><span>Sauvegarde</span></span></summary>
@@ -1112,6 +1120,18 @@
       <div class="page-corps" id="gestion-corps"></div>
     </div>
 
+    <!-- ============ PAGE TRANSACTIONS RECURRENTES ============ -->
+    <div id="recurrentes-overlay" class="page-overlay">
+      <div class="page-tete"><button id="recurrentes-retour" aria-label="Retour">&#8249;</button><h1 style="font-size:18px; margin:0;">Transactions récurrentes</h1></div>
+      <div class="page-corps" id="recurrentes-corps"></div>
+    </div>
+
+    <!-- ============ PAGE OPTIONS ============ -->
+    <div id="options-overlay" class="page-overlay">
+      <div class="page-tete"><button id="options-retour" aria-label="Retour">&#8249;</button><h1 style="font-size:18px; margin:0;">Options</h1></div>
+      <div class="page-corps" id="options-corps"></div>
+    </div>
+
     <!-- ============ PAGE PERSONNALISATION ============ -->
     <div id="perso-overlay" class="page-overlay">
       <div class="page-tete"><button id="perso-retour" aria-label="Retour">&#8249;</button><h1 style="font-size:18px; margin:0;">Personnalisation</h1></div>
@@ -1245,7 +1265,7 @@
 
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let modeInvite=false; // true = utilisateur invité (données locales seulement, non synchronisées)
-  let depenses=[], categories=[], souscats={}, participants=[];
+  let depenses=[], categories=[], souscats={}, souscatStyles={}, participants=[];
   let budCat={}, budMode="mois", budDate=new Date();
   let remboursements=[], filtreTxn="tout";
   let revenus=[], revtypes=[], revTypeSel=null;
@@ -1342,9 +1362,19 @@
     calculatrice:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/>',
     dossier:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
     tendance:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/>',
-    calendrier:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>'
+    calendrier:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+    assurance:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/>',
+    abonnement:'<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+    cafe:'<path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c0 .9-1 .9-1 1.8M12 3.5c0 .9-1 .9-1 1.8"/>',
+    internet:'<path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.5a6 6 0 0 1 6 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/>',
+    epargne:'<circle cx="12" cy="13" r="7"/><path d="M12 6V4M9 4h6"/><circle cx="9.5" cy="12" r=".8" fill="currentColor" stroke="none"/><path d="M17 10.5l2-1.5"/>',
+    vetements:'<path d="M8 4l4 2 4-2 4 4-3 3v9H7v-9l-3-3 4-4z"/>',
+    bricolage:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/>',
+    parking:'<circle cx="12" cy="12" r="9"/><path d="M9.5 16V8h3a2.5 2.5 0 0 1 0 5h-3"/>',
+    enfant:'<rect x="9" y="8" width="6" height="12" rx="2"/><path d="M9 12h6"/><path d="M10 8V5a2 2 0 0 1 4 0v3"/>',
+    impots:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 3v4h4"/><path d="M9 15l6-6M9.5 10a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4zM14.5 15a.7.7 0 1 0 0-1.4.7.7 0 0 0 0 1.4z"/>'
   };
-  const ICONES_CAT_ORDRE=["logement","alimentation","transport","sante","animaux","tech","shopping","loisirs","voyages","restaurant","education","sport","cadeau","travail","banque","telephone","carburant","divers"];
+  const ICONES_CAT_ORDRE=["logement","alimentation","transport","sante","animaux","tech","shopping","loisirs","voyages","restaurant","education","sport","cadeau","travail","banque","telephone","carburant","divers","cible","trophee","calculatrice","dossier","tendance","calendrier","assurance","abonnement","cafe","internet","epargne","vetements","bricolage","parking","enfant","impots"];
   function iconeCatSvg(cle){ return svgCat(ICONES_CAT[cle]||ICONES_CAT.divers); }
   function badgeIconeCat(catObj, taille){
     taille=taille||18;
@@ -1663,7 +1693,7 @@
   const peutAccederCommun=()=> !!foyerId && partageActif() && !!monRolePartage && !jeSuisEnAttente();
   const maJoinedAt=()=> (membresPartage[uid] && membresPartage[uid].joinedAt) || 0;
   const cleCacheMode=()=> "gf_"+uid+(modeActif==="commun"?"_commun":"");
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, souscatStyles, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
   // Requête d'upsert vers la table du mode actif UNIQUEMENT. Perso -> donnees ; commun -> foyers.
   function requeteSauvegarde(c){
     if(modeActif==="commun" && foyerId){
@@ -1724,6 +1754,7 @@
     categories = c.categories || CATS_DEFAUT.slice();
     categories.forEach(cat=>{ cat.emoji=migrerIconeCat(cat.emoji); });
     souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
+    souscatStyles = c.souscatStyles || {};
     revtypes   = (c.revtypes || REVTYPES_DEFAUT.slice()).map(t=> typeof t==="string" ? {nom:t, cotisation:0} : t);
     budCat     = c.budCat || {};
     participants = c.participants || PARTICIPANTS_DEFAUT.slice();
@@ -2617,9 +2648,12 @@
       const icone='<span class="cat-ico-badge" style="width:16px;height:16px;">'+(estRemb?ICONES_UI.remboursement:(estRev?ICONES_UI.revenu:iconeCatSvg(catObj&&catObj.emoji)))+'</span>';
       const couleur=estRemb?"var(--remb-fg)":(estRev?"var(--accent)":"var(--text)");
       const signe=estRemb?"↩ ":(estRev?"+":"−");
-      const l=document.createElement("div"); l.className="recur-carte glisser-ligne";
+      const faites=r.occurrencesCreees||0, limite=r.limiteOccurrences||0;
+      const termine=limite>0 && faites>=limite;
+      const statutTxt = limite>0 ? (" · "+(termine?"Terminée ("+faites+"/"+limite+")":faites+"/"+limite+" fois")) : "";
+      const l=document.createElement("div"); l.className="recur-carte glisser-ligne"+(termine?" recur-terminee":"");
       l.innerHTML='<div class="recur-tete"><span class="recur-nom" style="display:inline-flex; align-items:center; gap:6px;">'+icone+r.nom+'</span><span class="recur-mnt" style="color:'+couleur+';">'+signe+fmt(r.montant)+'</span></div>'+
-        '<div class="recur-sub">Le '+r.jour+' de chaque mois'+(estRemb?'':(' · '+(r.categorie||"?")))+'</div>';
+        '<div class="recur-sub">Le '+r.jour+' de chaque mois'+(estRemb?'':(' · '+(r.categorie||"?")))+statutTxt+'</div>';
       const actions=document.createElement("div"); actions.className="recur-actions";
       const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
       const modif=document.createElement("button"); modif.className="cat-move"; modif.textContent="✎"; modif.style.color="var(--accent)"; modif.setAttribute("aria-label","Modifier");
@@ -2627,6 +2661,7 @@
         editionRecur=r.id;
         basculerRecurType(r.type||"depense");
         $("recur-nom").value=r.nom; $("recur-montant").value=String(r.montant).replace(".",","); $("recur-jour").value=r.jour;
+        $("recur-limite").value=r.limiteOccurrences||"";
         recurCatSel=r.categorie; ddRecurCat.set(r.categorie);
         $("ajouter-recur").textContent="✓ Enregistrer les modifications";
         $("recur-annuler-edit").style.display="inline-block";
@@ -2776,7 +2811,7 @@
   $("recur-type-remb").onclick=()=>basculerRecurType("remboursement");
   function annulerEditionRecur(){
     editionRecur=null;
-    $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value="";
+    $("recur-nom").value=""; $("recur-montant").value=""; $("recur-jour").value=""; $("recur-limite").value="";
     basculerRecurType("depense");
     $("ajouter-recur").textContent="＋ Ajouter la récurrence";
     $("recur-annuler-edit").style.display="none";
@@ -2786,13 +2821,15 @@
     const nom=$("recur-nom").value.trim();
     const montant=parseFloat(($("recur-montant").value||"").replace(",","."));
     const jour=Math.min(28,Math.max(1,parseInt($("recur-jour").value,10)||1));
+    const limiteBrute=parseInt($("recur-limite").value,10);
+    const limiteOccurrences = limiteBrute>0 ? limiteBrute : null;
     if(!nom||!montant||montant<=0){ alert("Renseigne un nom et un montant valide."); return; }
     if(!recurCatSel){ alert(recurTypeSel==="revenu"?"Choisis un type de revenu.":"Choisis une catégorie."); return; }
     if(editionRecur){
       const r=recurrentes.find(x=>x.id===editionRecur);
-      if(r) Object.assign(r,{nom, montant, categorie:recurCatSel, jour, type:recurTypeSel});
+      if(r) Object.assign(r,{nom, montant, categorie:recurCatSel, jour, type:recurTypeSel, limiteOccurrences});
     } else {
-      recurrentes.push({id:Date.now(), nom, montant, categorie:recurCatSel, jour, type:recurTypeSel, dernierMoisGenere:null});
+      recurrentes.push({id:Date.now(), nom, montant, categorie:recurCatSel, jour, type:recurTypeSel, dernierMoisGenere:null, limiteOccurrences, occurrencesCreees:0});
     }
     annulerEditionRecur();
     sauverCloud(); rendreRecur();
@@ -2804,6 +2841,7 @@
     recurrentes.forEach(r=>{
       if(r.dernierMoisGenere===moisAuj) return;
       if(jourAuj<r.jour) return;
+      if(r.limiteOccurrences && (r.occurrencesCreees||0)>=r.limiteOccurrences) return;
       const isoJour=moisAuj+"-"+String(r.jour).padStart(2,"0");
       if(r.type==="revenu"){
         const pct=cotisationDuType(r.categorie);
@@ -2813,7 +2851,7 @@
       } else {
         depenses.push({id:Date.now()+Math.random(), montant:r.montant, categorie:r.categorie, sousCat:null, paiement:null, participant:participants[0]||"Moi", devise:deviseDefaut, commentaire:r.nom+" (récurrent)", date:isoJour, mois:moisAuj, dateAffichee:dateAff(isoJour), photo:false});
       }
-      r.dernierMoisGenere=moisAuj; cree=true;
+      r.dernierMoisGenere=moisAuj; r.occurrencesCreees=(r.occurrencesCreees||0)+1; cree=true;
     });
     if(cree){ sauverCloud(); }
     return cree;
@@ -3407,6 +3445,19 @@
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
     setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
   }
+  function ouvrirSwatchPickerSous(cle, coulInput, onDone){
+    document.querySelectorAll(".swatch-panel").forEach(p=>p.remove());
+    const panel=document.createElement("div"); panel.className="swatch-panel";
+    SWATCHES_RAPIDES.forEach(hex=>{
+      const b=document.createElement("button"); b.type="button"; b.className="swatch-chip"; b.style.background=hex;
+      b.onclick=()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{fg:hex,bg:tintClair(hex)}); coulInput.value=hex; sauverCloud(); onDone(); panel.remove(); };
+      panel.appendChild(b);
+    });
+    document.body.appendChild(panel);
+    const r=coulInput.getBoundingClientRect();
+    panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
+    setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
+  }
   function ouvrirIconePicker(obj, boutonIcone, champ, apresChoix){
     champ=champ||"emoji";
     document.querySelectorAll(".icon-panel").forEach(p=>p.remove());
@@ -3474,6 +3525,21 @@
     enveloppes.push({id:"env-"+Date.now(), nom, icone:type==="obligation"?"logement":"star", couleur:type==="obligation"?"#712b13":"#0f6e56", type, montantFixe:0, pourcentage:0, solde:0, ordre:enveloppes.length});
     sauverCloud(); rendreEnveloppesConfig(); rendreBudget&&rendreBudget();
   }
+  // Deplace `item` dans `container` (avant `avant`, ou en fin si null) en animant le glissement des autres lignes (FLIP)
+  function deplacerAvecFlip(container, item, avant){
+    const enfants=[...container.children].filter(c=>c!==item);
+    const rectsAvant=enfants.map(c=>[c,c.getBoundingClientRect()]);
+    if(avant) container.insertBefore(item, avant); else container.appendChild(item);
+    rectsAvant.forEach(([c,oldR])=>{
+      const newR=c.getBoundingClientRect();
+      const dy=oldR.top-newR.top;
+      if(Math.abs(dy)>0.5){
+        c.style.transition="none";
+        c.style.transform="translateY("+dy+"px)";
+        requestAnimationFrame(()=>{ c.style.transition="transform .18s ease"; c.style.transform=""; });
+      }
+    });
+  }
   function activerGlisser(container, arr, sauvegarder){
     container.querySelectorAll(".glisser-poignee").forEach(poignee=>{
       poignee.style.touchAction="none";
@@ -3483,17 +3549,25 @@
         const idxDepart=[...container.children].indexOf(ligne);
         ligne.setPointerCapture(e.pointerId);
         ligne.classList.add("glisse-actif");
+        ligne.style.willChange="transform";
+        let startY=e.clientY;
         const onMove=(ev)=>{
+          ligne.style.transition="none";
+          ligne.style.transform="translateY("+(ev.clientY-startY)+"px)";
           const y=ev.clientY;
           const autres=[...container.children].filter(c=>c!==ligne);
           for(const sib of autres){
             const rect=sib.getBoundingClientRect();
-            if(y<rect.top+rect.height/2){ if(sib.previousSibling!==ligne) container.insertBefore(ligne,sib); return; }
+            if(y<rect.top+rect.height/2){
+              if(sib.previousSibling!==ligne){ deplacerAvecFlip(container, ligne, sib); startY=ev.clientY; ligne.style.transform="translateY(0px)"; }
+              return;
+            }
           }
-          if(container.lastChild!==ligne) container.appendChild(ligne);
+          if(container.lastChild!==ligne){ deplacerAvecFlip(container, ligne, null); startY=ev.clientY; ligne.style.transform="translateY(0px)"; }
         };
         const onUp=()=>{
           ligne.classList.remove("glisse-actif");
+          ligne.style.willChange=""; ligne.style.transition="transform .15s ease"; ligne.style.transform="";
           ligne.removeEventListener("pointermove",onMove);
           ligne.removeEventListener("pointerup",onUp);
           const idxFinal=[...container.children].indexOf(ligne);
@@ -3513,12 +3587,26 @@
       if(!arr.length){ liste.innerHTML='<small class="aide">Aucune sous-catégorie.</small>'; }
       else {
         arr.forEach((s,i)=>{
+          const cle=nomCatRef.nom+"|"+s;
+          const st=souscatStyles[cle]||{};
           const l=document.createElement("div"); l.className="cat-ligne glisser-ligne";
           const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
+          const emo=document.createElement("button"); emo.type="button"; emo.className="emoji-in";
+          emo.innerHTML='<span class="cat-ico-badge" style="width:20px;height:20px;color:'+(st.fg||"currentColor")+';">'+iconeCatSvg(st.emoji)+'</span>';
+          emo.setAttribute("aria-label","Choisir une icone");
+          emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation();
+            const tmp={emoji:st.emoji||""};
+            ouvrirIconePicker(tmp, emo, "emoji", ()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{emoji:tmp.emoji}); sauverCloud(); rendre(); });
+          };
+          const coul=document.createElement("input"); coul.type="color"; coul.className="color-in"; coul.value=st.fg||"#888888";
+          coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation();
+            ouvrirSwatchPickerSous(cle, coul, rendre);
+          };
+          coul.onchange=()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{fg:coul.value,bg:tintClair(coul.value)}); sauverCloud(); rendre(); };
           const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
           const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
-          del.onclick=()=>{ souscats[nomCatRef.nom].splice(i,1); sauverSous(); rendre(); };
-          l.appendChild(poignee); l.appendChild(span); l.appendChild(del); liste.appendChild(l);
+          del.onclick=()=>{ souscats[nomCatRef.nom].splice(i,1); delete souscatStyles[cle]; sauverSous(); sauverCloud(); rendre(); };
+          l.appendChild(poignee); l.appendChild(emo); l.appendChild(coul); l.appendChild(span); l.appendChild(del); liste.appendChild(l);
         });
         activerGlisser(liste, souscats[nomCatRef.nom], ()=>{ sauverSous(); rendre(); });
       }
@@ -3585,19 +3673,27 @@
           const bloc=poignee.closest(".glisser-ligne"); if(!bloc) return;
           bloc.setPointerCapture(e.pointerId);
           bloc.classList.add("glisse-actif");
+          bloc.style.willChange="transform";
+          let startY=e.clientY;
           const onMove=(ev)=>{
+            bloc.style.transition="none";
+            bloc.style.transform="translateY("+(ev.clientY-startY)+"px)";
             const y=ev.clientY;
             let cible=boxes[boxes.length-1].el;
             for(const b of boxes){ const r=b.el.getBoundingClientRect(); if(y<r.bottom){ cible=b.el; break; } }
             const autres=[...cible.children].filter(c=>c!==bloc);
             for(const sib of autres){
               const rect=sib.getBoundingClientRect();
-              if(y<rect.top+rect.height/2){ if(sib.previousSibling!==bloc) cible.insertBefore(bloc,sib); return; }
+              if(y<rect.top+rect.height/2){
+                if(sib.previousSibling!==bloc){ deplacerAvecFlip(cible, bloc, sib); startY=ev.clientY; bloc.style.transform="translateY(0px)"; }
+                return;
+              }
             }
-            if(cible.lastChild!==bloc) cible.appendChild(bloc);
+            if(cible.lastChild!==bloc){ deplacerAvecFlip(cible, bloc, null); startY=ev.clientY; bloc.style.transform="translateY(0px)"; }
           };
           const onUp=()=>{
             bloc.classList.remove("glisse-actif");
+            bloc.style.willChange=""; bloc.style.transition="transform .15s ease"; bloc.style.transform="";
             bloc.removeEventListener("pointermove",onMove);
             bloc.removeEventListener("pointerup",onUp);
             const groupeFinal=boxes.find(b=>b.el===bloc.parentElement);
@@ -3618,6 +3714,7 @@
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
     categories[idx].nom=nv;
     if(souscats[anc]){souscats[nv]=souscats[anc];delete souscats[anc];sauverSous();}
+    Object.keys(souscatStyles).forEach(k=>{ if(k.startsWith(anc+"|")){ souscatStyles[nv+k.slice(anc.length)]=souscatStyles[k]; delete souscatStyles[k]; } });
     if(budCat[anc]){budCat[nv]=budCat[anc];delete budCat[anc];}
     sauverCat();rendreCategories();rendreBudGestion();rendreDepenses();rendreBudget();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
@@ -4294,6 +4391,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Correction z-index pickers, icones/couleurs sous-categories, drag fluide, page Plus en grille, recurrentes avec limite":"v1.22.13",
         "Glisser categories entre groupes, toggle sous-categories deplace dans le menu Categorie":"v1.22.12",
         "Gestion en page pleine, ajout par groupe, toggle sous-categories clarifie, donut Resume a gauche":"v1.22.11",
         "Categorie unifiee avec groupes Investissement/Obligations/Flexibles/Souhaits et toggle sous-categories":"v1.22.10",
@@ -4400,22 +4498,32 @@
   function ouvrirAmis(){ rendreAmisId(); rendrePartage(); $("amis-msg").innerHTML=""; $("amis-overlay").style.display="flex"; if(foyerId) rendreMembres(); }
   document.querySelectorAll(".tb-amis").forEach(b=>b.onclick=ouvrirAmis);
 
-  // ---- Pages Personnalisation / Données (sections déplacées hors de « Plus ») ----
+  // ---- Pages Personnalisation / Données / Gestion / Récurrentes / Options (sections déplacées hors de « Plus ») ----
   function relogerSectionsPlus(){
-    const perso=$("perso-corps"), donnees=$("donnees-corps"), gestion=$("gestion-corps");
+    const perso=$("perso-corps"), donnees=$("donnees-corps"), gestion=$("gestion-corps"), recur=$("recurrentes-corps"), options=$("options-corps");
     ["bloc-fond","bloc-devise"].forEach(id=>{ const el=$(id); if(el && perso) perso.appendChild(el); });
     ["bloc-import-export","bloc-sauvegarde","bloc-admin"].forEach(id=>{ const el=$(id); if(el && donnees) donnees.appendChild(el); });
     if(gestion){ const el=$("gestion-liste"); if(el) gestion.appendChild(el); }
+    if(recur){ const el=$("bloc-recurrentes"); if(el) recur.appendChild(el); }
+    if(options){ const el=$("bloc-options"); if(el) options.appendChild(el); }
   }
-  const DECLENCHEUR_PAGE={"perso-overlay":"ouvrir-perso","gestion-overlay":"ouvrir-gestion"};
+  const DECLENCHEUR_PAGE={"perso-overlay":"ouvrir-perso","gestion-overlay":"ouvrir-gestion","recurrentes-overlay":"ouvrir-recurrentes","options-overlay":"ouvrir-options"};
   function ouvrirPage(id){ const o=$(id); if(o){ o.classList.add("on"); window.scrollTo(0,0); } const t=DECLENCHEUR_PAGE[id]; if(t && $(t)) $(t).classList.add("open"); }
-  function fermerPage(id){ const o=$(id); if(o) o.classList.remove("on"); const t=DECLENCHEUR_PAGE[id]; if(t && $(t)) $(t).classList.remove("open"); }
+  function fermerPage(id){
+    const o=$(id);
+    if(o){ o.classList.remove("on"); o.querySelectorAll("details[open]").forEach(d=>d.removeAttribute("open")); }
+    const t=DECLENCHEUR_PAGE[id]; if(t && $(t)) $(t).classList.remove("open");
+  }
   relogerSectionsPlus();
   if($("ouvrir-perso")) $("ouvrir-perso").onclick=()=>ouvrirPage("perso-overlay");
   if($("perso-retour")) $("perso-retour").onclick=()=>fermerPage("perso-overlay");
   if($("donnees-retour")) $("donnees-retour").onclick=()=>fermerPage("donnees-overlay");
   if($("ouvrir-gestion")) $("ouvrir-gestion").onclick=()=>ouvrirPage("gestion-overlay");
   if($("gestion-retour")) $("gestion-retour").onclick=()=>fermerPage("gestion-overlay");
+  if($("ouvrir-recurrentes")) $("ouvrir-recurrentes").onclick=()=>ouvrirPage("recurrentes-overlay");
+  if($("recurrentes-retour")) $("recurrentes-retour").onclick=()=>fermerPage("recurrentes-overlay");
+  if($("ouvrir-options")) $("ouvrir-options").onclick=()=>ouvrirPage("options-overlay");
+  if($("options-retour")) $("options-retour").onclick=()=>fermerPage("options-overlay");
   try{ if(new URLSearchParams(location.search).get("vue")==="donnees") ouvrirPage("donnees-overlay"); }catch(e){}
   document.querySelectorAll(".tb-mode").forEach(b=>b.onclick=async()=>{
     if(!peutAccederCommun()) return;
