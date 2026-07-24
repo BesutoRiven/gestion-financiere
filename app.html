@@ -2980,7 +2980,7 @@
           const liees=rembLiees(d.id);
           const tagArch = d.arch ? '<span class="arch-tag">Archivé · '+d.arch+'</span>' : "";
           l.innerHTML='<div class="info"><div class="titre">'+titre+partBadge+tagArch+'</div>'+(sous?'<div class="sous">'+sous+'</div>':'')+'</div><div class="mnt">'+fmtDev(d.montant,d.devise)+'</div>';
-          if(d.arch){ l.classList.add("archive"); liste.appendChild(l); return; } // lecture seule : ni édition, ni suppression, ni sélection
+          if(d.arch){ l.classList.add("archive"); const bx=document.createElement("button"); bx.className="del"; bx.textContent="×"; bx.title="Supprimer cette archive"; bx.onclick=async()=>{ if(!confirmDouble("Supprimer définitivement cette dépense archivée ?")) return; if(d.photo)await photoDel(d.id); depenses=depenses.filter(x=>x.id!==d.id); sauverDep(); rendreDepenses(); }; l.appendChild(bx); liste.appendChild(l); return; } // archive : suppression autorisée, modification interdite
           if(liees.length){ const rb=document.createElement("button"); rb.className="act remb-badge"; rb.textContent="↩"; rb.setAttribute("aria-label","Voir les remboursements liés"); rb.onclick=()=>voirRembLiees(d); l.appendChild(rb); }
           if(d.photo){const p=document.createElement("button");p.className="act photo-ic";p.innerHTML=ICONES_UI.fond;p.setAttribute("aria-label","Voir la photo");p.onclick=()=>voirPhoto(d.id);l.appendChild(p);}
           const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRecu(d.id);
@@ -3003,7 +3003,7 @@
         const titre=r.description||r.type||"Revenu";
         const tagArchR = r.arch ? '<span class="arch-tag">Archivé · '+r.arch+'</span>' : "";
         l.innerHTML='<div class="info"><div class="titre">'+titre+tagArchR+'</div><div class="sous">'+(r.type||"")+'</div></div><div class="mnt">+'+fmtDev(r.net!=null?r.net:r.montant,r.devise)+'</div>';
-        if(r.arch){ l.classList.add("archive"); liste.appendChild(l); return; }
+        if(r.arch){ l.classList.add("archive"); const bx=document.createElement("button"); bx.className="del"; bx.textContent="×"; bx.title="Supprimer cette archive"; bx.onclick=()=>{ if(!confirmDouble("Supprimer définitivement ce revenu archivé ?")) return; revenus=revenus.filter(x=>x.id!==r.id); sauverRev(); rendreDepenses(); }; l.appendChild(bx); liste.appendChild(l); return; }
         const be=document.createElement("button");be.className="act";be.textContent="✎";be.setAttribute("aria-label","Modifier");be.onclick=()=>ouvrirRev(r.id);
         l.appendChild(be);
         if(modeGestion){
@@ -4178,6 +4178,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Autoriser la suppression des archives de partage":"v1.22.5",
         "Fiabiliser les admissions et annuler sans copie avant acces":"v1.22.4",
         "Supprimer la hierarchie des membres du partage":"v1.22.3",
         "Refondre le partage : admission unanime et visibilite depuis l arrivee":"v1.22.2",
