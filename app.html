@@ -608,14 +608,13 @@
       <div class="bloc menu-lien" id="ouvrir-gestion"><span class="sum-ico" style="font-weight:600;"><span data-ico="gestion"></span><span>Gestion</span></span><span class="chev">›</span></div>
       <div class="det-corps" id="gestion-liste" style="padding:0;">
           <details class="det-nested" id="bloc-categories">
-            <summary>
-              <span class="sum-ico" style="flex:1;">
-                <span data-ico="categories"></span><span>Catégorie</span>
-                <button type="button" id="toggle-souscat-gestion" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Afficher les sous-catégories" title="Afficher les sous-catégories" style="margin-left:auto; margin-right:8px;"><span class="knob"></span></button>
-              </span>
-            </summary>
+            <summary><span class="sum-ico"><span data-ico="categories"></span><span>Catégorie</span></span></summary>
             <div class="det-corps">
-              <small class="aide">Ce réglage affiche, pour chaque catégorie, un panneau ▾ où gérer ses sous-catégories. Désactivé par défaut.</small>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <span style="font-size:13px; font-weight:600;">Afficher les sous-catégories</span>
+                <button type="button" id="toggle-souscat-gestion" class="switch switch-sm" role="switch" aria-checked="false" aria-label="Afficher les sous-catégories"><span class="knob"></span></button>
+              </div>
+              <small class="aide" style="display:block; margin-top:6px;">Ce réglage affiche, pour chaque catégorie, un panneau ▾ où gérer ses sous-catégories. Désactivé par défaut.</small>
               <div class="cat-groupe-titre"><span data-ico="groupeinvest"></span><span>Investissement</span></div>
               <div id="cats-liste-investissement" class="cat-groupe"></div>
               <div class="cat-ligne" style="margin-top:8px;">
@@ -2757,7 +2756,7 @@
     if(!optionsActivees.sousCatVisibles) budgetParSousCat=false;
     sauverCloud(); rendreOptions(); rendreCategories(); rendreBudGestion(); rendreBudget(); rendreBudgetSelectionTicket();
   }
-  $("toggle-souscat-gestion").onclick=(e)=>{ e.preventDefault(); e.stopPropagation(); basculerSousCatGestion(); };
+  $("toggle-souscat-gestion").onclick=()=>{ basculerSousCatGestion(); };
 
   function basculerRecurType(type){
     recurTypeSel=type; recurCatSel=null;
@@ -3541,13 +3540,15 @@
   function sousCatGestionOn(){ return !!optionsActivees.sousCatVisibles; }
   function rendreCategories(){
     const sousCatOn=sousCatGestionOn();
+    const boxes=[];
     GROUPES_CAT.forEach(g=>{
       const box=$("cats-liste-"+g); if(!box) return; box.innerHTML="";
+      boxes.push({groupe:g, el:box});
       const arr=categories.filter(c=>groupeCat(c)===g);
       if(!arr.length){ box.innerHTML='<small class="aide">Aucune catégorie dans ce groupe pour l\'instant.</small>'; }
       arr.forEach(cat=>{
         const idxReel=categories.indexOf(cat);
-        const bloc=document.createElement("div"); bloc.className="cat-bloc glisser-ligne";
+        const bloc=document.createElement("div"); bloc.className="cat-bloc glisser-ligne"; bloc.dataset.catNom=cat.nom;
         const ligne=document.createElement("div"); ligne.className="cat-ligne";
         const poignee=document.createElement("span");poignee.className="glisser-poignee";poignee.textContent="⠿";
         const emo=document.createElement("button");emo.type="button";emo.className="emoji-in";emo.innerHTML=badgeIconeCat(cat,20);emo.setAttribute("aria-label","Choisir une icone");
@@ -3572,9 +3573,45 @@
         }
         box.appendChild(bloc);
       });
-      activerGlisser(box, arr, ()=>{
-        const nouvelOrdre=[]; GROUPES_CAT.forEach(gr=> nouvelOrdre.push(...(gr===g? arr : categories.filter(c=>groupeCat(c)===gr))));
-        categories=nouvelOrdre; sauverCat(); rendreCategories(); rendreBudGestion();
+    });
+    activerGlisserCategories(boxes);
+  }
+  function activerGlisserCategories(boxes){
+    boxes.forEach(({el})=>{
+      el.querySelectorAll(".glisser-poignee").forEach(poignee=>{
+        poignee.style.touchAction="none";
+        poignee.onpointerdown=(e)=>{
+          e.preventDefault();
+          const bloc=poignee.closest(".glisser-ligne"); if(!bloc) return;
+          bloc.setPointerCapture(e.pointerId);
+          bloc.classList.add("glisse-actif");
+          const onMove=(ev)=>{
+            const y=ev.clientY;
+            let cible=boxes[boxes.length-1].el;
+            for(const b of boxes){ const r=b.el.getBoundingClientRect(); if(y<r.bottom){ cible=b.el; break; } }
+            const autres=[...cible.children].filter(c=>c!==bloc);
+            for(const sib of autres){
+              const rect=sib.getBoundingClientRect();
+              if(y<rect.top+rect.height/2){ if(sib.previousSibling!==bloc) cible.insertBefore(bloc,sib); return; }
+            }
+            if(cible.lastChild!==bloc) cible.appendChild(bloc);
+          };
+          const onUp=()=>{
+            bloc.classList.remove("glisse-actif");
+            bloc.removeEventListener("pointermove",onMove);
+            bloc.removeEventListener("pointerup",onUp);
+            const groupeFinal=boxes.find(b=>b.el===bloc.parentElement);
+            const cat=categories.find(c=>c.nom===bloc.dataset.catNom);
+            if(cat && groupeFinal) cat.groupe=groupeFinal.groupe;
+            const nouvelOrdre=[];
+            boxes.forEach(b=>{ [...b.el.children].forEach(child=>{ const c=categories.find(cc=>cc.nom===child.dataset.catNom); if(c) nouvelOrdre.push(c); }); });
+            categories.forEach(c=>{ if(!nouvelOrdre.includes(c)) nouvelOrdre.push(c); });
+            categories=nouvelOrdre;
+            sauverCat(); rendreCategories(); rendreBudGestion();
+          };
+          bloc.addEventListener("pointermove",onMove);
+          bloc.addEventListener("pointerup",onUp);
+        };
       });
     });
   }
@@ -4257,6 +4294,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Glisser categories entre groupes, toggle sous-categories deplace dans le menu Categorie":"v1.22.12",
         "Gestion en page pleine, ajout par groupe, toggle sous-categories clarifie, donut Resume a gauche":"v1.22.11",
         "Categorie unifiee avec groupes Investissement/Obligations/Flexibles/Souhaits et toggle sous-categories":"v1.22.10",
         "Corriger debordement categories, icones groupes, cercle depenses et deplacer Amis":"v1.22.9",
