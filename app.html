@@ -875,7 +875,7 @@
         </div>
         <div id="partage-actif" style="display:none;">
           <p style="font-weight:600; color:var(--accent); margin:0 0 8px;">✓ Budget partagé</p>
-          <small class="aide">Génère un code temporaire (valable 5 minutes) à transmettre à la personne avec qui partager. Elle le colle dans « Rejoindre ce partage », avec le rôle « Ami » par défaut — tu pourras le changer ensuite.</small>
+          <small class="aide">Génère un code temporaire (valable 5 minutes) à transmettre à la personne avec qui partager. Elle devra être acceptée par tous les membres avant d’accéder au budget commun.</small>
           <button id="btn-generer-code" style="height:44px; margin-top:8px; width:100%; border:none; border-radius:12px; background:var(--accent-soft); color:var(--accent); font-weight:600; font-size:15px; cursor:pointer;">🔑 Générer un code d'invitation</button>
           <div id="zone-code" style="display:none; margin-top:8px;">
             <div style="display:flex; gap:8px;">
@@ -1833,7 +1833,24 @@
     await chargerEtatMembres(); abonnerDemandes();
     return {ok:true};
   }
-  async function rejoindrePartage(code){
+  // Certains projets existants refusent une valeur de type inconnue. Une demande sans type
+  // reste reconnue comme admission par son groupe_id et ne nécessite pas de migration SQL.
+  const estDemandeAdmission=d=> d.type==="admission" || (!d.type && !!d.groupe_id && !!d.demandeur_user_id);
+  async function creerDemandesAdmission(idFoyer, joinerUid){
+    let membres=[];
+    try{ const r=await sb.from("foyer_membres").select("user_id,role").eq("foyer_id",idFoyer); membres=r.data||[]; }catch(e){ return {ok:false, msg:"Impossible de lire les membres du partage."}; }
+    const actifs=membres.filter(m=>m.role!=="attente" && m.user_id!==joinerUid);
+    let existantes=[];
+    try{ const r=await sb.from("foyer_demandes").select("cible_user_id,type,groupe_id,demandeur_user_id,statut").eq("foyer_id",idFoyer).eq("groupe_id",joinerUid).eq("statut","en_attente"); existantes=r.data||[]; }catch(e){}
+    for(const m of actifs){
+      if(existantes.some(d=>d.cible_user_id===m.user_id && estDemandeAdmission(d))) continue;
+      const base={ foyer_id:idFoyer, cible_user_id:m.user_id, demandeur_user_id:joinerUid, groupe_id:joinerUid };
+      let demande=await sb.from("foyer_demandes").insert(Object.assign({type:"admission"},base));
+      if(demande.error) demande=await sb.from("foyer_demandes").insert(base);
+      if(demande.error) return {ok:false, msg:messageErreur(demande.error)};
+    }
+    return {ok:true, nb:actifs.length};
+  }  async function rejoindrePartage(code){
     code=(code||"").trim().toUpperCase(); if(!code) return {ok:false, msg:"Colle d'abord un code de partage."};
     const { data:invite, error } = await sb.from("foyer_invites").select("foyer_id,expires_at").eq("code",code).maybeSingle();
     if(error || !invite) return {ok:false, msg:"Code invalide ou expiré."};
@@ -1848,23 +1865,27 @@
     const r=await sb.from("foyer_membres").upsert({ user_id:uid, foyer_id:fid, role:"attente" });
     if(r.error) return {ok:false, msg:messageErreur(r.error)};
     foyerId=fid;
-    // Une demande d'admission par membre actif (groupe_id = mon uid).
-    // Supabase renvoie les erreurs dans `error` : il faut les vérifier explicitement.
-    for(const m of actifs){
-      const demande=await sb.from("foyer_demandes").insert({ foyer_id:fid, cible_user_id:m.user_id, demandeur_user_id:uid, type:"admission", groupe_id:uid });
-      if(demande.error){
-        await sb.from("foyer_membres").delete().eq("foyer_id",fid).eq("user_id",uid);
-        foyerId=null;
-        return {ok:false, msg:"Impossible d'envoyer la demande d'admission : "+messageErreur(demande.error)};
-      }
+    const demandes=await creerDemandesAdmission(fid,uid);
+    if(!demandes.ok){
+      await sb.from("foyer_membres").delete().eq("foyer_id",fid).eq("user_id",uid);
+      foyerId=null;
+      return {ok:false, msg:"Impossible d'envoyer la demande d'admission : "+demandes.msg};
     }
     await chargerEtatMembres(); abonnerDemandes();
-    return {ok:true, enAttente:true, nbAValider:actifs.length};
+    return {ok:true, enAttente:true, nbAValider:demandes.nb};
   }
   // Quitter le partage : on n'écrase JAMAIS la sauvegarde perso. Si nomPartage est fourni,
   // on copie les dépenses/revenus du commun dans le perso en LECTURE SEULE (tag arch).
-  async function quitterPartage(nomPartage){
+  async function quitterPartage(nomPartage, annulerAdmission){
     const idFoyer=foyerId;
+    // Un candidat n'a jamais accès au contenu commun : son départ annule seulement sa demande.
+    if(annulerAdmission){
+      try{ await sb.from("foyer_demandes").delete().eq("foyer_id",idFoyer).eq("groupe_id",uid); }catch(e){}
+      const r=await sb.from("foyer_membres").delete().eq("foyer_id",idFoyer).eq("user_id",uid);
+      if(r.error) return {ok:false, msg:messageErreur(r.error)};
+      foyerId=null; modeActif="perso"; localStorage.setItem("gf_mode_"+uid,"perso");
+      return {ok:true, annuleAdmission:true};
+    }
     // 1) Contenu commun (foyers) et perso (donnees), lus directement depuis la base.
     let commun=null, perso=null;
     try{ const { data }=await sb.from("foyers").select("contenu").eq("id",idFoyer).maybeSingle(); if(data && data.contenu) commun=data.contenu; }catch(e){}
@@ -1928,16 +1949,22 @@
       span.innerHTML='<b>'+m.pseudo+'</b><span style="color:var(--muted);">#'+m.tag+'</span>'+(m.user_id===uid?' <span style="color:var(--accent);">(toi)</span>':'');
       l.appendChild(span);
       if(m.enAttente){
-        const monVote=demandes.find(d=>d.type==="admission" && d.groupe_id===m.user_id && d.cible_user_id===uid);
-        const restants=demandes.filter(d=>d.type==="admission" && d.groupe_id===m.user_id).length;
+        const monVote=demandes.find(d=>estDemandeAdmission(d) && d.groupe_id===m.user_id && d.cible_user_id===uid);
+        const restants=demandes.filter(d=>estDemandeAdmission(d) && d.groupe_id===m.user_id).length;
         if(monVote){
           const acc=document.createElement("button"); acc.className="btn-ligne"; acc.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--accent); border-color:var(--accent);"; acc.textContent="Accepter";
           acc.onclick=async()=>{ await accepterAdmission(m.user_id); msgAmis("Accord enregistré.","ok"); rendreMembres(); rafraichirEtatPartage(); };
           const ref=document.createElement("button"); ref.className="btn-ligne"; ref.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--danger); border-color:#e0b4b4;"; ref.textContent="Refuser";
           ref.onclick=async()=>{ if(!confirm("Refuser l'accès à "+m.pseudo+" ?")) return; await refuserAdmission(m.user_id); msgAmis(m.pseudo+" refusé(e).","ok"); rendreMembres(); rafraichirEtatPartage(); };
           l.appendChild(acc); l.appendChild(ref);
+        } else if(m.user_id!==uid) {
+          const relancer=document.createElement("button"); relancer.className="btn-ligne"; relancer.style.cssText="height:32px; padding:0 10px; font-size:12px; color:var(--accent); border-color:var(--accent);"; relancer.textContent="Relancer l'admission";
+          relancer.onclick=async()=>{ const r=await creerDemandesAdmission(foyerId,m.user_id); if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; } msgAmis("Demandes d'accord envoyées.","ok"); rendreMembres(); };
+          l.appendChild(relancer);
+          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent="Aucune demande d'accord n'a été trouvée.";
+          l.appendChild(info);
         } else {
-          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent = restants>0 ? "En attente de l'accord des autres membres ("+restants+" restant"+(restants>1?"s":"")+")." : "Vote en cours…";
+          const info=document.createElement("small"); info.style.cssText="color:var(--muted); flex:0 0 100%;"; info.textContent="En attente de l'accord des autres membres.";
           l.appendChild(info);
         }
       }
@@ -1951,7 +1978,7 @@
     if(!pourMoi) return;
     let nomDemandeur="Un membre";
     try{ const r=await sb.from("profils").select("pseudo").eq("id",pourMoi.demandeur_user_id).maybeSingle(); if(r.data && r.data.pseudo) nomDemandeur=r.data.pseudo; }catch(e){}
-    if(pourMoi.type==="admission"){
+    if(estDemandeAdmission(pourMoi)){
       const joiner=pourMoi.demandeur_user_id;
       $("depart-titre").textContent="Demande d'accès au partage";
       $("depart-texte").textContent=nomDemandeur+" souhaite rejoindre la sauvegarde commune. Il/elle n'aura accès qu'aux transactions créées après son arrivée, et seulement une fois que tous les membres actuels ont accepté.";
@@ -4151,6 +4178,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Fiabiliser les admissions et annuler sans copie avant acces":"v1.22.4",
         "Supprimer la hierarchie des membres du partage":"v1.22.3",
         "Refondre le partage : admission unanime et visibilite depuis l arrivee":"v1.22.2",
         "Interrupteur perso/commun et texte du mode invite":"v1.22.1",
@@ -4289,6 +4317,13 @@
     else msgAmis("Partage rejoint.","ok");
   };
   $("btn-quitter-partage").onclick=async()=>{
+    const annulerAdmission=jeSuisEnAttente();
+    if(annulerAdmission){
+      if(!confirm("Annuler ta demande d'accès au partage ? Tu n'as reçu aucune donnée commune.")) return;
+      const r=await quitterPartage(null,true);
+      if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
+      msgAmis("Demande d'accès annulée.","ok"); setTimeout(()=>location.reload(),800); return;
+    }
     if(!confirm("Quitter le partage ? Tu reviendras sur ta sauvegarde perso (elle est intacte). Tu peux garder les dépenses/revenus du partage en lecture seule dans ta perso.")) return;
     let nomPartage=null;
     const veutGarder=await confirmerOuiNon("Garder une copie des données de ce partage dans ta sauvegarde perso (en lecture seule) ?");
@@ -4296,7 +4331,7 @@
       const saisi=(prompt("Donne un nom à ce partage pour retrouver ces données (ex. « Partage Louise ») :","Partage")||"").trim();
       nomPartage = saisi || "Partage";
     }
-    const r=await quitterPartage(nomPartage);
+    const r=await quitterPartage(nomPartage,false);
     if(!r.ok){ msgAmis("Échec : "+r.msg,"err"); return; }
     msgAmis("Partage quitté. L'app va se recharger sur ta sauvegarde perso.","ok");
     setTimeout(()=>location.reload(),1200);
