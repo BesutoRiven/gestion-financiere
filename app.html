@@ -573,11 +573,10 @@
               <div class="donut-label">Dépenses</div>
             </div>
           </div>
-          <div style="flex:1; min-width:140px;">
-            <div id="repartition"></div>
-            <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense sur cette période.</p>
-          </div>
+          <div id="rep-donut-legende" style="flex:1; min-width:90px;"></div>
         </div>
+        <div id="repartition"></div>
+        <p class="vide" id="rep-vide" style="padding:12px 0;">Aucune dépense sur cette période.</p>
       </div>
     </section>
 
@@ -1265,7 +1264,7 @@
 
   let uid, cleDep, cleCat, cleDash, cleSous, cleRev, cleRevType;
   let modeInvite=false; // true = utilisateur invité (données locales seulement, non synchronisées)
-  let depenses=[], categories=[], souscats={}, souscatStyles={}, participants=[];
+  let depenses=[], categories=[], souscats={}, participants=[];
   let budCat={}, budMode="mois", budDate=new Date();
   let remboursements=[], filtreTxn="tout";
   let revenus=[], revtypes=[], revTypeSel=null;
@@ -1693,7 +1692,7 @@
   const peutAccederCommun=()=> !!foyerId && partageActif() && !!monRolePartage && !jeSuisEnAttente();
   const maJoinedAt=()=> (membresPartage[uid] && membresPartage[uid].joinedAt) || 0;
   const cleCacheMode=()=> "gf_"+uid+(modeActif==="commun"?"_commun":"");
-  function contenuActuel(){ return { depenses, revenus, categories, souscats, souscatStyles, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
+  function contenuActuel(){ return { depenses, revenus, categories, souscats, revtypes, dash:dashMode, budCat, participants, remboursements, devise:deviseDefaut, devisesPerso, moyensPaiement, recurrentes, budgetParSousCat, budSousCat, optionsActivees, objectifsEpargne, profilFinance, enveloppes }; }
   // Requête d'upsert vers la table du mode actif UNIQUEMENT. Perso -> donnees ; commun -> foyers.
   function requeteSauvegarde(c){
     if(modeActif==="commun" && foyerId){
@@ -1754,7 +1753,6 @@
     categories = c.categories || CATS_DEFAUT.slice();
     categories.forEach(cat=>{ cat.emoji=migrerIconeCat(cat.emoji); });
     souscats   = c.souscats   || JSON.parse(JSON.stringify(SOUS_CAT));
-    souscatStyles = c.souscatStyles || {};
     revtypes   = (c.revtypes || REVTYPES_DEFAUT.slice()).map(t=> typeof t==="string" ? {nom:t, cotisation:0} : t);
     budCat     = c.budCat || {};
     participants = c.participants || PARTICIPANTS_DEFAUT.slice();
@@ -2136,14 +2134,30 @@
   function remboursementsPeriode(b){ return remboursements.filter(r=>r.date>=b.debut && r.date<=b.fin); }
   function majDonutDepenses(parCat){
     const wrap=$("rep-donut"); if(!wrap) return;
-    const noms=Object.keys(parCat).sort((a,c)=>parCat[c]-parCat[a]);
-    const total=noms.reduce((s,n)=>s+parCat[n],0);
-    if(!noms.length || total<=0){ wrap.style.display="none"; return; }
+    const tousNoms=Object.keys(parCat).sort((a,c)=>parCat[c]-parCat[a]);
+    const total=tousNoms.reduce((s,n)=>s+parCat[n],0);
+    const legende=$("rep-donut-legende");
+    if(!tousNoms.length || total<=0){ wrap.style.display="none"; if(legende) legende.innerHTML=""; return; }
+    const top5=tousNoms.slice(0,5);
+    const totalTop5=top5.reduce((s,n)=>s+parCat[n],0);
+    const GAP=1.1; // % de la circonférence par séparation (~5px de blanc entre les parts)
+    const dispo=top5.length>1 ? 100-GAP*top5.length : 100;
     let acc=0; const parts=[];
-    noms.forEach(n=>{ const col=couleursDe(n).fg||"#888"; const part=parCat[n]/total*100; parts.push(col+" "+acc+"% "+(acc+part)+"%"); acc+=part; });
+    top5.forEach(n=>{
+      const col=couleursDe(n).fg||"#888";
+      const part=totalTop5>0 ? parCat[n]/totalTop5*dispo : 0;
+      parts.push(col+" "+acc+"% "+(acc+part)+"%"); acc+=part;
+      if(top5.length>1){ parts.push("transparent "+acc+"% "+(acc+GAP)+"%"); acc+=GAP; }
+    });
     $("rep-donut-cercle").style.background="conic-gradient("+parts.join(",")+")";
     $("rep-donut-total").textContent=fmt(total);
     wrap.style.display="flex";
+    if(legende){
+      legende.innerHTML=top5.map(n=>{
+        const col=couleursDe(n).fg||"#888";
+        return '<div style="display:flex; align-items:center; gap:6px; font-size:12.5px; margin:5px 0; min-width:0;"><span style="width:10px; height:10px; border-radius:50%; background:'+col+'; flex:0 0 auto;"></span><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+n+'</span></div>';
+      }).join("");
+    }
   }
   function rendreAccueil(){
     if(dashMode==="tout"||!dashMode) dashMode="mois";
@@ -2180,6 +2194,7 @@
       $("kpi-zone").innerHTML='<div class="kpi-grand"><p class="lbl">Revenus de la période</p><p class="val">'+fmt(totalRev)+'</p></div>';
       $("rep-titre").textContent="Par type de revenu";
       $("rep-donut").style.display="none";
+      $("rep-donut-legende").innerHTML="";
       const noms=Object.keys(parType).sort((a,c)=>parType[c]-parType[a]);
       $("rep-vide").style.display=noms.length?"none":"block";
       noms.forEach(n=>{ const l=document.createElement("div"); l.className="rep-ligne"; l.style.cursor="pointer";
@@ -3445,19 +3460,6 @@
     panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
     setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
   }
-  function ouvrirSwatchPickerSous(cle, coulInput, onDone){
-    document.querySelectorAll(".swatch-panel").forEach(p=>p.remove());
-    const panel=document.createElement("div"); panel.className="swatch-panel";
-    SWATCHES_RAPIDES.forEach(hex=>{
-      const b=document.createElement("button"); b.type="button"; b.className="swatch-chip"; b.style.background=hex;
-      b.onclick=()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{fg:hex,bg:tintClair(hex)}); coulInput.value=hex; sauverCloud(); onDone(); panel.remove(); };
-      panel.appendChild(b);
-    });
-    document.body.appendChild(panel);
-    const r=coulInput.getBoundingClientRect();
-    panel.style.top=(window.scrollY+r.bottom+6)+"px"; panel.style.left=(window.scrollX+r.left)+"px";
-    setTimeout(()=>document.addEventListener("click",function fermer(e){ if(!panel.contains(e.target)){ panel.remove(); document.removeEventListener("click",fermer); } }),0);
-  }
   function ouvrirIconePicker(obj, boutonIcone, champ, apresChoix){
     champ=champ||"emoji";
     document.querySelectorAll(".icon-panel").forEach(p=>p.remove());
@@ -3587,26 +3589,12 @@
       if(!arr.length){ liste.innerHTML='<small class="aide">Aucune sous-catégorie.</small>'; }
       else {
         arr.forEach((s,i)=>{
-          const cle=nomCatRef.nom+"|"+s;
-          const st=souscatStyles[cle]||{};
           const l=document.createElement("div"); l.className="cat-ligne glisser-ligne";
           const poignee=document.createElement("span"); poignee.className="glisser-poignee"; poignee.textContent="⠿";
-          const emo=document.createElement("button"); emo.type="button"; emo.className="emoji-in";
-          emo.innerHTML='<span class="cat-ico-badge" style="width:20px;height:20px;color:'+(st.fg||"currentColor")+';">'+iconeCatSvg(st.emoji)+'</span>';
-          emo.setAttribute("aria-label","Choisir une icone");
-          emo.onclick=(e)=>{ e.preventDefault(); e.stopPropagation();
-            const tmp={emoji:st.emoji||""};
-            ouvrirIconePicker(tmp, emo, "emoji", ()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{emoji:tmp.emoji}); sauverCloud(); rendre(); });
-          };
-          const coul=document.createElement("input"); coul.type="color"; coul.className="color-in"; coul.value=st.fg||"#888888";
-          coul.onclick=(e)=>{ if(coul.dataset.pickCustom==="1"){ delete coul.dataset.pickCustom; return; } e.preventDefault(); e.stopPropagation();
-            ouvrirSwatchPickerSous(cle, coul, rendre);
-          };
-          coul.onchange=()=>{ souscatStyles[cle]=Object.assign({},souscatStyles[cle],{fg:coul.value,bg:tintClair(coul.value)}); sauverCloud(); rendre(); };
           const span=document.createElement("span"); span.textContent=s; span.style.flex="1"; span.style.fontSize="14px"; span.style.padding="8px 10px";
           const del=document.createElement("button"); del.textContent="×"; del.setAttribute("aria-label","Supprimer");
-          del.onclick=()=>{ souscats[nomCatRef.nom].splice(i,1); delete souscatStyles[cle]; sauverSous(); sauverCloud(); rendre(); };
-          l.appendChild(poignee); l.appendChild(emo); l.appendChild(coul); l.appendChild(span); l.appendChild(del); liste.appendChild(l);
+          del.onclick=()=>{ souscats[nomCatRef.nom].splice(i,1); sauverSous(); rendre(); };
+          l.appendChild(poignee); l.appendChild(span); l.appendChild(del); liste.appendChild(l);
         });
         activerGlisser(liste, souscats[nomCatRef.nom], ()=>{ sauverSous(); rendre(); });
       }
@@ -3714,7 +3702,6 @@
   function renommerCat(idx,nv){if(!nv){rendreCategories();return;}const anc=categories[idx].nom;if(anc===nv)return;
     categories[idx].nom=nv;
     if(souscats[anc]){souscats[nv]=souscats[anc];delete souscats[anc];sauverSous();}
-    Object.keys(souscatStyles).forEach(k=>{ if(k.startsWith(anc+"|")){ souscatStyles[nv+k.slice(anc.length)]=souscatStyles[k]; delete souscatStyles[k]; } });
     if(budCat[anc]){budCat[nv]=budCat[anc];delete budCat[anc];}
     sauverCat();rendreCategories();rendreBudGestion();rendreDepenses();rendreBudget();}
   function supprimerCat(idx){if(categories.length<=1)return;const nom=categories[idx].nom;
@@ -4391,6 +4378,7 @@
       const commits=await r.json();
       box.innerHTML="";
       const versionsForcees={
+        "Donut top 5 avec separation, legende indicative, retrait perso sous-categories":"v1.22.14",
         "Correction z-index pickers, icones/couleurs sous-categories, drag fluide, page Plus en grille, recurrentes avec limite":"v1.22.13",
         "Glisser categories entre groupes, toggle sous-categories deplace dans le menu Categorie":"v1.22.12",
         "Gestion en page pleine, ajout par groupe, toggle sous-categories clarifie, donut Resume a gauche":"v1.22.11",
